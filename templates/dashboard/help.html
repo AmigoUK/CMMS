@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+{% block title %}Help — CMMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-10 col-xl-8">
+
+<h4 class="mb-4"><i class="bi bi-question-circle me-2"></i>How CMMS Works</h4>
+
+{# ── Overview ──────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-diagram-3 me-2"></i>Overview</h5>
+        <p>CMMS (Computerised Maintenance Management System) tracks maintenance work from the moment a problem is spotted through to resolution. Every piece of work follows a clear path:</p>
+        <div class="d-flex flex-wrap align-items-center gap-2 my-3 justify-content-center">
+            <span class="badge bg-primary fs-6 py-2 px-3">Report Problem</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-info text-dark fs-6 py-2 px-3">Triage</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-warning text-dark fs-6 py-2 px-3">Work Order</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-success fs-6 py-2 px-3">Complete</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-secondary fs-6 py-2 px-3">Asset History</span>
+        </div>
+        <p class="mb-0">Everything you enter is preserved — photos, notes, parts used, time spent — building a maintenance history for each asset.</p>
+    </div>
+</div>
+
+{# ── Multi-Site ────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-building me-2"></i>Sites</h5>
+        <p>The system manages multiple sites. Each site has its own locations, assets, requests, and work orders. If you have access to more than one site, use the <strong>site switcher</strong> in the top navigation bar to change your active site. All data you see is filtered to the currently selected site.</p>
+    </div>
+</div>
+
+{# ── Roles ─────────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-people me-2"></i>User Roles</h5>
+        <p>What you can see and do depends on your role:</p>
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 140px;">Role</th>
+                        <th>What you can do</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge bg-secondary">User</span></td>
+                        <td>Report problems, upload photos, track your own requests. This is the role for anyone who spots an issue — operators, office staff, shop workers.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-warning text-dark">Contractor</span></td>
+                        <td>View and execute work orders assigned to you. Log time and notes. You only see jobs assigned to you — not the full queue or asset details.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-success">Technician</span></td>
+                        <td>Everything a Contractor can do, plus: view all work orders for the site, view asset details and history, record parts used.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-primary">Supervisor</span></td>
+                        <td>Everything a Technician can do, plus: review and triage incoming requests, convert requests into work orders, assign work to technicians and contractors, manage assets, locations, and parts inventory, close work orders.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-danger">Admin</span></td>
+                        <td>Full access. Manage users, teams, and sites. Everything a Supervisor can do across all assigned sites.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ── Request Lifecycle ─────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-exclamation-triangle me-2"></i>Requests — Reporting a Problem</h5>
+        <p>Anyone with an account can submit a maintenance request. Keep it simple — describe what's wrong, where it is, and attach a photo if you can. A supervisor will review it.</p>
+
+        <h6 class="mt-3 mb-2">Request statuses</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <tbody>
+                    <tr>
+                        <td style="width: 160px;"><span class="badge badge-new">New</span></td>
+                        <td>Just submitted. Waiting for a supervisor to review.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-acknowledged">Acknowledged</span></td>
+                        <td>A supervisor has seen the request and confirmed it's valid.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-in_progress">In Progress</span></td>
+                        <td>A work order has been created from this request. Maintenance is underway.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-resolved">Resolved</span></td>
+                        <td>The linked work order has been completed and the issue is fixed.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-closed">Closed</span></td>
+                        <td>Fully closed — no further action needed.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-cancelled">Cancelled</span></td>
+                        <td>Request was cancelled (duplicate, not valid, etc.).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ── Work Order Lifecycle ──────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-clipboard-check me-2"></i>Work Orders — Getting Work Done</h5>
+        <p>A work order is the controlled maintenance task. It can be created from a request (most common) or directly by a supervisor for planned work like inspections or preventive maintenance.</p>
+
+        <h6 class="mt-3 mb-2">Work order lifecycle</h6>
+        <div class="d-flex flex-wrap align-items-center gap-1 my-3">
+            <span class="badge badge-open py-1 px-2">Open</span>
+            <i class="bi bi-arrow-right text-muted small"></i>
+            <span class="badge badge-assigned py-1 px-2">Assigned</span>
+            <i class="bi bi-arrow-right text-muted small"></i>
+            <span class="badge badge-in_progress py-1 px-2">In Progress</span>
+            <i class="bi bi-arrow-right text-muted small"></i>
+            <span class="badge badge-completed py-1 px-2">Completed</span>
+            <i class="bi bi-arrow-right text-muted small"></i>
+            <span class="badge badge-closed py-1 px-2">Closed</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <tbody>
+                    <tr>
+                        <td style="width: 160px;"><span class="badge badge-open">Open</span></td>
+                        <td>Created but not yet assigned to anyone.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-assigned">Assigned</span></td>
+                        <td>A technician or contractor has been assigned. Work hasn't started yet.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-in_progress">In Progress</span></td>
+                        <td>Work has started. The assignee is on the job.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-on_hold">On Hold</span></td>
+                        <td>Work paused — typically waiting for parts, access, or further information.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-completed">Completed</span></td>
+                        <td>Work is done. The technician has recorded what they found and what they did. Waiting for supervisor to review and close.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-closed">Closed</span></td>
+                        <td>Supervisor has reviewed and closed the work order. This is the final state.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-cancelled">Cancelled</span></td>
+                        <td>Work order was cancelled before completion.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h6 class="mt-3 mb-2">What the technician records during execution</h6>
+        <ul class="mb-0">
+            <li><strong>Checklist tasks</strong> — step-by-step items to tick off as work progresses.</li>
+            <li><strong>Parts used</strong> — which parts were consumed and how many. Stock is automatically deducted.</li>
+            <li><strong>Time spent</strong> — how long the work took (in minutes).</li>
+            <li><strong>Photos and files</strong> — evidence of the work done or issues found.</li>
+            <li><strong>Findings</strong> — what was discovered during the job (causes, observations, recommendations).</li>
+            <li><strong>Completion notes</strong> — summary of the actions taken.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Work Order Types ──────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-tags me-2"></i>Work Order Types</h5>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <tbody>
+                    <tr>
+                        <td style="width: 160px;"><strong>Corrective</strong></td>
+                        <td>Fix something that is broken or not working properly. Most common type — usually created from a request.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Preventive</strong></td>
+                        <td>Scheduled maintenance to prevent breakdowns — servicing, lubrication, filter changes, calibration.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Inspection</strong></td>
+                        <td>Checking equipment condition without necessarily doing repair work — safety inspections, condition assessments, compliance checks.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Emergency</strong></td>
+                        <td>Urgent unplanned work that cannot wait — safety hazards, critical equipment failure, production stoppage.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ── Priority ──────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-flag me-2"></i>Priority Levels</h5>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <tbody>
+                    <tr>
+                        <td style="width: 160px;"><span class="priority-low fw-bold">Low</span></td>
+                        <td>Cosmetic issues, minor inconveniences, nice-to-fix items. No impact on operations.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="priority-medium fw-bold">Medium</span></td>
+                        <td>Should be addressed within a few days. Operations can continue but the issue is noticeable.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="priority-high fw-bold">High</span></td>
+                        <td>Significant impact. Workaround may exist but the problem needs prompt attention.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="priority-critical fw-bold">Critical</span></td>
+                        <td>Operations are stopped or a safety risk exists. Needs immediate action.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ── Assets ────────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-gear me-2"></i>Assets</h5>
+        <p>An asset is any piece of equipment, machine, or system that requires maintenance — ovens, mixers, fridges, electrical panels, HVAC units, etc. Each asset has:</p>
+        <ul>
+            <li><strong>Asset tag</strong> — a unique identifier (e.g., BM-OV-001)</li>
+            <li><strong>Location</strong> — where it is installed</li>
+            <li><strong>Status</strong> — operational, needs repair, out of service, or decommissioned</li>
+            <li><strong>Criticality</strong> — how important it is to operations (low to critical)</li>
+            <li><strong>Maintenance history</strong> — all past work orders linked to this asset</li>
+        </ul>
+        <p class="mb-0">When you report a problem, linking it to the correct asset helps build a history. If the same mixer keeps breaking down, the history makes that pattern visible.</p>
+    </div>
+</div>
+
+{# ── Locations ─────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-geo-alt me-2"></i>Locations</h5>
+        <p class="mb-0">Locations are organised in a hierarchy: <strong>Building</strong> &gt; <strong>Floor</strong> &gt; <strong>Area</strong> &gt; <strong>Room</strong>. When reporting a problem, you can pick a location even if you don't know the specific asset. The maintenance team will identify the right equipment.</p>
+    </div>
+</div>
+
+{# ── Parts ─────────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-box-seam me-2"></i>Parts Inventory</h5>
+        <p class="mb-0">The parts inventory tracks spare parts and consumables. When a technician records parts used on a work order, the stock is automatically deducted. Parts flagged as <strong>low stock</strong> (quantity at or below the minimum) are highlighted so supervisors can reorder before running out.</p>
+    </div>
+</div>
+
+{# ── Teams ─────────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-people-fill me-2"></i>Teams &amp; Contractors</h5>
+        <p>Technicians and contractors are organised into teams. Teams are either <strong>internal</strong> (your own maintenance staff) or <strong>external</strong> (contractor companies). Contractors can only see and work on jobs specifically assigned to them — they do not have access to the full queue, asset records, or parts costs.</p>
+        <p class="mb-0">A supervisor assigns work to the right person based on skills and availability. External contractors are typically assigned specialist work (refrigeration, electrical, etc.).</p>
+    </div>
+</div>
+
+{# ── Quick guide per role ──────────────────────────────────── #}
+<div class="card shadow-sm mb-4 border-primary">
+    <div class="card-header bg-primary bg-opacity-10">
+        <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Guide — What Do I Do?</h5>
+    </div>
+    <div class="card-body">
+        <div class="accordion" id="roleGuide">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button {{ '' if current_user.role == 'user' else 'collapsed' }}" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#guideUser">
+                        <span class="badge bg-secondary me-2">User</span> I need to report a problem
+                    </button>
+                </h2>
+                <div id="guideUser" class="accordion-collapse collapse {{ 'show' if current_user.role == 'user' }}">
+                    <div class="accordion-body">
+                        <ol class="mb-0">
+                            <li>Click <strong>Report a Problem</strong> on the dashboard (or go to Requests &gt; New Request).</li>
+                            <li>Give it a short title (e.g., "Fridge not cold").</li>
+                            <li>Describe what's wrong — be specific about what you see/hear/smell.</li>
+                            <li>Pick the location and asset if you know them (optional).</li>
+                            <li>Set the urgency — when in doubt, use <em>Medium</em>.</li>
+                            <li>Attach a photo if it helps show the problem.</li>
+                            <li>Submit. You'll get a request number and can track the status from <strong>My Requests</strong>.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button {{ '' if current_user.role in ('contractor', 'technician') else 'collapsed' }}" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#guideTech">
+                        <span class="badge bg-success me-2">Technician / Contractor</span> I have work assigned to me
+                    </button>
+                </h2>
+                <div id="guideTech" class="accordion-collapse collapse {{ 'show' if current_user.role in ('contractor', 'technician') }}">
+                    <div class="accordion-body">
+                        <ol class="mb-0">
+                            <li>Check <strong>My Assigned Work Orders</strong> on the dashboard.</li>
+                            <li>Open the work order to see what needs doing.</li>
+                            <li>Click <strong>Start Work</strong> when you begin.</li>
+                            <li>Work through the checklist, ticking items as you go.</li>
+                            <li>Record any parts you used.</li>
+                            <li>Log your time (how many minutes the job took).</li>
+                            <li>Upload photos of the work done or issues found.</li>
+                            <li>When finished, click <strong>Complete</strong> — describe what you found and what you did.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button {{ '' if current_user.role == 'supervisor' else 'collapsed' }}" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#guideSupervisor">
+                        <span class="badge bg-primary me-2">Supervisor</span> I manage the maintenance queue
+                    </button>
+                </h2>
+                <div id="guideSupervisor" class="accordion-collapse collapse {{ 'show' if current_user.role == 'supervisor' }}">
+                    <div class="accordion-body">
+                        <ol class="mb-0">
+                            <li>Check the <strong>Triage Queue</strong> on the dashboard for new requests.</li>
+                            <li>Open each new request — review the description and photos.</li>
+                            <li>Click <strong>Acknowledge</strong> to confirm the request is valid.</li>
+                            <li>Click <strong>Convert to Work Order</strong> to create a job from the request.</li>
+                            <li>Edit the work order to add a checklist, set the type and priority, pick a due date.</li>
+                            <li>Assign the work order to a technician or contractor.</li>
+                            <li>Monitor progress — check for overdue or on-hold work orders.</li>
+                            <li>When work is completed, review the findings and <strong>Close</strong> the work order.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button {{ '' if current_user.role == 'admin' else 'collapsed' }}" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#guideAdmin">
+                        <span class="badge bg-danger me-2">Admin</span> I manage the system
+                    </button>
+                </h2>
+                <div id="guideAdmin" class="accordion-collapse collapse {{ 'show' if current_user.role == 'admin' }}">
+                    <div class="accordion-body">
+                        <p>As admin, you have full supervisor access plus system management:</p>
+                        <ul class="mb-0">
+                            <li><strong>Admin &gt; Users</strong> — create accounts, assign roles, assign users to sites, reset passwords.</li>
+                            <li><strong>Admin &gt; Teams</strong> — create internal teams or external contractor companies.</li>
+                            <li><strong>Admin &gt; Sites</strong> — add or edit site locations managed by the system.</li>
+                            <li><strong>Locations</strong> — set up the building/floor/area hierarchy for each site.</li>
+                            <li><strong>Assets</strong> — register equipment with tags, manufacturers, and criticality ratings.</li>
+                            <li><strong>Parts</strong> — set up the spare parts inventory with minimum stock levels.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mb-4">
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">
+        <i class="bi bi-house me-1"></i>Back to Dashboard
+    </a>
+</div>
+
+</div>
+</div>
+{% endblock %}

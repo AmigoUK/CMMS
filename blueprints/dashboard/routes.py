@@ -99,3 +99,9 @@ def switch_site(site_id):
     session["active_site_id"] = site.id
     flash(f"Switched to {site.name}.", "success")
     return redirect(url_for("dashboard.index"))
+
+
+@dashboard_bp.route("/help")
+@login_required
+def help_page():
+    return render_template("dashboard/help.html")
