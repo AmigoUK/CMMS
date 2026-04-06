@@ -3,7 +3,7 @@
 from datetime import date
 
 from flask import (
-    abort, flash, g, redirect, render_template, request, url_for,
+    abort, current_app, flash, g, redirect, render_template, request, url_for,
 )
 from flask_login import current_user, login_required
 
@@ -12,9 +12,12 @@ from decorators import supervisor_required, technician_required
 from extensions import db
 from models import (
     Asset, Attachment, Location, WorkOrder,
-    ASSET_STATUSES, ASSET_CRITICALITIES,
+    ASSET_STATUSES, ASSET_CRITICALITIES, ASSET_CATEGORIES,
 )
-from utils.uploads import allowed_file, save_attachment
+from utils.uploads import allowed_file, is_allowed_image, save_attachment, generate_stored_filename
+
+import os
+from werkzeug.utils import secure_filename
 
 
 # ── helpers ────────────────────────────────────────────────────────────
@@ -83,6 +86,7 @@ def new():
         locations=locations,
         statuses=ASSET_STATUSES,
         criticalities=ASSET_CRITICALITIES,
+        categories=ASSET_CATEGORIES,
     )
 
 
@@ -91,7 +95,7 @@ def new():
 def create():
     name = request.form.get("name", "").strip()
     if not name:
-        flash("Asset name is required.", "danger")
+        flash("Property name is required.", "danger")
         return redirect(url_for("assets.new"))
 
     asset = Asset(
@@ -129,9 +133,20 @@ def create():
     if asset.criticality not in ASSET_CRITICALITIES:
         asset.criticality = "medium"
 
+    # Handle image upload
+    image = request.files.get("image")
+    if image and image.filename and is_allowed_image(image):
+        stored = generate_stored_filename(image.filename)
+        upload_dir = os.path.join(
+            current_app.config["UPLOAD_FOLDER"], "property"
+        )
+        os.makedirs(upload_dir, exist_ok=True)
+        image.save(os.path.join(upload_dir, stored))
+        asset.image = stored
+
     db.session.add(asset)
     db.session.commit()
-    flash("Asset created successfully.", "success")
+    flash("Property created successfully.", "success")
     return redirect(url_for("assets.detail", id=asset.id))
 
 
@@ -175,6 +190,7 @@ def edit(id):
         locations=locations,
         statuses=ASSET_STATUSES,
         criticalities=ASSET_CRITICALITIES,
+        categories=ASSET_CATEGORIES,
     )
 
 
@@ -222,8 +238,35 @@ def update(id):
     else:
         asset.warranty_expiry = None
 
+    # Handle image upload
+    image = request.files.get("image")
+    if image and image.filename and is_allowed_image(image):
+        # Remove old image if exists
+        if asset.image:
+            old_path = os.path.join(
+                current_app.config["UPLOAD_FOLDER"], "property", asset.image
+            )
+            if os.path.exists(old_path):
+                os.remove(old_path)
+        stored = generate_stored_filename(image.filename)
+        upload_dir = os.path.join(
+            current_app.config["UPLOAD_FOLDER"], "property"
+        )
+        os.makedirs(upload_dir, exist_ok=True)
+        image.save(os.path.join(upload_dir, stored))
+        asset.image = stored
+
+    # Handle image removal
+    if request.form.get("remove_image") == "1" and asset.image:
+        old_path = os.path.join(
+            current_app.config["UPLOAD_FOLDER"], "property", asset.image
+        )
+        if os.path.exists(old_path):
+            os.remove(old_path)
+        asset.image = ""
+
     db.session.commit()
-    flash("Asset updated successfully.", "success")
+    flash("Property updated successfully.", "success")
     return redirect(url_for("assets.detail", id=asset.id))
 
 

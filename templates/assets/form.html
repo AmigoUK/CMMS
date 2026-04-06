@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}{{ 'Edit Asset' if asset else 'New Asset' }} — CMMS{% endblock %}
+{% block title %}{{ 'Edit Property' if asset else 'New Property' }} — CMMS{% endblock %}
 
 {% block content %}
 <div class="mb-4">
     <a href="{{ url_for('assets.list_assets') }}" class="text-decoration-none">
-        <i class="bi bi-arrow-left me-1"></i>Back to Assets
+        <i class="bi bi-arrow-left me-1"></i>Back to Property
     </a>
 </div>
 
 <h1 class="h3 mb-4">
-    <i class="bi bi-gear me-2"></i>{{ 'Edit Asset' if asset else 'New Asset' }}
+    <i class="bi bi-buildings me-2"></i>{{ 'Edit Property' if asset else 'New Property' }}
 </h1>
 
-<form method="POST"
+<form method="POST" enctype="multipart/form-data"
       action="{{ url_for('assets.update', id=asset.id) if asset else url_for('assets.create') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -22,7 +22,7 @@
         <div class="col-md-6">
             <div class="card mb-3">
                 <div class="card-header">
-                    <h6 class="mb-0">Asset Information</h6>
+                    <h6 class="mb-0">Property Information</h6>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
@@ -32,15 +32,22 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="asset_tag" class="form-label">Asset Tag</label>
+                        <label for="asset_tag" class="form-label">Tag / ID</label>
                         <input type="text" class="form-control" id="asset_tag" name="asset_tag"
                                value="{{ asset.asset_tag if asset and asset.asset_tag else '' }}">
                     </div>
 
                     <div class="mb-3">
                         <label for="category" class="form-label">Category</label>
-                        <input type="text" class="form-control" id="category" name="category"
-                               value="{{ asset.category if asset else '' }}">
+                        <select class="form-select" id="category" name="category">
+                            <option value="">— Select —</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}"
+                                    {% if asset and asset.category == cat %}selected{% endif %}>
+                                {{ cat }}
+                            </option>
+                            {% endfor %}
+                        </select>
                     </div>
 
                     <div class="mb-3">
@@ -123,6 +130,39 @@
                     </div>
                 </div>
             </div>
+
+            {# Image upload card #}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Image</h6>
+                </div>
+                <div class="card-body">
+                    {% if asset and asset.image %}
+                    <div class="mb-3 text-center">
+                        <img src="{{ url_for('uploaded_file', filename='property/' + asset.image) }}"
+                             alt="{{ asset.name }}" class="img-fluid rounded"
+                             style="max-height: 200px; object-fit: contain;">
+                        <div class="mt-2">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="remove_image"
+                                       name="remove_image" value="1">
+                                <label class="form-check-label text-danger" for="remove_image">
+                                    Remove current image
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="mb-0">
+                        <label for="image" class="form-label">
+                            {{ 'Replace image' if asset and asset.image else 'Upload image' }}
+                        </label>
+                        <input type="file" class="form-control" id="image" name="image"
+                               accept="image/jpeg,image/png,image/webp,image/gif">
+                        <div class="form-text">JPEG, PNG, WebP, or GIF. Max 16 MB.</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -145,7 +185,7 @@
 
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-lg me-1"></i>{{ 'Save Changes' if asset else 'Create Asset' }}
+            <i class="bi bi-check-lg me-1"></i>{{ 'Save Changes' if asset else 'Create Property' }}
         </button>
         <a href="{{ url_for('assets.list_assets') }}" class="btn btn-outline-secondary">Cancel</a>
     </div>

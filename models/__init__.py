@@ -2,7 +2,7 @@ from models.site import Site
 from models.team import Team
 from models.user import User, ROLES, user_sites
 from models.location import Location, LOCATION_TYPES
-from models.asset import Asset, ASSET_STATUSES, ASSET_CRITICALITIES
+from models.asset import Asset, ASSET_STATUSES, ASSET_CRITICALITIES, ASSET_CATEGORIES
 from models.work_order import (
     WorkOrder, WorkOrderTask, WO_STATUSES, WO_TYPES, WO_PRIORITIES,
 )
@@ -15,7 +15,7 @@ from models.preventive_task import PreventiveTask, FREQUENCY_UNITS
 __all__ = [
     "Site", "Team", "User", "ROLES", "user_sites",
     "Location", "LOCATION_TYPES",
-    "Asset", "ASSET_STATUSES", "ASSET_CRITICALITIES",
+    "Asset", "ASSET_STATUSES", "ASSET_CRITICALITIES", "ASSET_CATEGORIES",
     "WorkOrder", "WorkOrderTask", "WO_STATUSES", "WO_TYPES", "WO_PRIORITIES",
     "Request", "REQUEST_STATUSES", "REQUEST_PRIORITIES",
     "Part", "PartUsage",
