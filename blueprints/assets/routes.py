@@ -16,7 +16,10 @@ from models import (
 )
 from utils.uploads import allowed_file, is_allowed_image, save_attachment, generate_stored_filename
 
+import io
 import os
+
+import qrcode
 from werkzeug.utils import secure_filename
 
 
@@ -268,6 +271,47 @@ def update(id):
     db.session.commit()
     flash("Property updated successfully.", "success")
     return redirect(url_for("assets.detail", id=asset.id))
+
+
+# ── QR code ──────────────────────────────────────────────────────────
+
+@assets_bp.route("/<int:id>/qr")
+@technician_required
+def qr_code(id):
+    """Generate QR code PNG for a property item."""
+    from flask import make_response
+
+    asset = _get_asset_or_404(id)
+    site_url = os.environ.get("SITE_URL", request.host_url.rstrip("/"))
+    scan_url = f"{site_url}/report/{asset.asset_tag or asset.id}"
+
+    img = qrcode.make(scan_url, box_size=8, border=2)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    response = make_response(buf.read())
+    response.headers["Content-Type"] = "image/png"
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
+@assets_bp.route("/<int:id>/qr-label")
+@technician_required
+def qr_label(id):
+    """Printable QR label page for a single property item."""
+    asset = _get_asset_or_404(id)
+    return render_template("assets/qr_label.html", assets=[asset])
+
+
+@assets_bp.route("/qr-labels")
+@supervisor_required
+def qr_labels_bulk():
+    """Printable QR labels for all active property at current site."""
+    assets = Asset.query.filter_by(
+        site_id=g.current_site.id, is_active=True,
+    ).order_by(Asset.name).all()
+    return render_template("assets/qr_label.html", assets=assets)
 
 
 # ── upload attachment ─────────────────────────────────────────────────
