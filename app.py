@@ -72,6 +72,7 @@ def create_app(config_class=None):
     from blueprints.locations import locations_bp
     from blueprints.parts import parts_bp
     from blueprints.admin import admin_bp
+    from blueprints.help import help_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(dashboard_bp)
@@ -81,12 +82,16 @@ def create_app(config_class=None):
     app.register_blueprint(locations_bp, url_prefix="/locations")
     app.register_blueprint(parts_bp, url_prefix="/parts")
     app.register_blueprint(admin_bp, url_prefix="/admin")
+    app.register_blueprint(help_bp, url_prefix="/help")
 
     # ── Site context middleware ─────────────────────────────
     # Endpoints that work without site context
     _NO_SITE_ENDPOINTS = {
         "static", "auth.login", "auth.logout", "auth.change_password",
-        "dashboard.help_page", "dashboard.scan_report", "uploaded_file",
+        "dashboard.scan_report", "uploaded_file",
+        "help.index", "help.getting_started", "help.reporting",
+        "help.requests_help", "help.work_orders", "help.property_help",
+        "help.admin_guide", "help.faq",
     }
 
     @app.before_request

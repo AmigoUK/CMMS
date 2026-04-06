@@ -1,0 +1,93 @@
+{% extends "help/base_help.html" %}
+{% block title %}Reporting a Problem — CMMS Help{% endblock %}
+
+{% block help_content %}
+<h4 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Reporting a Problem</h4>
+<p class="text-muted mb-4">Anyone can report a maintenance problem. There are two ways: scan a QR code on the equipment, or log in and submit manually.</p>
+
+{# ── Scanning a QR Code ────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-qr-code me-2"></i>Scanning a QR Code</h5>
+        <ol class="mb-3">
+            <li>Find the QR code label on the equipment (usually a small sticker)</li>
+            <li>Open your phone camera and point it at the QR code</li>
+            <li>Tap the link that appears &mdash; it opens the report form</li>
+            <li>The equipment is automatically identified &mdash; no need to search for it</li>
+            <li>Fill in what's wrong and submit</li>
+        </ol>
+        <div class="text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            If anonymous reporting is enabled, you can submit without logging in. Otherwise, you'll be asked to sign in first.
+        </div>
+    </div>
+</div>
+
+{# ── Submitting Manually ───────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-pencil-square me-2"></i>Submitting Manually</h5>
+        <ol class="mb-0">
+            <li>Sign in to CMMS</li>
+            <li>Click <strong>"Report a Problem"</strong> on the dashboard</li>
+            <li>Fill in the title (what's wrong), description (details), and priority</li>
+            <li>Optionally select the location and property item</li>
+            <li>Attach a photo if helpful</li>
+            <li>Click <strong>"Submit Request"</strong></li>
+        </ol>
+    </div>
+</div>
+
+{# ── Priority Levels ───────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-flag me-2"></i>Priority Levels</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered mb-3">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 140px;">Priority</th>
+                        <th>When to use</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge bg-success">Not urgent</span></td>
+                        <td>Cosmetic issues, minor inconveniences. No impact on operations.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-primary">Normal</span></td>
+                        <td>Should be addressed within a few days. Operations can continue.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-warning text-dark">Urgent</span></td>
+                        <td>Significant impact. Workaround may exist but needs prompt attention.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-danger">Emergency</span></td>
+                        <td>Operations stopped or safety risk. Needs immediate action.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="text-muted small">
+            <i class="bi bi-lightbulb me-1"></i>
+            <strong>Tip:</strong> When in doubt, choose "Normal". A supervisor will adjust the priority if needed.
+        </div>
+    </div>
+</div>
+
+{# ── Tips for a Good Report ─────────────────────────────────── #}
+<div class="card border-info mb-4">
+    <div class="card-body">
+        <h5 class="card-title text-info"><i class="bi bi-lightbulb me-2"></i>Tips for a Good Report</h5>
+        <ul class="mb-0">
+            <li>Be specific about what you see, hear, or smell</li>
+            <li>Mention when the problem started and if it's getting worse</li>
+            <li>Include the location if you know it</li>
+            <li>Attach a photo &mdash; a picture is worth a thousand words</li>
+            <li>Don't worry about technical terms &mdash; describe it in your own words</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

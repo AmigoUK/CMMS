@@ -1,0 +1,106 @@
+{% extends "help/base_help.html" %}
+{% block title %}Help Centre — CMMS{% endblock %}
+
+{% block help_content %}
+<h4 class="mb-3"><i class="bi bi-question-circle me-2"></i>Help Centre</h4>
+<p class="text-muted mb-4">Welcome to the CMMS Help Centre. Find guides, instructions, and answers to help you get the most out of the maintenance management system.</p>
+
+{# ── Quick links by role ─────────────────────────────────────── #}
+<h5 class="mb-3">What do you need?</h5>
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('help.reporting') }}" class="card h-100 text-decoration-none shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-person fs-2 text-primary d-block mb-2"></i>
+                <h6 class="card-title mb-1">I need to report a problem</h6>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('help.work_orders') }}" class="card h-100 text-decoration-none shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-clipboard fs-2 text-success d-block mb-2"></i>
+                <h6 class="card-title mb-1">I have work assigned</h6>
+                <small class="text-muted">Sign in required</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('help.work_orders') }}" class="card h-100 text-decoration-none shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-funnel fs-2 text-warning d-block mb-2"></i>
+                <h6 class="card-title mb-1">I manage the queue</h6>
+                <small class="text-muted">Sign in required</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('help.admin_guide') }}" class="card h-100 text-decoration-none shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-shield fs-2 text-danger d-block mb-2"></i>
+                <h6 class="card-title mb-1">I manage the system</h6>
+                <small class="text-muted">Admin only</small>
+            </div>
+        </a>
+    </div>
+</div>
+
+{# ── Browse topics ───────────────────────────────────────────── #}
+<h5 class="mb-3">Browse Topics</h5>
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h6><i class="bi bi-rocket-takeoff me-2"></i>Getting Started</h6>
+                <p class="text-muted small mb-2">New to CMMS? Start here.</p>
+                <a href="{{ url_for('help.getting_started') }}" class="stretched-link small">Read more <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h6><i class="bi bi-exclamation-triangle me-2"></i>Reporting a Problem</h6>
+                <p class="text-muted small mb-2">How to report issues via QR code or form.</p>
+                <a href="{{ url_for('help.reporting') }}" class="stretched-link small">Read more <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h6><i class="bi bi-list-check me-2"></i>Requests</h6>
+                <p class="text-muted small mb-2">Track your requests and understand statuses.</p>
+                <a href="{{ url_for('help.requests_help') }}" class="stretched-link small">Read more <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h6><i class="bi bi-clipboard-check me-2"></i>Work Orders</h6>
+                <p class="text-muted small mb-2">Execute, track, and complete maintenance work.</p>
+                <a href="{{ url_for('help.work_orders') }}" class="stretched-link small">Read more <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h6><i class="bi bi-buildings me-2"></i>Property &amp; Parts</h6>
+                <p class="text-muted small mb-2">Manage equipment, parts inventory, and compatibility.</p>
+                <a href="{{ url_for('help.property_help') }}" class="stretched-link small">Read more <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h6><i class="bi bi-patch-question me-2"></i>FAQ</h6>
+                <p class="text-muted small mb-2">Frequently asked questions.</p>
+                <a href="{{ url_for('help.faq') }}" class="stretched-link small">Read more <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

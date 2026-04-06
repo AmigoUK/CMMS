@@ -1,0 +1,116 @@
+{% extends "help/base_help.html" %}
+{% block title %}Property & Parts — CMMS Help{% endblock %}
+
+{% block help_content %}
+<h4 class="mb-3"><i class="bi bi-buildings me-2"></i>Property &amp; Parts</h4>
+<p class="text-muted mb-4">Property covers all maintainable items &mdash; machines, tools, vehicles, and buildings. Parts are the spare parts and consumables used during maintenance.</p>
+
+{# ── Property Register ──────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-building-gear me-2"></i>Property Register</h5>
+        <p class="text-muted small mb-3">The property register is a central record of every maintainable item in your organisation.</p>
+
+        <ul>
+            <li><strong>What is a property item?</strong> Any asset that requires maintenance &mdash; equipment, machinery, vehicles, tools, or building elements (doors, HVAC units, lifts, etc.).</li>
+            <li><strong>Categories</strong> &mdash; Group items by type (e.g. Electrical, Mechanical, Plumbing) for easier filtering and reporting.</li>
+            <li><strong>Tags</strong> &mdash; Apply free-form tags to items for flexible cross-category grouping.</li>
+            <li><strong>Images</strong> &mdash; Upload photos to help technicians identify equipment quickly in the field.</li>
+        </ul>
+
+        <h6>Property Statuses</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Status</th>
+                        <th>Meaning</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge bg-success">Operational</span></td>
+                        <td>Item is working normally and available for use.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-warning text-dark">Needs Repair</span></td>
+                        <td>Item has a known issue and requires maintenance attention.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-danger">Out of Service</span></td>
+                        <td>Item is not operational and must not be used until repaired.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-secondary">Decommissioned</span></td>
+                        <td>Item has been permanently retired and is no longer maintained.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ── QR Code Labels ─────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-qr-code me-2"></i>QR Code Labels</h5>
+        <p class="text-muted small mb-3">QR labels let anyone scan equipment to instantly report a problem or view its maintenance history.</p>
+
+        <h6>Printing QR Labels</h6>
+        <ol>
+            <li>Go to the <strong>Property</strong> list page.</li>
+            <li>Click <strong>Print All QR Labels</strong>.</li>
+            <li>Select the items you want to print labels for.</li>
+            <li>Click <strong>Print</strong> &mdash; labels are formatted for standard label sheets.</li>
+        </ol>
+
+        <h6>Single Labels</h6>
+        <p class="mb-0">You can also print a single QR label from any property detail page using the <strong>Print QR Label</strong> button.</p>
+    </div>
+</div>
+
+{# ── Parts Inventory ────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-box-seam me-2"></i>Parts Inventory</h5>
+        <p class="text-muted small mb-3">Track spare parts and consumables so you always know what is in stock and when to reorder.</p>
+
+        <ul class="mb-0">
+            <li><strong>Stock levels</strong> &mdash; Each part has a current stock quantity, plus configurable minimum and maximum levels.</li>
+            <li><strong>Minimum level</strong> &mdash; When stock falls to or below this threshold, a reorder alert is triggered.</li>
+            <li><strong>Maximum level</strong> &mdash; The recommended upper limit to avoid overstocking.</li>
+            <li><strong>Reorder alerts</strong> &mdash; Parts at or below their minimum level appear in the Reorder Report and are flagged on the dashboard.</li>
+            <li><strong>Supplier info</strong> &mdash; Record the supplier name, contact details, and part number for easy reordering.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Part Compatibility ─────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-link-45deg me-2"></i>Part Compatibility</h5>
+        <p class="text-muted small mb-3">Link parts to the property items they are compatible with, so technicians always know which parts fit which equipment.</p>
+
+        <ul class="mb-0">
+            <li>On a <strong>part detail page</strong>, you can link it to one or more property items &mdash; the part page then shows all compatible equipment.</li>
+            <li>On a <strong>property detail page</strong>, you can see all compatible parts &mdash; making it easy to find the right replacement during a repair.</li>
+            <li>Compatibility links work in both directions: linking a part to a property item also makes the part appear on that property item's page.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Reorder Report ─────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-cart-check me-2"></i>Reorder Report</h5>
+        <p class="text-muted small mb-3">The reorder report helps you stay on top of stock replenishment before you run out of critical parts.</p>
+
+        <ul>
+            <li><strong>What triggers it?</strong> Any part whose current stock is at or below its configured minimum level.</li>
+            <li><strong>Where to find it:</strong> Navigate to <strong>Parts</strong> &rarr; <strong>Reorder Report</strong>.</li>
+            <li><strong>Grouped by supplier</strong> &mdash; Items are grouped by their assigned supplier, making it easy to place consolidated orders.</li>
+            <li><strong>Printable</strong> &mdash; The report is print-friendly so you can hand it to your purchasing team or take it with you.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

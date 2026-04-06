@@ -102,12 +102,6 @@ def switch_site(site_id):
     return redirect(url_for("dashboard.index"))
 
 
-@dashboard_bp.route("/help")
-@login_required
-def help_page():
-    return render_template("dashboard/help.html")
-
-
 @dashboard_bp.route("/report/<identifier>", methods=["GET", "POST"])
 @csrf.exempt
 def scan_report(identifier):

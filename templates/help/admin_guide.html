@@ -1,0 +1,149 @@
+{% extends "help/base_help.html" %}
+{% block title %}Admin Guide — CMMS Help{% endblock %}
+
+{% block help_content %}
+<h4 class="mb-3"><i class="bi bi-shield-lock me-2"></i>Admin Guide</h4>
+<p class="text-muted mb-4">This guide covers system administration &mdash; managing users, teams, sites, and settings.</p>
+
+{# ── Managing Users ─────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-people me-2"></i>Managing Users</h5>
+        <p class="text-muted small mb-3">User accounts control who can access the system and what they can do.</p>
+
+        <ul>
+            <li><strong>Create a user:</strong> Go to <strong>Admin &rarr; Users &rarr; New User</strong>. Enter their name, email, and assign a role and site(s).</li>
+            <li><strong>Edit a user:</strong> Click any user in the list to update their details, role, or site assignments.</li>
+            <li><strong>Toggle active/inactive:</strong> Deactivate a user to revoke access without deleting their account. Reactivate at any time.</li>
+            <li><strong>Reset password:</strong> Admins can reset a user's password from the user edit page.</li>
+        </ul>
+
+        <h6>Roles</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Role</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Admin</strong></td>
+                        <td>Full system access including user management, settings, and all sites.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Supervisor</strong></td>
+                        <td>Can triage requests, create and assign work orders, and manage property and parts.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Technician</strong></td>
+                        <td>Can view and execute assigned work orders, log parts and time.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Reporter</strong></td>
+                        <td>Can submit maintenance requests and track their progress.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ── Managing Teams ──────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-person-badge me-2"></i>Managing Teams</h5>
+        <p class="text-muted small mb-3">Teams group technicians together for work assignment and scheduling.</p>
+
+        <ul>
+            <li><strong>Internal teams</strong> &mdash; Your own maintenance staff, organised by trade or area (e.g. Electrical, Mechanical, Facilities).</li>
+            <li><strong>Contractor teams</strong> &mdash; External service providers who handle specialist or overflow work.</li>
+            <li><strong>Creating a team:</strong> Go to <strong>Admin &rarr; Teams &rarr; New Team</strong>. Enter a name, select the type (internal/contractor), and add members.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Managing Sites ──────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-geo-alt me-2"></i>Managing Sites</h5>
+        <p class="text-muted small mb-3">Sites represent the physical locations your organisation maintains.</p>
+
+        <ul class="mb-0">
+            <li><strong>Adding a site:</strong> Go to <strong>Admin &rarr; Sites &rarr; New Site</strong>. Enter the site name, address, and a short site code.</li>
+            <li><strong>Site codes</strong> &mdash; Short identifiers (e.g. HQ, DEPOT-01) used in reports and labels for quick reference.</li>
+            <li>Users and property items are assigned to specific sites, so data stays organised per location.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Settings ────────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-gear me-2"></i>Settings</h5>
+        <p class="text-muted small mb-3">System-wide configuration options available to administrators.</p>
+
+        <ul class="mb-0">
+            <li><strong>Anonymous reporting</strong> &mdash; Toggle whether visitors can submit maintenance requests without signing in. When enabled, anyone with a QR code link can report a problem.</li>
+            <li><strong>Name/email requirements</strong> &mdash; Configure whether anonymous reporters must provide their name and/or email address when submitting a request.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Initial Setup Checklist ────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-list-check me-2"></i>Initial Setup Checklist</h5>
+        <p class="text-muted small mb-3">Follow these steps when setting up CMMS for the first time.</p>
+
+        <div class="list-group list-group-flush">
+            <div class="list-group-item px-0">
+                <i class="bi bi-1-circle-fill text-primary me-2"></i>
+                <strong>Change the default admin password</strong>
+                <p class="text-muted small mb-0 ms-4">Secure the admin account immediately after first login.</p>
+            </div>
+            <div class="list-group-item px-0">
+                <i class="bi bi-2-circle-fill text-primary me-2"></i>
+                <strong>Create your sites</strong>
+                <p class="text-muted small mb-0 ms-4">Add each physical location your organisation maintains.</p>
+            </div>
+            <div class="list-group-item px-0">
+                <i class="bi bi-3-circle-fill text-primary me-2"></i>
+                <strong>Create teams (internal + contractors)</strong>
+                <p class="text-muted small mb-0 ms-4">Set up your maintenance teams and any external contractor teams.</p>
+            </div>
+            <div class="list-group-item px-0">
+                <i class="bi bi-4-circle-fill text-primary me-2"></i>
+                <strong>Add users, assign roles and sites</strong>
+                <p class="text-muted small mb-0 ms-4">Create accounts for everyone who will use the system and assign appropriate roles.</p>
+            </div>
+            <div class="list-group-item px-0">
+                <i class="bi bi-5-circle-fill text-primary me-2"></i>
+                <strong>Add locations for each site</strong>
+                <p class="text-muted small mb-0 ms-4">Define specific areas within each site (rooms, floors, zones) for precise fault reporting.</p>
+            </div>
+            <div class="list-group-item px-0">
+                <i class="bi bi-6-circle-fill text-primary me-2"></i>
+                <strong>Register property items</strong>
+                <p class="text-muted small mb-0 ms-4">Add all maintainable equipment, machines, and building elements to the property register.</p>
+            </div>
+            <div class="list-group-item px-0">
+                <i class="bi bi-7-circle-fill text-primary me-2"></i>
+                <strong>Print and attach QR labels</strong>
+                <p class="text-muted small mb-0 ms-4">Generate QR codes and affix them to each property item for quick scanning.</p>
+            </div>
+            <div class="list-group-item px-0">
+                <i class="bi bi-8-circle-fill text-primary me-2"></i>
+                <strong>Add parts to inventory</strong>
+                <p class="text-muted small mb-0 ms-4">Enter spare parts and consumables with stock levels and supplier details.</p>
+            </div>
+            <div class="list-group-item px-0">
+                <i class="bi bi-9-circle-fill text-primary me-2"></i>
+                <strong>Enable anonymous reporting if needed</strong>
+                <p class="text-muted small mb-0 ms-4">Turn on anonymous reporting in Settings if you want anyone to submit requests via QR codes.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends "help/base_help.html" %}
+{% block title %}Getting Started — CMMS Help{% endblock %}
+
+{% block help_content %}
+<h4 class="mb-3"><i class="bi bi-rocket-takeoff me-2"></i>Getting Started</h4>
+<p class="text-muted mb-4">This guide walks you through the basics of using CMMS, whether you're reporting a problem, executing maintenance work, or managing the system.</p>
+
+{# ── What is CMMS? ───────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-diagram-3 me-2"></i>What is CMMS?</h5>
+        <p>CMMS (Computerised Maintenance Management System) is a system for tracking repairs, inspections, and preventive maintenance across one or more sites. Every piece of work follows a clear lifecycle:</p>
+        <div class="d-flex flex-wrap align-items-center gap-2 my-3 justify-content-center">
+            <span class="badge bg-primary fs-6 py-2 px-3">Report Problem</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-info text-dark fs-6 py-2 px-3">Triage</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-warning text-dark fs-6 py-2 px-3">Work Order</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-success fs-6 py-2 px-3">Complete</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-secondary fs-6 py-2 px-3">Asset History</span>
+        </div>
+        <p class="mb-0">Everything you enter is preserved -- photos, notes, parts used, time spent -- building a complete maintenance history for each asset.</p>
+    </div>
+</div>
+
+{# ── Your Role ────────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-people me-2"></i>Your Role</h5>
+        <p>What you can see and do depends on your role:</p>
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 140px;">Role</th>
+                        <th>What you can do</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge bg-secondary">User</span></td>
+                        <td>Report problems, upload photos, track your own requests.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-warning text-dark">Contractor</span></td>
+                        <td>View and execute work orders assigned to you. Log time and notes.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-success">Technician</span></td>
+                        <td>Everything a Contractor can do, plus: view all work orders for the site, view asset details and history, record parts used.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-primary">Supervisor</span></td>
+                        <td>Everything a Technician can do, plus: triage incoming requests, convert to work orders, assign work, manage assets, locations, and parts inventory, close work orders.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-danger">Admin</span></td>
+                        <td>Full access. Everything a Supervisor can do, plus user, team, and site management.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ── First Steps by Role ─────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-signpost-split me-2"></i>First Steps by Role</h5>
+        <p>Find your role below to see what to do first.</p>
+
+        <div class="accordion" id="firstSteps">
+            {# User / Shop Staff #}
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#stepsUser">
+                        <span class="badge bg-secondary me-2">User</span> I'm a User / Shop Staff
+                    </button>
+                </h2>
+                <div id="stepsUser" class="accordion-collapse collapse show" data-bs-parent="#firstSteps">
+                    <div class="accordion-body">
+                        <ol class="mb-0">
+                            <li>Go to the <strong>Dashboard</strong>.</li>
+                            <li>Click <strong>"Report a Problem"</strong>.</li>
+                            <li>Fill in what's wrong -- describe the issue, pick a location, and attach a photo if you can.</li>
+                            <li>Track progress from <strong>"My Requests"</strong>.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            {# Technician #}
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#stepsTech">
+                        <span class="badge bg-success me-2">Technician</span> I'm a Technician
+                    </button>
+                </h2>
+                <div id="stepsTech" class="accordion-collapse collapse" data-bs-parent="#firstSteps">
+                    <div class="accordion-body">
+                        <ol class="mb-0">
+                            <li>Check the <strong>Dashboard</strong> for assigned work orders.</li>
+                            <li>Open the work order to see what needs doing.</li>
+                            <li>Click <strong>Start Work</strong> when you begin.</li>
+                            <li>Complete the checklist, log time and parts used.</li>
+                            <li>Click <strong>Mark Complete</strong> when finished.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            {# Supervisor #}
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#stepsSupervisor">
+                        <span class="badge bg-primary me-2">Supervisor</span> I'm a Supervisor
+                    </button>
+                </h2>
+                <div id="stepsSupervisor" class="accordion-collapse collapse" data-bs-parent="#firstSteps">
+                    <div class="accordion-body">
+                        <ol class="mb-0">
+                            <li>Check the <strong>Triage Queue</strong> for new requests.</li>
+                            <li><strong>Acknowledge</strong> valid requests.</li>
+                            <li><strong>Convert to Work Orders</strong> and add checklists, priority, and due dates.</li>
+                            <li><strong>Assign</strong> work orders to technicians or contractors.</li>
+                            <li><strong>Review and Close</strong> completed work orders.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            {# Admin #}
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#stepsAdmin">
+                        <span class="badge bg-danger me-2">Admin</span> I'm an Admin
+                    </button>
+                </h2>
+                <div id="stepsAdmin" class="accordion-collapse collapse" data-bs-parent="#firstSteps">
+                    <div class="accordion-body">
+                        <ol class="mb-0">
+                            <li>Set up <strong>Sites</strong> -- add the locations your organisation manages.</li>
+                            <li>Create <strong>Teams</strong> -- internal maintenance teams and external contractors.</li>
+                            <li>Add <strong>Users</strong> and assign roles and sites to each person.</li>
+                            <li>Configure <strong>Settings</strong> -- locations, property, parts inventory, and categories.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Need More Help? ─────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-life-preserver me-2"></i>Need More Help?</h5>
+        <p class="mb-0">Check the <a href="{{ url_for('help.faq') }}">Frequently Asked Questions</a> for answers to common questions, or browse the other topics in the sidebar.</p>
+    </div>
+</div>
+{% endblock %}

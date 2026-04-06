@@ -113,7 +113,7 @@
 {# ═══ 3. Checklist section ═══ #}
 <div class="card mb-3 wo-detail-section">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-check2-square"></i> Checklist</span>
+        <span><i class="bi bi-check2-square"></i> Checklist <a href="{{ url_for('help.work_orders') }}#checklists" class="text-muted ms-1 no-print" title="Help"><i class="bi bi-question-circle small"></i></a></span>
         <small class="text-muted">{{ tasks_done }} of {{ tasks_total }} complete</small>
     </div>
     <div class="card-body">
@@ -159,7 +159,7 @@
 
 {# ═══ 4. Parts Used section ═══ #}
 <div class="card mb-3 wo-detail-section">
-    <div class="card-header"><i class="bi bi-box-seam"></i> Parts Used</div>
+    <div class="card-header"><i class="bi bi-box-seam"></i> Parts Used <a href="{{ url_for('help.work_orders') }}#parts-time" class="text-muted ms-1 no-print" title="Help"><i class="bi bi-question-circle small"></i></a></div>
     <div class="card-body">
         {% if wo.parts_used %}
         <div class="table-responsive">
@@ -231,7 +231,7 @@
 
 {# ═══ 5. Time Log section ═══ #}
 <div class="card mb-3 wo-detail-section">
-    <div class="card-header"><i class="bi bi-clock-history"></i> Time Log</div>
+    <div class="card-header"><i class="bi bi-clock-history"></i> Time Log <a href="{{ url_for('help.work_orders') }}#parts-time" class="text-muted ms-1 no-print" title="Help"><i class="bi bi-question-circle small"></i></a></div>
     <div class="card-body">
         {% if wo.time_logs %}
         <div class="table-responsive">

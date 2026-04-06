@@ -1,0 +1,264 @@
+{% extends "help/base_help.html" %}
+{% block title %}FAQ — CMMS Help{% endblock %}
+
+{% block help_content %}
+<h4 class="mb-3"><i class="bi bi-patch-question me-2"></i>Frequently Asked Questions</h4>
+
+{# ── General ────────────────────────────────────────────────── #}
+<h6 class="text-muted text-uppercase small mt-4 mb-3">General</h6>
+<div class="accordion mb-4" id="faqGeneral">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqGeneralH1">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqGeneralC1" aria-expanded="false" aria-controls="faqGeneralC1">
+                What is CMMS?
+            </button>
+        </h2>
+        <div id="faqGeneralC1" class="accordion-collapse collapse" aria-labelledby="faqGeneralH1" data-bs-parent="#faqGeneral">
+            <div class="accordion-body">
+                CMMS stands for Computerised Maintenance Management System. It helps organisations track maintenance requests, manage work orders, monitor equipment, and keep on top of spare parts inventory &mdash; all in one place.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqGeneralH2">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqGeneralC2" aria-expanded="false" aria-controls="faqGeneralC2">
+                How do I report a problem?
+            </button>
+        </h2>
+        <div id="faqGeneralC2" class="accordion-collapse collapse" aria-labelledby="faqGeneralH2" data-bs-parent="#faqGeneral">
+            <div class="accordion-body">
+                The quickest way is to scan the QR code label on the equipment. You can also log in and submit a request through the Requests page. See the <a href="{{ url_for('help.reporting') }}">Reporting a Problem</a> guide for full details.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqGeneralH3">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqGeneralC3" aria-expanded="false" aria-controls="faqGeneralC3">
+                Can I report a problem without logging in?
+            </button>
+        </h2>
+        <div id="faqGeneralC3" class="accordion-collapse collapse" aria-labelledby="faqGeneralH3" data-bs-parent="#faqGeneral">
+            <div class="accordion-body">
+                It depends on your organisation's settings. If an administrator has enabled anonymous reporting, anyone can submit a request by scanning a QR code &mdash; no account required. If anonymous reporting is disabled, you will need to sign in first.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqGeneralH4">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqGeneralC4" aria-expanded="false" aria-controls="faqGeneralC4">
+                How do I scan a QR code?
+            </button>
+        </h2>
+        <div id="faqGeneralC4" class="accordion-collapse collapse" aria-labelledby="faqGeneralH4" data-bs-parent="#faqGeneral">
+            <div class="accordion-body">
+                Point your phone's camera at the QR code label on the equipment. Most modern phones will automatically recognise the code and show a link &mdash; tap it to open the reporting form in your browser. No special app is needed.
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Requests ───────────────────────────────────────────────── #}
+<h6 class="text-muted text-uppercase small mt-4 mb-3">Requests</h6>
+<div class="accordion mb-4" id="faqRequests">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqRequestsH1">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqRequestsC1" aria-expanded="false" aria-controls="faqRequestsC1">
+                What do the priority levels mean?
+            </button>
+        </h2>
+        <div id="faqRequestsC1" class="accordion-collapse collapse" aria-labelledby="faqRequestsH1" data-bs-parent="#faqRequests">
+            <div class="accordion-body">
+                <ul class="mb-0">
+                    <li><strong>Not Urgent</strong> &mdash; Minor issue, no immediate impact. Can wait for scheduled maintenance.</li>
+                    <li><strong>Normal</strong> &mdash; Standard priority. Should be addressed in the normal workflow.</li>
+                    <li><strong>Urgent</strong> &mdash; Significant impact on operations. Needs attention as soon as possible.</li>
+                    <li><strong>Emergency</strong> &mdash; Safety risk or critical failure. Requires immediate response.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqRequestsH2">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqRequestsC2" aria-expanded="false" aria-controls="faqRequestsC2">
+                How do I track my request?
+            </button>
+        </h2>
+        <div id="faqRequestsC2" class="accordion-collapse collapse" aria-labelledby="faqRequestsH2" data-bs-parent="#faqRequests">
+            <div class="accordion-body">
+                If you are signed in, go to the <strong>Dashboard</strong> and check the "My Requests" section. You can also visit the <strong>Requests</strong> page to see all your submissions and their current status.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqRequestsH3">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqRequestsC3" aria-expanded="false" aria-controls="faqRequestsC3">
+                Can I add more information after submitting a request?
+            </button>
+        </h2>
+        <div id="faqRequestsC3" class="accordion-collapse collapse" aria-labelledby="faqRequestsH3" data-bs-parent="#faqRequests">
+            <div class="accordion-body">
+                Yes. Open your request and use the comments section to add extra details. You can also upload additional files and photos after the initial submission.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqRequestsH4">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqRequestsC4" aria-expanded="false" aria-controls="faqRequestsC4">
+                What happens after I submit a request?
+            </button>
+        </h2>
+        <div id="faqRequestsC4" class="accordion-collapse collapse" aria-labelledby="faqRequestsH4" data-bs-parent="#faqRequests">
+            <div class="accordion-body">
+                A supervisor reviews your request in the triage queue. They will either acknowledge it for further investigation or convert it directly into a work order. Once a work order is created, a technician is assigned to carry out the repair.
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Work Orders ────────────────────────────────────────────── #}
+<h6 class="text-muted text-uppercase small mt-4 mb-3">Work Orders</h6>
+<div class="accordion mb-4" id="faqWorkOrders">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqWorkOrdersH1">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqWorkOrdersC1" aria-expanded="false" aria-controls="faqWorkOrdersC1">
+                How do I see my assigned work?
+            </button>
+        </h2>
+        <div id="faqWorkOrdersC1" class="accordion-collapse collapse" aria-labelledby="faqWorkOrdersH1" data-bs-parent="#faqWorkOrders">
+            <div class="accordion-body">
+                Your Dashboard shows a "My Assigned Work Orders" section listing all work orders currently assigned to you. This is the quickest way to see what needs your attention.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqWorkOrdersH2">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqWorkOrdersC2" aria-expanded="false" aria-controls="faqWorkOrdersC2">
+                How do I complete a work order?
+            </button>
+        </h2>
+        <div id="faqWorkOrdersC2" class="accordion-collapse collapse" aria-labelledby="faqWorkOrdersH2" data-bs-parent="#faqWorkOrders">
+            <div class="accordion-body">
+                Click <strong>Start Work</strong> to begin, then work through the checklist, log any parts used and time spent, upload photos, and finally click <strong>Complete</strong>. You will be asked to describe what you found and what was done.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqWorkOrdersH3">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqWorkOrdersC3" aria-expanded="false" aria-controls="faqWorkOrdersC3">
+                Can I put a job on hold?
+            </button>
+        </h2>
+        <div id="faqWorkOrdersC3" class="accordion-collapse collapse" aria-labelledby="faqWorkOrdersH3" data-bs-parent="#faqWorkOrders">
+            <div class="accordion-body">
+                Yes. While a work order is In Progress, you can click the <strong>Put on Hold</strong> button. Use this when you are waiting for parts to arrive, need access to a locked area, or are waiting for further information before you can continue.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqWorkOrdersH4">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqWorkOrdersC4" aria-expanded="false" aria-controls="faqWorkOrdersC4">
+                How do I log parts and time?
+            </button>
+        </h2>
+        <div id="faqWorkOrdersC4" class="accordion-collapse collapse" aria-labelledby="faqWorkOrdersH4" data-bs-parent="#faqWorkOrders">
+            <div class="accordion-body">
+                On the work order detail page, use the parts dropdown to select a part and enter the quantity used &mdash; stock is automatically deducted from inventory. For time, enter the number of minutes spent and add a note. You can add multiple entries for both parts and time.
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Supervisors ────────────────────────────────────────────── #}
+<h6 class="text-muted text-uppercase small mt-4 mb-3">Supervisors</h6>
+<div class="accordion mb-4" id="faqSupervisors">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqSupervisorsH1">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqSupervisorsC1" aria-expanded="false" aria-controls="faqSupervisorsC1">
+                How do I triage requests?
+            </button>
+        </h2>
+        <div id="faqSupervisorsC1" class="accordion-collapse collapse" aria-labelledby="faqSupervisorsH1" data-bs-parent="#faqSupervisors">
+            <div class="accordion-body">
+                Your Dashboard shows a triage queue with new and unacknowledged requests. Review each request and either acknowledge it (to mark it as seen and under review) or convert it directly into a work order if the issue is clear.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqSupervisorsH2">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqSupervisorsC2" aria-expanded="false" aria-controls="faqSupervisorsC2">
+                How do I convert a request to a work order?
+            </button>
+        </h2>
+        <div id="faqSupervisorsC2" class="accordion-collapse collapse" aria-labelledby="faqSupervisorsH2" data-bs-parent="#faqSupervisors">
+            <div class="accordion-body">
+                Open the request detail page and click the <strong>Convert to Work Order</strong> button. This creates a new work order pre-populated with the request details. You can then assign it to a technician and add a checklist.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqSupervisorsH3">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqSupervisorsC3" aria-expanded="false" aria-controls="faqSupervisorsC3">
+                How do I assign work?
+            </button>
+        </h2>
+        <div id="faqSupervisorsC3" class="accordion-collapse collapse" aria-labelledby="faqSupervisorsH3" data-bs-parent="#faqSupervisors">
+            <div class="accordion-body">
+                Open the work order detail page and go to the Assignment section. Select a technician from the dropdown and save. The technician will see the work order in their "My Assigned Work Orders" on the Dashboard.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqSupervisorsH4">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqSupervisorsC4" aria-expanded="false" aria-controls="faqSupervisorsC4">
+                What is the reorder report?
+            </button>
+        </h2>
+        <div id="faqSupervisorsC4" class="accordion-collapse collapse" aria-labelledby="faqSupervisorsH4" data-bs-parent="#faqSupervisors">
+            <div class="accordion-body">
+                The reorder report shows all parts whose stock has fallen to or below their minimum level. Navigate to <strong>Parts &rarr; Reorder Report</strong> to view it. Items are grouped by supplier so you can place consolidated orders. The report is printable.
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Admin ──────────────────────────────────────────────────── #}
+<h6 class="text-muted text-uppercase small mt-4 mb-3">Admin</h6>
+<div class="accordion mb-4" id="faqAdmin">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqAdminH1">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqAdminC1" aria-expanded="false" aria-controls="faqAdminC1">
+                How do I add a new user?
+            </button>
+        </h2>
+        <div id="faqAdminC1" class="accordion-collapse collapse" aria-labelledby="faqAdminH1" data-bs-parent="#faqAdmin">
+            <div class="accordion-body">
+                Go to <strong>Admin &rarr; Users &rarr; New User</strong>. Fill in the user's name, email address, and set a temporary password. Assign them a role (Admin, Supervisor, Technician, or Reporter) and select which sites they should have access to.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqAdminH2">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqAdminC2" aria-expanded="false" aria-controls="faqAdminC2">
+                How do I enable anonymous reporting?
+            </button>
+        </h2>
+        <div id="faqAdminC2" class="accordion-collapse collapse" aria-labelledby="faqAdminH2" data-bs-parent="#faqAdmin">
+            <div class="accordion-body">
+                Go to <strong>Admin &rarr; Settings</strong> and toggle the anonymous reporting option. When enabled, anyone who scans a QR code can submit a maintenance request without needing an account.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqAdminH3">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqAdminC3" aria-expanded="false" aria-controls="faqAdminC3">
+                How do I print QR labels?
+            </button>
+        </h2>
+        <div id="faqAdminC3" class="accordion-collapse collapse" aria-labelledby="faqAdminH3" data-bs-parent="#faqAdmin">
+            <div class="accordion-body">
+                Go to the <strong>Property</strong> list page and click <strong>Print All QR Labels</strong>. Select the items you want labels for and click Print. You can also print a single label from any property detail page.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

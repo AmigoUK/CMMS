@@ -1,0 +1,179 @@
+{% extends "help/base_help.html" %}
+{% block title %}Work Orders — CMMS Help{% endblock %}
+
+{% block help_content %}
+<h4 class="mb-3"><i class="bi bi-clipboard-check me-2"></i>Work Orders</h4>
+<p class="text-muted mb-4">A work order is the controlled maintenance task. It tracks what needs to be done, who's doing it, what parts and time were used, and what was found.</p>
+
+{# ── Work Order Lifecycle ───────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-arrow-repeat me-2"></i>Work Order Lifecycle</h5>
+        <p class="text-muted small mb-3">Every work order moves through a series of statuses from creation to closure.</p>
+
+        {# Flow diagram using badges #}
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-4 justify-content-center">
+            <span class="badge bg-secondary fs-6">Open</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-info fs-6">Assigned</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-primary fs-6">In Progress</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-success fs-6">Completed</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-dark fs-6">Closed</span>
+        </div>
+        <div class="text-center mb-4">
+            <span class="text-muted small">Side branch from In Progress:</span>
+            <span class="badge bg-warning text-dark fs-6 ms-2">On Hold</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Status</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge bg-secondary">Open</span></td>
+                        <td>Work order has been created but not yet assigned to a technician.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-info">Assigned</span></td>
+                        <td>A technician has been assigned and the work is awaiting start.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-primary">In Progress</span></td>
+                        <td>The technician has started working on the task.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-warning text-dark">On Hold</span></td>
+                        <td>Work is paused, typically waiting for parts, information, or access.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-success">Completed</span></td>
+                        <td>The technician has finished the work and recorded their findings.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-dark">Closed</span></td>
+                        <td>A supervisor has reviewed and closed the work order. No further changes.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ── Executing a Work Order ─────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-tools me-2"></i>Executing a Work Order</h5>
+        <p class="text-muted small mb-3">Step-by-step guide for technicians carrying out maintenance work.</p>
+
+        <ol class="list-group list-group-numbered list-group-flush">
+            <li class="list-group-item">
+                <strong>Check your assignments</strong> &mdash; Go to the Dashboard and look at the "My Assigned Work Orders" section.
+            </li>
+            <li class="list-group-item">
+                <strong>Open the work order</strong> &mdash; Click on the work order to view its details, instructions, and any attached files.
+            </li>
+            <li class="list-group-item">
+                <strong>Start work</strong> &mdash; Click the <span class="badge bg-primary">Start Work</span> button to change the status to In Progress.
+            </li>
+            <li class="list-group-item">
+                <strong>Work through the checklist</strong> &mdash; Complete each task in the checklist and tick items off as you go.
+            </li>
+            <li class="list-group-item">
+                <strong>Record parts used</strong> &mdash; Select each part from the dropdown, enter the quantity consumed. Stock is automatically deducted.
+            </li>
+            <li class="list-group-item">
+                <strong>Log time spent</strong> &mdash; Enter the number of minutes worked and add any notes about what was done.
+            </li>
+            <li class="list-group-item">
+                <strong>Upload photos</strong> &mdash; Take photos of the completed work and upload them as evidence.
+            </li>
+            <li class="list-group-item">
+                <strong>Complete the work order</strong> &mdash; Click <span class="badge bg-success">Complete</span> and describe what you found and what you did.
+            </li>
+        </ol>
+    </div>
+</div>
+
+{# ── Work Order Types ───────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-tags me-2"></i>Work Order Types</h5>
+        <p class="text-muted small mb-3">Work orders are categorised by the type of maintenance being performed.</p>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Corrective</strong></td>
+                        <td>Reactive maintenance to fix something that has broken down or is malfunctioning.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Preventive</strong></td>
+                        <td>Scheduled maintenance to prevent breakdowns, such as servicing, lubrication, or filter changes.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Inspection</strong></td>
+                        <td>Routine checks and assessments to identify wear, damage, or potential issues before they cause failure.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Emergency</strong></td>
+                        <td>Urgent, unplanned work required immediately due to safety risks or critical equipment failure.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ── Checklists ─────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-check2-square me-2"></i>Checklists</h5>
+        <p class="text-muted small mb-3">Checklists are task lists attached to a work order that guide technicians through each step of the job.</p>
+        <ul class="mb-0">
+            <li>Each work order can have a checklist of individual tasks to complete.</li>
+            <li>Tick items off as you work through them &mdash; progress is saved automatically.</li>
+            <li>Supervisors can add checklist items when creating or editing a work order.</li>
+            <li>Checklists help ensure consistency and nothing is missed during maintenance.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Parts & Time ───────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-box-seam me-2"></i>Parts &amp; Time</h5>
+        <p class="text-muted small mb-3">Recording parts and time against a work order keeps accurate maintenance records and manages inventory.</p>
+
+        <h6>Parts Usage</h6>
+        <ul>
+            <li>Select a part from the dropdown on the work order detail page.</li>
+            <li>Enter the quantity used.</li>
+            <li>Stock levels are automatically deducted from inventory when parts are recorded.</li>
+            <li>If stock falls to or below the minimum level, a reorder alert is triggered.</li>
+        </ul>
+
+        <h6>Time Logging</h6>
+        <ul class="mb-0">
+            <li>Enter the number of minutes spent on the task.</li>
+            <li>Add a brief note describing what was done during that time.</li>
+            <li>Multiple time entries can be logged against a single work order.</li>
+            <li>Time logs help track labour costs and identify jobs that take longer than expected.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
