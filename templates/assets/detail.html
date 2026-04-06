@@ -27,7 +27,10 @@
         <small class="text-muted">Tag: {{ asset.asset_tag }}</small>
         {% endif %}
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 no-print">
+        <button onclick="window.print()" class="btn btn-outline-secondary" title="Print">
+            <i class="bi bi-printer me-1"></i>Print
+        </button>
         <a href="{{ url_for('assets.qr_label', id=asset.id) }}" class="btn btn-outline-secondary" title="Print QR Label">
             <i class="bi bi-qr-code me-1"></i>QR Label
         </a>
@@ -39,19 +42,11 @@
     </div>
 </div>
 
-{# QR Code card #}
-<div class="row mb-4">
-    <div class="col-md-3 col-6 mx-auto mx-md-0 mb-3 mb-md-0">
-        <div class="card text-center">
-            <div class="card-body py-3">
-                <img src="{{ url_for('assets.qr_code', id=asset.id) }}" alt="QR Code"
-                     class="img-fluid" style="max-width: 160px;">
-                <div class="mt-2">
-                    <small class="text-muted">Scan to report a problem</small>
-                </div>
-            </div>
-        </div>
-    </div>
+{# QR Code — floats right on print #}
+<div class="float-end ms-3 mb-3 text-center qr-print-block">
+    <img src="{{ url_for('assets.qr_code', id=asset.id) }}" alt="QR Code"
+         style="width: 120px; height: 120px;">
+    <div><small class="text-muted">Scan to report</small></div>
 </div>
 
 {# Image + info row #}

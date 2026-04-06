@@ -67,3 +67,34 @@
     border-radius: 0.375rem;
     cursor: pointer;
 }
+
+/* ── Print styles ─────────────────────────────────────────── */
+@media print {
+    /* Hide navigation, buttons, forms, footer */
+    nav, footer, .no-print,
+    .toast-container,
+    form:not(.print-keep),
+    .btn:not(.print-keep),
+    .offcanvas { display: none !important; }
+
+    /* Reset page */
+    body { font-size: 11pt; color: #000; background: #fff; }
+    main.container { padding: 0; max-width: 100%; }
+    .card { border: 1px solid #ccc; break-inside: avoid; }
+    .card-header { background: #f5f5f5 !important; color: #000 !important; }
+    a { color: #000; text-decoration: none; }
+    .badge { border: 1px solid #999; color: #000 !important;
+             background: #eee !important; }
+
+    /* QR block floats to top-right corner on print */
+    .qr-print-block { float: right; margin: 0 0 1rem 1rem; }
+    .qr-print-block img { width: 100px !important; height: 100px !important; }
+}
+
+/* Screen: QR print block */
+.qr-print-block {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    background: #fff;
+}

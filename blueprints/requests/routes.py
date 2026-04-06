@@ -1,7 +1,11 @@
 """Request blueprint — routes for maintenance requests."""
 
+import io
+import os
+
+import qrcode
 from flask import (
-    abort, flash, g, redirect, render_template, request, url_for,
+    abort, flash, g, make_response, redirect, render_template, request, url_for,
 )
 from flask_login import current_user, login_required
 
@@ -236,3 +240,24 @@ def upload_attachment(id):
     db.session.commit()
     flash("File uploaded.", "success")
     return redirect(url_for("requests.detail", id=req.id))
+
+
+# ── QR code ───────────────────────────────────────────────────────────
+
+@requests_bp.route("/<int:id>/qr")
+@login_required
+def qr_code(id):
+    """Generate QR code PNG linking to this request."""
+    req = _get_request_or_404(id)
+    site_url = os.environ.get("SITE_URL", request.host_url.rstrip("/"))
+    url = f"{site_url}/requests/{req.id}"
+
+    img = qrcode.make(url, box_size=8, border=2)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    response = make_response(buf.read())
+    response.headers["Content-Type"] = "image/png"
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
