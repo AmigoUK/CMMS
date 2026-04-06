@@ -5,7 +5,7 @@ from flask_login import current_user, login_required
 
 from blueprints.dashboard import dashboard_bp
 from extensions import db
-from models import Request, WorkOrder, Site
+from models import Asset, Request, WorkOrder, Site
 
 
 @dashboard_bp.route("/")
@@ -105,3 +105,35 @@ def switch_site(site_id):
 @login_required
 def help_page():
     return render_template("dashboard/help.html")
+
+
+@dashboard_bp.route("/report/<identifier>")
+def scan_report(identifier):
+    """QR code scan landing page. Finds the asset and redirects to the
+    request form with the asset pre-selected. Works with asset_tag or id."""
+    # Try asset_tag first, then id
+    asset = Asset.query.filter_by(asset_tag=identifier).first()
+    if not asset:
+        try:
+            asset = Asset.query.get(int(identifier))
+        except (ValueError, TypeError):
+            pass
+
+    if not asset:
+        flash("Property not found. Please report the problem manually.", "warning")
+        if current_user.is_authenticated:
+            return redirect(url_for("requests.new"))
+        return redirect(url_for("auth.login"))
+
+    # If not logged in, redirect to login with next= back here
+    if not current_user.is_authenticated:
+        return redirect(
+            url_for("auth.login", next=url_for("dashboard.scan_report", identifier=identifier))
+        )
+
+    # Switch to the asset's site if the user has access
+    if current_user.has_site_access(asset.site_id):
+        session["active_site_id"] = asset.site_id
+
+    # Redirect to request form with asset pre-selected
+    return redirect(url_for("requests.new", asset_id=asset.id))

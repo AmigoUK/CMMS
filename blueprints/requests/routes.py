@@ -78,11 +78,18 @@ def new():
         site_id=g.current_site.id, is_active=True,
     ).order_by(Asset.name).all()
 
+    # Pre-select asset if coming from QR scan
+    preselected_asset_id = request.args.get("asset_id", type=int)
+    preselected_asset = None
+    if preselected_asset_id:
+        preselected_asset = Asset.query.get(preselected_asset_id)
+
     return render_template(
         "requests/form.html",
         locations=locations,
         assets=assets,
         priorities=REQUEST_PRIORITIES,
+        preselected_asset=preselected_asset,
     )
 
 

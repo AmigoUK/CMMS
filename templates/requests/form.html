@@ -6,6 +6,19 @@
     <div class="col-lg-8 col-xl-6">
         <h1 class="h3 mb-4">Report a Problem</h1>
 
+        {% if preselected_asset %}
+        <div class="alert alert-info d-flex align-items-center mb-4">
+            <i class="bi bi-qr-code-scan fs-4 me-3"></i>
+            <div>
+                <strong>{{ preselected_asset.name }}</strong>
+                {% if preselected_asset.asset_tag %}<span class="text-muted ms-1">({{ preselected_asset.asset_tag }})</span>{% endif %}
+                {% if preselected_asset.location %}
+                <br><small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ preselected_asset.location.full_path }}</small>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
         <form method="POST"
               action="{{ url_for('requests.create') }}"
               enctype="multipart/form-data"
@@ -44,18 +57,24 @@
                 <select class="form-select" id="location_id" name="location_id">
                     <option value="">— Select location (optional) —</option>
                     {% for loc in locations %}
-                    <option value="{{ loc.id }}">{{ loc.full_path }}</option>
+                    <option value="{{ loc.id }}"
+                            {% if preselected_asset and preselected_asset.location_id == loc.id %}selected{% endif %}>
+                        {{ loc.full_path }}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
 
             {# Asset #}
             <div class="mb-3">
-                <label for="asset_id" class="form-label">Asset</label>
+                <label for="asset_id" class="form-label">Property</label>
                 <select class="form-select" id="asset_id" name="asset_id">
-                    <option value="">— Select asset (optional) —</option>
+                    <option value="">— Select property (optional) —</option>
                     {% for asset in assets %}
-                    <option value="{{ asset.id }}">{{ asset.name }}{% if asset.asset_tag %} ({{ asset.asset_tag }}){% endif %}</option>
+                    <option value="{{ asset.id }}"
+                            {% if preselected_asset and preselected_asset.id == asset.id %}selected{% endif %}>
+                        {{ asset.name }}{% if asset.asset_tag %} ({{ asset.asset_tag }}){% endif %}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
