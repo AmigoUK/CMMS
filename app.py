@@ -3,6 +3,7 @@ from datetime import date, datetime, timezone
 
 from flask import Flask, g, redirect, render_template, request, session, url_for
 from flask_login import current_user
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from extensions import csrf, db, login_manager
@@ -13,6 +14,9 @@ APP_VERSION = "0.1.0"
 def create_app(config_class=None):
     app = Flask(__name__)
     app.config.from_object(config_class or Config)
+
+    # Trust one level of proxy headers (Tailscale Serve / nginx)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
     # Initialise extensions
     db.init_app(app)
