@@ -4,8 +4,9 @@ from flask import g, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
 
 from blueprints.dashboard import dashboard_bp
-from extensions import db
-from models import Asset, Request, WorkOrder, Site
+from extensions import csrf, db
+from models import AppSettings, Asset, Request, WorkOrder, Site, Location, RequestActivity
+from models.request import REQUEST_PRIORITIES
 
 
 @dashboard_bp.route("/")
@@ -107,11 +108,11 @@ def help_page():
     return render_template("dashboard/help.html")
 
 
-@dashboard_bp.route("/report/<identifier>")
+@dashboard_bp.route("/report/<identifier>", methods=["GET", "POST"])
+@csrf.exempt
 def scan_report(identifier):
-    """QR code scan landing page. Finds the asset and redirects to the
-    request form with the asset pre-selected. Works with asset_tag or id."""
-    # Try asset_tag first, then id
+    """QR code scan landing page. Supports anonymous reporting if enabled."""
+    # Find the asset
     asset = Asset.query.filter_by(asset_tag=identifier).first()
     if not asset:
         try:
@@ -125,15 +126,95 @@ def scan_report(identifier):
             return redirect(url_for("requests.new"))
         return redirect(url_for("auth.login"))
 
-    # If not logged in, redirect to login with next= back here
-    if not current_user.is_authenticated:
+    # If logged in, redirect to the normal request form
+    if current_user.is_authenticated:
+        if current_user.has_site_access(asset.site_id):
+            session["active_site_id"] = asset.site_id
+        return redirect(url_for("requests.new", asset_id=asset.id))
+
+    # Check if anonymous requests are enabled
+    settings = AppSettings.get()
+    if not settings.allow_anonymous_requests:
         return redirect(
             url_for("auth.login", next=url_for("dashboard.scan_report", identifier=identifier))
         )
 
-    # Switch to the asset's site if the user has access
-    if current_user.has_site_access(asset.site_id):
-        session["active_site_id"] = asset.site_id
+    # Anonymous reporting enabled — show public form
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        description = request.form.get("description", "").strip()
+        priority = request.form.get("priority", "medium")
+        reporter_name = request.form.get("reporter_name", "").strip()
+        reporter_contact = request.form.get("reporter_contact", "").strip()
 
-    # Redirect to request form with asset pre-selected
-    return redirect(url_for("requests.new", asset_id=asset.id))
+        if not title or not description:
+            flash("Title and description are required.", "danger")
+            return render_template(
+                "requests/public_form.html",
+                asset=asset,
+                priorities=REQUEST_PRIORITIES,
+                settings=settings,
+            )
+
+        if settings.anonymous_require_name and not reporter_name:
+            flash("Your name is required.", "danger")
+            return render_template(
+                "requests/public_form.html",
+                asset=asset,
+                priorities=REQUEST_PRIORITIES,
+                settings=settings,
+            )
+
+        if settings.anonymous_require_email and not reporter_contact:
+            flash("Your email or phone is required.", "danger")
+            return render_template(
+                "requests/public_form.html",
+                asset=asset,
+                priorities=REQUEST_PRIORITIES,
+                settings=settings,
+            )
+
+        if priority not in REQUEST_PRIORITIES:
+            priority = "medium"
+
+        req = Request(
+            title=title,
+            description=description,
+            priority=priority,
+            site_id=asset.site_id,
+            asset_id=asset.id,
+            location_id=asset.location_id,
+            requester_id=None,
+            reporter_name=reporter_name,
+            reporter_contact=reporter_contact,
+            status="new",
+        )
+        db.session.add(req)
+        db.session.flush()
+
+        # Record activity
+        activity = RequestActivity(
+            request_id=req.id,
+            user_id=None,
+            activity_type="status_change",
+            new_status="new",
+            comment=f"Submitted anonymously by {reporter_name}" if reporter_name else "Submitted anonymously via QR scan",
+        )
+        db.session.add(activity)
+
+        # Handle file upload
+        from utils.uploads import allowed_file, save_attachment
+        file = request.files.get("file")
+        if file and file.filename and allowed_file(file.filename):
+            save_attachment(file, "request", req.id, None)
+
+        db.session.commit()
+        return render_template("requests/public_confirm.html", req=req, asset=asset)
+
+    # GET — show the public form
+    return render_template(
+        "requests/public_form.html",
+        asset=asset,
+        priorities=REQUEST_PRIORITIES,
+        settings=settings,
+    )

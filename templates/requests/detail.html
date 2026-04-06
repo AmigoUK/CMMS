@@ -1,6 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Request #{{ request_obj.id }} — CMMS{% endblock %}
 
+{% block extra_head %}
+<style>
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before { content: ''; position: absolute; left: 0.75rem; top: 0; bottom: 0; width: 2px; background: #dee2e6; }
+    .timeline-item { position: relative; margin-bottom: 1rem; }
+    .timeline-item .timeline-icon {
+        position: absolute; left: -2rem; width: 1.5rem; height: 1.5rem;
+        display: flex; align-items: center; justify-content: center;
+        background: #fff; font-size: 1rem; z-index: 1;
+    }
+    .timeline-item .timeline-body { padding-left: 0.5rem; }
+    .timeline-item .timeline-meta { font-size: 0.8rem; color: #6c757d; }
+    .comment-text { background: #f8f9fa; border-radius: 0.5rem; padding: 0.75rem; margin-top: 0.25rem; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <h1 class="h3 mb-0">
@@ -44,12 +60,23 @@
                 {{ request_obj.location.full_path if request_obj.location else '—' }}
             </div>
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Asset</small>
-                {{ request_obj.asset.name if request_obj.asset else '—' }}
+                <small class="text-muted d-block">Property</small>
+                {% if request_obj.asset %}
+                <a href="{{ url_for('assets.detail', id=request_obj.asset.id) }}">{{ request_obj.asset.name }}</a>
+                {% else %}—{% endif %}
             </div>
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Requester</small>
-                {{ request_obj.requester.display_name }}
+                <small class="text-muted d-block">Reported by</small>
+                {% if request_obj.requester %}
+                    {{ request_obj.requester.display_name }}
+                {% elif request_obj.reporter_name %}
+                    {{ request_obj.reporter_name }}
+                    {% if request_obj.reporter_contact %}
+                    <br><small class="text-muted">{{ request_obj.reporter_contact }}</small>
+                    {% endif %}
+                {% else %}
+                    Anonymous
+                {% endif %}
             </div>
             <div class="col-sm-6 col-md-3">
                 <small class="text-muted d-block">Submitted</small>
@@ -67,10 +94,63 @@
     </div>
 </div>
 
+{# ── Activity Timeline ── #}
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="bi bi-clock-history me-1"></i> Activity
+    </div>
+    <div class="card-body">
+        {% if activities %}
+        <div class="timeline">
+            {% for act in activities %}
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="{{ act.icon }}"></i>
+                </div>
+                <div class="timeline-body">
+                    {% if act.activity_type == 'comment' %}
+                    <div class="timeline-meta">
+                        <strong>{{ act.user.display_name if act.user else 'Anonymous' }}</strong>
+                        &middot; {{ act.created_at.strftime('%d %b %Y %H:%M') }}
+                    </div>
+                    <div class="comment-text">{{ act.comment }}</div>
+                    {% else %}
+                    <div>
+                        <span>{{ act.display_text }}</span>
+                        <span class="timeline-meta ms-2">{{ act.created_at.strftime('%d %b %Y %H:%M') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No activity recorded yet.</p>
+        {% endif %}
+
+        {# Comment form #}
+        {% if request_obj.status not in ('closed', 'cancelled') %}
+        <hr>
+        <form method="POST" action="{{ url_for('requests.add_comment', id=request_obj.id) }}"
+              class="d-flex gap-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="flex-grow-1">
+                <input type="text" class="form-control form-control-sm" name="comment"
+                       placeholder="Add a comment..." required>
+            </div>
+            <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">
+                <i class="bi bi-chat-dots"></i> Comment
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
 {# ── Attachments ── #}
 <div class="card mb-4">
     <div class="card-header">
         <i class="bi bi-paperclip"></i> Attachments
+        {% if attachments %}<span class="badge bg-secondary ms-1">{{ attachments|length }}</span>{% endif %}
     </div>
     <div class="card-body">
         {% if attachments %}
@@ -98,6 +178,7 @@
         {% endif %}
 
         {# Upload form #}
+        {% if request_obj.status not in ('closed', 'cancelled') %}
         <hr>
         <form method="POST"
               action="{{ url_for('requests.upload_attachment', id=request_obj.id) }}"
@@ -112,13 +193,13 @@
                 <i class="bi bi-upload"></i> Upload
             </button>
         </form>
+        {% endif %}
     </div>
 </div>
 
 {# ── Action buttons ── #}
-<div class="card">
+<div class="card no-print">
     <div class="card-body d-flex flex-wrap gap-2">
-        {# Supervisor actions #}
         {% if current_user.is_supervisor %}
             {% if request_obj.status == 'new' %}
             <form method="POST" action="{{ url_for('requests.acknowledge', id=request_obj.id) }}">
@@ -148,7 +229,6 @@
             </form>
             {% endif %}
         {% else %}
-            {# Regular user: cancel own request #}
             {% if request_obj.requester_id == current_user.id and request_obj.status in ('new', 'acknowledged') %}
             <form method="POST" action="{{ url_for('requests.cancel', id=request_obj.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
