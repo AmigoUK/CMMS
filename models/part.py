@@ -3,6 +3,15 @@ from datetime import datetime, timezone
 from extensions import db
 
 
+# Many-to-many: parts <-> assets (compatibility)
+part_assets = db.Table(
+    "part_assets",
+    db.Column("part_id", db.Integer, db.ForeignKey("parts.id"), primary_key=True),
+    db.Column("asset_id", db.Integer, db.ForeignKey("assets.id"), primary_key=True),
+    db.Column("notes", db.String(300), default=""),
+)
+
+
 class Part(db.Model):
     __tablename__ = "parts"
 
@@ -20,6 +29,11 @@ class Part(db.Model):
     unit_cost = db.Column(db.Float, default=0.0)
     quantity_on_hand = db.Column(db.Integer, default=0)
     minimum_stock = db.Column(db.Integer, default=0)
+    maximum_stock = db.Column(db.Integer, default=0)
+    image = db.Column(db.String(300), default="")
+    supplier = db.Column(db.String(200), default="")
+    supplier_part_number = db.Column(db.String(100), default="")
+    supplier_email = db.Column(db.String(200), default="")
     storage_location = db.Column(db.String(200), default="")
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(
@@ -33,10 +47,44 @@ class Part(db.Model):
 
     # Relationships
     site = db.relationship("Site", backref="parts")
+    compatible_assets = db.relationship(
+        "Asset",
+        secondary=part_assets,
+        backref=db.backref("compatible_parts", lazy="select"),
+        lazy="select",
+    )
 
     @property
     def is_low_stock(self):
         return self.minimum_stock > 0 and self.quantity_on_hand <= self.minimum_stock
+
+    @property
+    def needs_reorder(self):
+        """True if stock is at or below minimum and max is set."""
+        if self.minimum_stock <= 0:
+            return False
+        return self.quantity_on_hand <= self.minimum_stock
+
+    @property
+    def reorder_quantity(self):
+        """How many to order to reach maximum stock."""
+        if self.maximum_stock > 0:
+            return max(0, self.maximum_stock - self.quantity_on_hand)
+        if self.minimum_stock > 0:
+            return max(0, self.minimum_stock * 2 - self.quantity_on_hand)
+        return 0
+
+    @property
+    def reorder_cost(self):
+        return round(self.reorder_quantity * self.unit_cost, 2)
+
+    @property
+    def stock_level_percent(self):
+        """Stock level as percentage of maximum (for progress bars)."""
+        target = self.maximum_stock or self.minimum_stock * 2
+        if target <= 0:
+            return 100
+        return min(100, round(self.quantity_on_hand / target * 100))
 
     def __repr__(self):
         return f"<Part {self.name}>"

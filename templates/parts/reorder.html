@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Reorder Report — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h1 class="h3 mb-0"><i class="bi bi-cart me-2"></i>Reorder Report</h1>
+        <small class="text-muted">
+            {{ current_site.name }} — Generated {{ now().strftime('%d %b %Y %H:%M') if now else '' }}
+        </small>
+    </div>
+    <div class="d-flex gap-2 no-print">
+        <button onclick="window.print()" class="btn btn-outline-secondary">
+            <i class="bi bi-printer me-1"></i>Print
+        </button>
+        <a href="{{ url_for('parts.list_parts') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Parts
+        </a>
+    </div>
+</div>
+
+{% if parts %}
+<div class="card mb-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Part Name</th>
+                        <th>Part #</th>
+                        <th>Supplier</th>
+                        <th>Supplier Part #</th>
+                        <th class="text-center">On Hand</th>
+                        <th class="text-center">Min</th>
+                        <th class="text-center">Max</th>
+                        <th class="text-center">Order Qty</th>
+                        <th>Unit</th>
+                        <th class="text-end">Unit Cost</th>
+                        <th class="text-end">Line Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for part in parts %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('parts.detail', id=part.id) }}" class="no-print-link">
+                                {{ part.name }}
+                            </a>
+                            <span class="print-only">{{ part.name }}</span>
+                        </td>
+                        <td>{{ part.part_number or '—' }}</td>
+                        <td>
+                            {{ part.supplier or '—' }}
+                            {% if part.supplier_email %}
+                            <br><small class="text-muted">{{ part.supplier_email }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ part.supplier_part_number or '—' }}</td>
+                        <td class="text-center text-danger fw-bold">{{ part.quantity_on_hand }}</td>
+                        <td class="text-center">{{ part.minimum_stock }}</td>
+                        <td class="text-center">{{ part.maximum_stock or '—' }}</td>
+                        <td class="text-center fw-bold fs-5">{{ part.reorder_quantity }}</td>
+                        <td>{{ part.unit }}</td>
+                        <td class="text-end">&pound;{{ '%.2f' | format(part.unit_cost) }}</td>
+                        <td class="text-end fw-bold">&pound;{{ '%.2f' | format(part.reorder_cost) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <td colspan="10" class="text-end fw-bold">Estimated Total:</td>
+                        <td class="text-end fw-bold fs-5">&pound;{{ '%.2f' | format(total_cost) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# Grouped by supplier for easy ordering #}
+<h5 class="mt-4 mb-3"><i class="bi bi-people me-2"></i>Grouped by Supplier</h5>
+{% set suppliers = parts | groupby('supplier') %}
+{% for supplier_name, supplier_parts in suppliers %}
+<div class="card mb-3">
+    <div class="card-header">
+        <strong>{{ supplier_name or 'No supplier specified' }}</strong>
+        {% set sp_list = supplier_parts | list %}
+        {% if sp_list[0].supplier_email %}
+        <a href="mailto:{{ sp_list[0].supplier_email }}" class="ms-2 no-print">
+            <i class="bi bi-envelope"></i> {{ sp_list[0].supplier_email }}
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Part</th>
+                    <th>Supplier Part #</th>
+                    <th class="text-center">Order Qty</th>
+                    <th>Unit</th>
+                    <th class="text-end">Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in sp_list %}
+                <tr>
+                    <td>{{ p.name }} {% if p.part_number %}<small class="text-muted">({{ p.part_number }})</small>{% endif %}</td>
+                    <td>{{ p.supplier_part_number or '—' }}</td>
+                    <td class="text-center fw-bold">{{ p.reorder_quantity }}</td>
+                    <td>{{ p.unit }}</td>
+                    <td class="text-end">&pound;{{ '%.2f' | format(p.reorder_cost) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                    <td class="text-end"><strong>&pound;{{ '%.2f' | format(sp_list | sum(attribute='reorder_cost')) }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endfor %}
+
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-check-circle display-4 text-success"></i>
+    <h5 class="mt-3">All stock levels are healthy</h5>
+    <p>No parts need reordering at this time.</p>
+</div>
+{% endif %}
+{% endblock %}

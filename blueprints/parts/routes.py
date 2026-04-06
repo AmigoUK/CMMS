@@ -1,28 +1,46 @@
 """Parts blueprint — routes for parts inventory management."""
 
+import io
+import os
+
+import qrcode
 from flask import (
-    abort, flash, g, redirect, render_template, request, url_for,
+    abort, current_app, flash, g, make_response,
+    redirect, render_template, request, url_for,
 )
 from flask_login import current_user, login_required
 
 from blueprints.parts import parts_bp
-from decorators import supervisor_required
+from decorators import supervisor_required, technician_required
 from extensions import db
-from models import Part
+from models import Asset, Part, PartUsage, part_assets
+from utils.uploads import is_allowed_image, generate_stored_filename
 
 
 # ── helpers ────────────────────────────────────────────────────────────
 
 def _get_part_or_404(part_id):
     """Load a part in the current site (or shared) or 404."""
-    part = Part.query.filter(
+    return Part.query.filter(
         Part.id == part_id,
         db.or_(
             Part.site_id == g.current_site.id,
             Part.site_id.is_(None),
         ),
     ).first_or_404()
-    return part
+
+
+def _save_part_image(part, file):
+    """Save uploaded image for a part, replacing old one."""
+    if part.image:
+        old = os.path.join(current_app.config["UPLOAD_FOLDER"], "parts", part.image)
+        if os.path.exists(old):
+            os.remove(old)
+    stored = generate_stored_filename(file.filename)
+    upload_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "parts")
+    os.makedirs(upload_dir, exist_ok=True)
+    file.save(os.path.join(upload_dir, stored))
+    part.image = stored
 
 
 # ── list ───────────────────────────────────────────────────────────────
@@ -31,6 +49,7 @@ def _get_part_or_404(part_id):
 @supervisor_required
 def list_parts():
     q = request.args.get("q", "").strip()
+    show = request.args.get("show", "")
     page = request.args.get("page", 1, type=int)
 
     query = Part.query.filter(
@@ -47,18 +66,62 @@ def list_parts():
             db.or_(
                 Part.name.ilike(like),
                 Part.part_number.ilike(like),
+                Part.supplier.ilike(like),
             )
+        )
+
+    if show == "reorder":
+        query = query.filter(
+            Part.minimum_stock > 0,
+            Part.quantity_on_hand <= Part.minimum_stock,
         )
 
     pagination = query.order_by(Part.name).paginate(
         page=page, per_page=25, error_out=False,
     )
 
+    # Count items needing reorder for badge
+    reorder_count = Part.query.filter(
+        db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
+        Part.is_active == True,  # noqa: E712
+        Part.minimum_stock > 0,
+        Part.quantity_on_hand <= Part.minimum_stock,
+    ).count()
+
     return render_template(
         "parts/index.html",
         parts=pagination.items,
         pagination=pagination,
         search_query=q,
+        show_filter=show,
+        reorder_count=reorder_count,
+    )
+
+
+# ── detail ─────────────────────────────────────────────────────────────
+
+@parts_bp.route("/<int:id>")
+@supervisor_required
+def detail(id):
+    part = _get_part_or_404(id)
+    recent_usage = (
+        PartUsage.query.filter_by(part_id=part.id)
+        .order_by(PartUsage.created_at.desc())
+        .limit(20)
+        .all()
+    )
+    # Available assets for adding compatibility
+    site_assets = Asset.query.filter_by(
+        site_id=g.current_site.id, is_active=True,
+    ).order_by(Asset.name).all()
+    already_linked_ids = {a.id for a in part.compatible_assets}
+
+    return render_template(
+        "parts/detail.html",
+        part=part,
+        recent_usage=recent_usage,
+        site_assets=site_assets,
+        already_linked_ids=already_linked_ids,
     )
 
 
@@ -67,7 +130,10 @@ def list_parts():
 @parts_bp.route("/new", methods=["GET"])
 @supervisor_required
 def new():
-    return render_template("parts/form.html", part=None)
+    site_assets = Asset.query.filter_by(
+        site_id=g.current_site.id, is_active=True,
+    ).order_by(Asset.name).all()
+    return render_template("parts/form.html", part=None, site_assets=site_assets)
 
 
 @parts_bp.route("/new", methods=["POST"])
@@ -85,29 +151,50 @@ def create():
         category=request.form.get("category", "").strip(),
         unit=request.form.get("unit", "each").strip(),
         storage_location=request.form.get("storage_location", "").strip(),
+        supplier=request.form.get("supplier", "").strip(),
+        supplier_part_number=request.form.get("supplier_part_number", "").strip(),
+        supplier_email=request.form.get("supplier_email", "").strip(),
         site_id=g.current_site.id,
     )
 
-    # Parse numeric fields
     try:
         part.unit_cost = float(request.form.get("unit_cost", 0))
     except (ValueError, TypeError):
         part.unit_cost = 0.0
-
     try:
         part.quantity_on_hand = int(request.form.get("quantity_on_hand", 0))
     except (ValueError, TypeError):
         part.quantity_on_hand = 0
-
     try:
         part.minimum_stock = int(request.form.get("minimum_stock", 0))
     except (ValueError, TypeError):
         part.minimum_stock = 0
+    try:
+        part.maximum_stock = int(request.form.get("maximum_stock", 0))
+    except (ValueError, TypeError):
+        part.maximum_stock = 0
+
+    # Image
+    image = request.files.get("image")
+    if image and image.filename and is_allowed_image(image):
+        _save_part_image(part, image)
 
     db.session.add(part)
+    db.session.flush()
+
+    # Compatible assets
+    asset_ids = request.form.getlist("compatible_assets")
+    for aid in asset_ids:
+        try:
+            asset = Asset.query.get(int(aid))
+            if asset:
+                part.compatible_assets.append(asset)
+        except (ValueError, TypeError):
+            pass
+
     db.session.commit()
     flash("Part created successfully.", "success")
-    return redirect(url_for("parts.list_parts"))
+    return redirect(url_for("parts.detail", id=part.id))
 
 
 # ── edit ──────────────────────────────────────────────────────────────
@@ -116,7 +203,10 @@ def create():
 @supervisor_required
 def edit(id):
     part = _get_part_or_404(id)
-    return render_template("parts/form.html", part=part)
+    site_assets = Asset.query.filter_by(
+        site_id=g.current_site.id, is_active=True,
+    ).order_by(Asset.name).all()
+    return render_template("parts/form.html", part=part, site_assets=site_assets)
 
 
 @parts_bp.route("/<int:id>/edit", methods=["POST"])
@@ -135,22 +225,118 @@ def update(id):
     part.category = request.form.get("category", "").strip()
     part.unit = request.form.get("unit", "each").strip()
     part.storage_location = request.form.get("storage_location", "").strip()
+    part.supplier = request.form.get("supplier", "").strip()
+    part.supplier_part_number = request.form.get("supplier_part_number", "").strip()
+    part.supplier_email = request.form.get("supplier_email", "").strip()
 
     try:
         part.unit_cost = float(request.form.get("unit_cost", 0))
     except (ValueError, TypeError):
-        part.unit_cost = 0.0
-
+        pass
     try:
         part.quantity_on_hand = int(request.form.get("quantity_on_hand", 0))
     except (ValueError, TypeError):
-        part.quantity_on_hand = 0
-
+        pass
     try:
         part.minimum_stock = int(request.form.get("minimum_stock", 0))
     except (ValueError, TypeError):
-        part.minimum_stock = 0
+        pass
+    try:
+        part.maximum_stock = int(request.form.get("maximum_stock", 0))
+    except (ValueError, TypeError):
+        pass
+
+    # Image
+    image = request.files.get("image")
+    if image and image.filename and is_allowed_image(image):
+        _save_part_image(part, image)
+    if request.form.get("remove_image") == "1" and part.image:
+        old = os.path.join(current_app.config["UPLOAD_FOLDER"], "parts", part.image)
+        if os.path.exists(old):
+            os.remove(old)
+        part.image = ""
+
+    # Compatible assets — replace entire list
+    asset_ids = request.form.getlist("compatible_assets")
+    part.compatible_assets.clear()
+    for aid in asset_ids:
+        try:
+            asset = Asset.query.get(int(aid))
+            if asset:
+                part.compatible_assets.append(asset)
+        except (ValueError, TypeError):
+            pass
 
     db.session.commit()
     flash("Part updated successfully.", "success")
-    return redirect(url_for("parts.list_parts"))
+    return redirect(url_for("parts.detail", id=part.id))
+
+
+# ── add/remove compatibility from detail page ─────────────────────────
+
+@parts_bp.route("/<int:id>/compatibility", methods=["POST"])
+@supervisor_required
+def add_compatibility(id):
+    part = _get_part_or_404(id)
+    asset_id = request.form.get("asset_id", type=int)
+    if asset_id:
+        asset = Asset.query.get(asset_id)
+        if asset and asset not in part.compatible_assets:
+            part.compatible_assets.append(asset)
+            db.session.commit()
+            flash(f"Linked {asset.name} to {part.name}.", "success")
+    return redirect(url_for("parts.detail", id=part.id))
+
+
+@parts_bp.route("/<int:id>/compatibility/<int:asset_id>/remove", methods=["POST"])
+@supervisor_required
+def remove_compatibility(id, asset_id):
+    part = _get_part_or_404(id)
+    asset = Asset.query.get_or_404(asset_id)
+    if asset in part.compatible_assets:
+        part.compatible_assets.remove(asset)
+        db.session.commit()
+        flash(f"Removed {asset.name} from {part.name}.", "info")
+    return redirect(url_for("parts.detail", id=part.id))
+
+
+# ── reorder report ────────────────────────────────────────────────────
+
+@parts_bp.route("/reorder")
+@supervisor_required
+def reorder_report():
+    """Printable reorder report — parts at or below minimum stock."""
+    parts = Part.query.filter(
+        db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
+        Part.is_active == True,  # noqa: E712
+        Part.minimum_stock > 0,
+        Part.quantity_on_hand <= Part.minimum_stock,
+    ).order_by(Part.supplier, Part.name).all()
+
+    total_cost = sum(p.reorder_cost for p in parts)
+
+    return render_template(
+        "parts/reorder.html",
+        parts=parts,
+        total_cost=total_cost,
+    )
+
+
+# ── QR code ───────────────────────────────────────────────────────────
+
+@parts_bp.route("/<int:id>/qr")
+@supervisor_required
+def qr_code(id):
+    part = _get_part_or_404(id)
+    site_url = os.environ.get("SITE_URL", request.host_url.rstrip("/"))
+    url = f"{site_url}/parts/{part.id}"
+
+    img = qrcode.make(url, box_size=8, border=2)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    response = make_response(buf.read())
+    response.headers["Content-Type"] = "image/png"
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return response

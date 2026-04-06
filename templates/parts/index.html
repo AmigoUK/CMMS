@@ -1,77 +1,125 @@
 {% extends "base.html" %}
-
 {% block title %}Parts Inventory — CMMS{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <h1 class="h3 mb-0"><i class="bi bi-box-seam me-2"></i>Parts Inventory</h1>
-    <a href="{{ url_for('parts.new') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>New Part
-    </a>
+    <div class="d-flex gap-2">
+        {% if reorder_count > 0 %}
+        <a href="{{ url_for('parts.reorder_report') }}" class="btn btn-warning">
+            <i class="bi bi-cart me-1"></i>Reorder Report
+            <span class="badge bg-danger ms-1">{{ reorder_count }}</span>
+        </a>
+        {% endif %}
+        <a href="{{ url_for('parts.new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>New Part
+        </a>
+    </div>
 </div>
 
 {# Search bar #}
 <form method="GET" action="{{ url_for('parts.list_parts') }}" class="mb-3">
     <div class="input-group">
-        <input type="text" name="q" class="form-control" placeholder="Search by name or part number..."
+        <input type="text" name="q" class="form-control"
+               placeholder="Search by name, part number, or supplier..."
                value="{{ search_query }}">
         <button type="submit" class="btn btn-outline-secondary">
             <i class="bi bi-search"></i>
         </button>
         {% if search_query %}
-        <a href="{{ url_for('parts.list_parts') }}" class="btn btn-outline-secondary">
+        <a href="{{ url_for('parts.list_parts', show=show_filter) }}" class="btn btn-outline-secondary">
             <i class="bi bi-x-lg"></i>
         </a>
         {% endif %}
     </div>
 </form>
 
-{# Parts table #}
+{# Filter tabs #}
+<div class="mb-3">
+    <a href="{{ url_for('parts.list_parts', q=search_query) }}"
+       class="btn btn-sm {% if not show_filter %}btn-dark{% else %}btn-outline-dark{% endif %} me-1">
+        All
+    </a>
+    <a href="{{ url_for('parts.list_parts', show='reorder', q=search_query) }}"
+       class="btn btn-sm {% if show_filter == 'reorder' %}btn-danger{% else %}btn-outline-danger{% endif %} me-1">
+        <i class="bi bi-exclamation-triangle me-1"></i>Needs Reorder
+        {% if reorder_count > 0 %}
+        <span class="badge bg-danger">{{ reorder_count }}</span>
+        {% endif %}
+    </a>
+</div>
+
 {% if parts %}
 <div class="table-responsive">
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
+                <th style="width: 44px;"></th>
                 <th>Name</th>
                 <th>Part #</th>
                 <th>Category</th>
-                <th>Stock</th>
+                <th>Stock Level</th>
                 <th>Unit Cost</th>
-                <th>Location</th>
+                <th>Supplier</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for part in parts %}
             <tr class="{% if part.is_low_stock %}row-low-stock{% endif %}">
-                <td class="fw-semibold">{{ part.name }}</td>
+                <td>
+                    {% if part.image %}
+                    <img src="{{ url_for('uploaded_file', filename='parts/' + part.image) }}"
+                         alt="" class="rounded" style="width: 36px; height: 36px; object-fit: cover;">
+                    {% else %}
+                    <span class="d-inline-flex align-items-center justify-content-center bg-light rounded"
+                          style="width: 36px; height: 36px;">
+                        <i class="bi bi-box text-muted small"></i>
+                    </span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('parts.detail', id=part.id) }}" class="text-decoration-none fw-semibold">
+                        {{ part.name }}
+                    </a>
+                    {% if part.compatible_assets %}
+                    <br><small class="text-muted">
+                        <i class="bi bi-link-45deg"></i> {{ part.compatible_assets|length }} property
+                    </small>
+                    {% endif %}
+                </td>
                 <td>{{ part.part_number or '—' }}</td>
                 <td>{{ part.category or '—' }}</td>
                 <td>
                     {% if part.is_low_stock %}
-                    <span class="text-danger fw-bold" title="Low stock">
-                        <i class="bi bi-exclamation-triangle me-1"></i>
-                        {{ part.quantity_on_hand }} / {{ part.minimum_stock }}
+                    <span class="text-danger fw-bold" title="Low stock — reorder needed">
+                        <i class="bi bi-exclamation-triangle me-1"></i>{{ part.quantity_on_hand }}
                     </span>
                     {% else %}
                     {{ part.quantity_on_hand }}
-                    {% if part.minimum_stock > 0 %}
-                    <small class="text-muted">/ {{ part.minimum_stock }}</small>
                     {% endif %}
-                    {% endif %}
+                    <small class="text-muted">
+                        / {{ part.minimum_stock }}
+                        {% if part.maximum_stock %}&ndash;{{ part.maximum_stock }}{% endif %}
+                    </small>
+                    {# Mini progress bar #}
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar {% if part.is_low_stock %}bg-danger{% elif part.stock_level_percent < 50 %}bg-warning{% else %}bg-success{% endif %}"
+                             style="width: {{ part.stock_level_percent }}%;"></div>
+                    </div>
                 </td>
                 <td>
                     {% if part.unit_cost %}
                     &pound;{{ '%.2f' | format(part.unit_cost) }}
                     <small class="text-muted">/ {{ part.unit }}</small>
-                    {% else %}
-                    —
-                    {% endif %}
+                    {% else %}—{% endif %}
                 </td>
-                <td>{{ part.storage_location or '—' }}</td>
+                <td>{{ part.supplier or '—' }}</td>
                 <td>
-                    <a href="{{ url_for('parts.edit', id=part.id) }}" class="btn btn-sm btn-outline-secondary"
-                       title="Edit">
+                    <a href="{{ url_for('parts.detail', id=part.id) }}" class="btn btn-sm btn-outline-primary" title="View">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ url_for('parts.edit', id=part.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
                         <i class="bi bi-pencil"></i>
                     </a>
                 </td>
@@ -86,10 +134,7 @@
 {% else %}
 <div class="text-center text-muted py-5">
     <i class="bi bi-box-seam display-4"></i>
-    <p class="mt-2">No parts found.</p>
-    <a href="{{ url_for('parts.new') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>Add First Part
-    </a>
+    <p class="mt-2">{% if show_filter == 'reorder' %}No parts need reordering.{% else %}No parts found.{% endif %}</p>
 </div>
 {% endif %}
 {% endblock %}

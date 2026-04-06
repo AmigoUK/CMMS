@@ -160,6 +160,56 @@
 </div>
 {% endif %}
 
+{# Compatible Parts #}
+{% if asset.compatible_parts %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-box-seam me-2"></i>Compatible Parts</h6>
+        <span class="badge bg-secondary">{{ asset.compatible_parts | length }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 40px;"></th>
+                        <th>Part</th>
+                        <th>Part #</th>
+                        <th>Stock</th>
+                        <th class="text-end">Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for part in asset.compatible_parts %}
+                    <tr class="{% if part.is_low_stock %}row-low-stock{% endif %}">
+                        <td>
+                            {% if part.image %}
+                            <img src="{{ url_for('uploaded_file', filename='parts/' + part.image) }}"
+                                 class="rounded" style="width: 32px; height: 32px; object-fit: cover;">
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('parts.detail', id=part.id) }}">{{ part.name }}</a>
+                        </td>
+                        <td>{{ part.part_number or '—' }}</td>
+                        <td>
+                            {% if part.is_low_stock %}
+                            <span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle me-1"></i>{{ part.quantity_on_hand }}</span>
+                            {% else %}
+                            {{ part.quantity_on_hand }}
+                            {% endif %}
+                            <small class="text-muted">{{ part.unit }}</small>
+                        </td>
+                        <td class="text-end">&pound;{{ '%.2f' | format(part.unit_cost) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {# Work Order History #}
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">

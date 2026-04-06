@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block title %}{{ part.name }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <a href="{{ url_for('parts.list_parts') }}" class="text-decoration-none small">
+            <i class="bi bi-arrow-left me-1"></i>Back to Parts
+        </a>
+        <h1 class="h3 mt-2 mb-0">
+            <i class="bi bi-box-seam me-2"></i>{{ part.name }}
+            {% if part.is_low_stock %}
+            <span class="badge bg-danger ms-2">Low Stock</span>
+            {% endif %}
+        </h1>
+        {% if part.part_number %}
+        <small class="text-muted">Part #: {{ part.part_number }}</small>
+        {% endif %}
+    </div>
+    <div class="d-flex gap-2 no-print">
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer"></i> Print
+        </button>
+        <a href="{{ url_for('parts.edit', id=part.id) }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+    </div>
+</div>
+
+{# QR for print #}
+<div class="float-end ms-3 mb-3 text-center qr-print-block">
+    <img src="{{ url_for('parts.qr_code', id=part.id) }}" alt="QR Code"
+         style="width: 120px; height: 120px;">
+    <div><small class="text-muted">Scan to open</small></div>
+</div>
+
+{# Image + Info #}
+<div class="row mb-4">
+    {% if part.image %}
+    <div class="col-md-3 mb-3 mb-md-0">
+        <img src="{{ url_for('uploaded_file', filename='parts/' + part.image) }}"
+             alt="{{ part.name }}" class="img-fluid rounded shadow-sm"
+             style="max-height: 220px; object-fit: contain; background: #f8f9fa; padding: 0.5rem; width: 100%;">
+    </div>
+    <div class="col-md-4">
+    {% else %}
+    <div class="col-md-6">
+    {% endif %}
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0">Part Details</h6></div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-0">
+                    <tr><th class="text-muted" style="width:40%;">Category</th><td>{{ part.category or '—' }}</td></tr>
+                    <tr><th class="text-muted">Unit</th><td>{{ part.unit | title }}</td></tr>
+                    <tr><th class="text-muted">Unit Cost</th><td>&pound;{{ '%.2f' | format(part.unit_cost) }}</td></tr>
+                    <tr><th class="text-muted">Storage</th><td>{{ part.storage_location or '—' }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% if part.image %}
+    <div class="col-md-5">
+    {% else %}
+    <div class="col-md-6">
+    {% endif %}
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0">Stock &amp; Supplier</h6></div>
+            <div class="card-body">
+                {# Stock gauge #}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>
+                            <strong class="fs-4">{{ part.quantity_on_hand }}</strong>
+                            <small class="text-muted">on hand</small>
+                        </span>
+                        <span class="text-muted small">
+                            Min: {{ part.minimum_stock }}
+                            {% if part.maximum_stock %} | Max: {{ part.maximum_stock }}{% endif %}
+                        </span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar {% if part.is_low_stock %}bg-danger{% elif part.stock_level_percent < 50 %}bg-warning{% else %}bg-success{% endif %}"
+                             style="width: {{ part.stock_level_percent }}%;"></div>
+                    </div>
+                    {% if part.needs_reorder %}
+                    <div class="alert alert-danger mt-2 py-2 mb-0">
+                        <i class="bi bi-cart me-1"></i>
+                        <strong>Reorder {{ part.reorder_quantity }} {{ part.unit }}(s)</strong>
+                        to reach {% if part.maximum_stock %}maximum ({{ part.maximum_stock }}){% else %}safe level{% endif %}
+                        — est. cost <strong>&pound;{{ '%.2f' | format(part.reorder_cost) }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+                <table class="table table-borderless table-sm mb-0">
+                    <tr><th class="text-muted" style="width:40%;">Supplier</th><td>{{ part.supplier or '—' }}</td></tr>
+                    <tr><th class="text-muted">Supplier Part #</th><td>{{ part.supplier_part_number or '—' }}</td></tr>
+                    <tr><th class="text-muted">Supplier Email</th>
+                        <td>{% if part.supplier_email %}<a href="mailto:{{ part.supplier_email }}">{{ part.supplier_email }}</a>{% else %}—{% endif %}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if part.description %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h6>Description</h6>
+        <p class="mb-0">{{ part.description }}</p>
+    </div>
+</div>
+{% endif %}
+
+{# Compatible Property #}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Compatible Property</h6>
+        <span class="badge bg-secondary">{{ part.compatible_assets | length }}</span>
+    </div>
+    <div class="card-body">
+        {% if part.compatible_assets %}
+        <div class="list-group list-group-flush mb-3">
+            {% for asset in part.compatible_assets %}
+            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <div>
+                    {% if asset.image %}
+                    <img src="{{ url_for('uploaded_file', filename='property/' + asset.image) }}"
+                         class="rounded me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                    {% endif %}
+                    <a href="{{ url_for('assets.detail', id=asset.id) }}">{{ asset.name }}</a>
+                    {% if asset.asset_tag %}<small class="text-muted ms-1">({{ asset.asset_tag }})</small>{% endif %}
+                    {% if asset.category %}<span class="badge bg-light text-dark ms-1">{{ asset.category }}</span>{% endif %}
+                </div>
+                <form method="POST" action="{{ url_for('parts.remove_compatibility', id=part.id, asset_id=asset.id) }}"
+                      class="no-print">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove"
+                            onclick="return confirm('Remove this link?')">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-3">No property linked yet.</p>
+        {% endif %}
+
+        {# Add compatibility form #}
+        {% set available = site_assets | rejectattr('id', 'in', already_linked_ids) | list %}
+        {% if available %}
+        <form method="POST" action="{{ url_for('parts.add_compatibility', id=part.id) }}"
+              class="d-flex gap-2 no-print">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <select class="form-select form-select-sm" name="asset_id" required>
+                <option value="">— Add property —</option>
+                {% for asset in available %}
+                <option value="{{ asset.id }}">
+                    {{ asset.name }}{% if asset.asset_tag %} ({{ asset.asset_tag }}){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">
+                <i class="bi bi-plus"></i> Link
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{# Usage History #}
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Usage</h6>
+    </div>
+    <div class="card-body">
+        {% if recent_usage %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Work Order</th>
+                        <th class="text-center">Qty</th>
+                        <th>Used By</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pu in recent_usage %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('workorders.detail', id=pu.work_order_id) }}">
+                                {{ pu.work_order.wo_number }}
+                            </a>
+                        </td>
+                        <td class="text-center">{{ pu.quantity_used }}</td>
+                        <td>{{ pu.used_by.display_name if pu.used_by else '—' }}</td>
+                        <td>{{ pu.created_at.strftime('%d %b %Y') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No usage recorded.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
