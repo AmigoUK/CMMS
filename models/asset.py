@@ -4,6 +4,7 @@ from extensions import db
 
 ASSET_STATUSES = ["operational", "needs_repair", "out_of_service", "decommissioned"]
 ASSET_CRITICALITIES = ["low", "medium", "high", "critical"]
+ASSET_CATEGORIES = ["Machine", "Tool", "Vehicle", "Building"]
 
 
 class Asset(db.Model):
@@ -29,6 +30,7 @@ class Asset(db.Model):
     criticality = db.Column(db.String(20), default="medium")
     install_date = db.Column(db.Date, nullable=True)
     warranty_expiry = db.Column(db.Date, nullable=True)
+    image = db.Column(db.String(300), default="")
     notes = db.Column(db.Text, default="")
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(
