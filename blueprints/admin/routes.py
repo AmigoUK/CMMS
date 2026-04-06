@@ -10,7 +10,7 @@ from flask_login import current_user, login_required
 from blueprints.admin import admin_bp
 from decorators import admin_required
 from extensions import db
-from models import Site, Team, User, ROLES
+from models import AppSettings, Site, Team, User, ROLES
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -362,3 +362,26 @@ def update_site(id):
     db.session.commit()
     flash(f"Site '{name}' updated successfully.", "success")
     return redirect(url_for("admin.list_sites"))
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  SETTINGS
+# ═══════════════════════════════════════════════════════════════════════
+
+@admin_bp.route("/settings", methods=["GET"])
+@admin_required
+def settings():
+    app_settings = AppSettings.get()
+    return render_template("admin/settings.html", app_settings=app_settings)
+
+
+@admin_bp.route("/settings", methods=["POST"])
+@admin_required
+def update_settings():
+    settings = AppSettings.get()
+    settings.allow_anonymous_requests = "allow_anonymous_requests" in request.form
+    settings.anonymous_require_name = "anonymous_require_name" in request.form
+    settings.anonymous_require_email = "anonymous_require_email" in request.form
+    db.session.commit()
+    flash("Settings saved.", "success")
+    return redirect(url_for("admin.settings"))

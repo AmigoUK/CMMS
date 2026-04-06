@@ -27,8 +27,10 @@ class Request(db.Model):
         db.Integer, db.ForeignKey("assets.id"), nullable=True
     )
     requester_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False
+        db.Integer, db.ForeignKey("users.id"), nullable=True
     )
+    reporter_name = db.Column(db.String(150), default="")
+    reporter_contact = db.Column(db.String(200), default="")
     assigned_to_id = db.Column(
         db.Integer, db.ForeignKey("users.id"), nullable=True
     )

@@ -11,6 +11,8 @@ from models.part import Part, PartUsage, part_assets
 from models.time_log import TimeLog
 from models.attachment import Attachment, ENTITY_TYPES, ALLOWED_EXTENSIONS
 from models.preventive_task import PreventiveTask, FREQUENCY_UNITS
+from models.app_settings import AppSettings
+from models.request_activity import RequestActivity
 
 __all__ = [
     "Site", "Team", "User", "ROLES", "user_sites",
@@ -22,4 +24,6 @@ __all__ = [
     "TimeLog",
     "Attachment", "ENTITY_TYPES", "ALLOWED_EXTENSIONS",
     "PreventiveTask", "FREQUENCY_UNITS",
+    "AppSettings",
+    "RequestActivity",
 ]

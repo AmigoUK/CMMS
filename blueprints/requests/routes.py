@@ -16,6 +16,7 @@ from models import (
     Asset, Attachment, Location, Request, WorkOrder,
     REQUEST_STATUSES, REQUEST_PRIORITIES,
 )
+from models.request_activity import RequestActivity
 from utils.uploads import allowed_file, save_attachment
 
 
@@ -126,6 +127,14 @@ def create():
     db.session.add(req)
     db.session.flush()  # get req.id before saving attachment
 
+    activity = RequestActivity(
+        request_id=req.id,
+        user_id=current_user.id,
+        activity_type="status_change",
+        new_status="new",
+    )
+    db.session.add(activity)
+
     # Handle optional file upload
     file = request.files.get("file")
     if file and file.filename and allowed_file(file.filename):
@@ -146,11 +155,15 @@ def detail(id):
         abort(403)
 
     attachments = Attachment.get_for_entity("request", req.id)
+    activities = RequestActivity.query.filter_by(
+        request_id=req.id
+    ).order_by(RequestActivity.created_at.asc()).all()
 
     return render_template(
         "requests/detail.html",
         request_obj=req,
         attachments=attachments,
+        activities=activities,
     )
 
 
@@ -160,7 +173,16 @@ def detail(id):
 @supervisor_required
 def acknowledge(id):
     req = _get_request_or_404(id)
+    old_status = req.status
     req.status = "acknowledged"
+    activity = RequestActivity(
+        request_id=req.id,
+        user_id=current_user.id,
+        activity_type="status_change",
+        old_status=old_status,
+        new_status="acknowledged",
+    )
+    db.session.add(activity)
     db.session.commit()
     flash("Request acknowledged.", "success")
     return redirect(url_for("requests.detail", id=req.id))
@@ -193,7 +215,16 @@ def convert(id):
     db.session.flush()
 
     req.work_order_id = wo.id
+    old_status = req.status
     req.status = "in_progress"
+    activity = RequestActivity(
+        request_id=req.id,
+        user_id=current_user.id,
+        activity_type="status_change",
+        old_status=old_status,
+        new_status="in_progress",
+    )
+    db.session.add(activity)
     db.session.commit()
 
     flash("Work order created from request.", "success")
@@ -211,7 +242,16 @@ def cancel(id):
     if not current_user.is_supervisor and req.requester_id != current_user.id:
         abort(403)
 
+    old_status = req.status
     req.status = "cancelled"
+    activity = RequestActivity(
+        request_id=req.id,
+        user_id=current_user.id,
+        activity_type="status_change",
+        old_status=old_status,
+        new_status="cancelled",
+    )
+    db.session.add(activity)
     db.session.commit()
     flash("Request cancelled.", "info")
     return redirect(url_for("requests.detail", id=req.id))
@@ -237,8 +277,38 @@ def upload_attachment(id):
         return redirect(url_for("requests.detail", id=req.id))
 
     save_attachment(file, "request", req.id, current_user.id)
+    activity = RequestActivity(
+        request_id=req.id,
+        user_id=current_user.id,
+        activity_type="attachment",
+    )
+    db.session.add(activity)
     db.session.commit()
     flash("File uploaded.", "success")
+    return redirect(url_for("requests.detail", id=req.id))
+
+
+# ── comment ───────────────────────────────────────────────────────────
+
+@requests_bp.route("/<int:id>/comment", methods=["POST"])
+@login_required
+def add_comment(id):
+    req = _get_request_or_404(id)
+    if not _can_view(req):
+        abort(403)
+    comment_text = request.form.get("comment", "").strip()
+    if not comment_text:
+        flash("Comment cannot be empty.", "warning")
+        return redirect(url_for("requests.detail", id=req.id))
+    activity = RequestActivity(
+        request_id=req.id,
+        user_id=current_user.id,
+        activity_type="comment",
+        comment=comment_text,
+    )
+    db.session.add(activity)
+    db.session.commit()
+    flash("Comment added.", "success")
     return redirect(url_for("requests.detail", id=req.id))
 
 

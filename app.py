@@ -125,10 +125,12 @@ def create_app(config_class=None):
     # ── Context processor ──────────────────────────────────
     @app.context_processor
     def inject_globals():
+        from models.app_settings import AppSettings
         ctx = {
             "app_version": APP_VERSION,
             "current_site": getattr(g, "current_site", None),
             "user_sites": [],
+            "app_settings": AppSettings.get(),
         }
         if current_user.is_authenticated:
             ctx["user_sites"] = current_user.sites
@@ -160,7 +162,7 @@ def create_app(config_class=None):
             Site, Team, User, Location, Asset,
             WorkOrder, WorkOrderTask, Request,
             Part, PartUsage, TimeLog, Attachment,
-            PreventiveTask,
+            PreventiveTask, AppSettings, RequestActivity,
         )
 
         db.create_all()
