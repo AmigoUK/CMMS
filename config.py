@@ -23,5 +23,7 @@ class Config:
     # Session / Remember-me cookies
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "true").lower() != "false"
     REMEMBER_COOKIE_DURATION = timedelta(days=14)
     REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "true").lower() != "false"

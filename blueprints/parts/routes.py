@@ -182,11 +182,11 @@ def create():
     db.session.add(part)
     db.session.flush()
 
-    # Compatible assets
+    # Compatible assets — only from current site
     asset_ids = request.form.getlist("compatible_assets")
     for aid in asset_ids:
         try:
-            asset = Asset.query.get(int(aid))
+            asset = Asset.query.filter_by(id=int(aid), site_id=g.current_site.id).first()
             if asset:
                 part.compatible_assets.append(asset)
         except (ValueError, TypeError):
@@ -256,12 +256,12 @@ def update(id):
             os.remove(old)
         part.image = ""
 
-    # Compatible assets — replace entire list
+    # Compatible assets — replace entire list, only from current site
     asset_ids = request.form.getlist("compatible_assets")
     part.compatible_assets.clear()
     for aid in asset_ids:
         try:
-            asset = Asset.query.get(int(aid))
+            asset = Asset.query.filter_by(id=int(aid), site_id=g.current_site.id).first()
             if asset:
                 part.compatible_assets.append(asset)
         except (ValueError, TypeError):
@@ -280,7 +280,7 @@ def add_compatibility(id):
     part = _get_part_or_404(id)
     asset_id = request.form.get("asset_id", type=int)
     if asset_id:
-        asset = Asset.query.get(asset_id)
+        asset = Asset.query.filter_by(id=asset_id, site_id=g.current_site.id).first()
         if asset and asset not in part.compatible_assets:
             part.compatible_assets.append(asset)
             db.session.commit()
@@ -292,7 +292,7 @@ def add_compatibility(id):
 @supervisor_required
 def remove_compatibility(id, asset_id):
     part = _get_part_or_404(id)
-    asset = Asset.query.get_or_404(asset_id)
+    asset = Asset.query.filter_by(id=asset_id, site_id=g.current_site.id).first_or_404()
     if asset in part.compatible_assets:
         part.compatible_assets.remove(asset)
         db.session.commit()
@@ -315,10 +315,12 @@ def reorder_report():
 
     total_cost = sum(p.reorder_cost for p in parts)
 
+    from datetime import datetime, timezone
     return render_template(
         "parts/reorder.html",
         parts=parts,
         total_cost=total_cost,
+        now=datetime.now(timezone.utc),
     )
 
 

@@ -76,8 +76,8 @@
         {% if attachments %}
         <div class="attachment-grid mb-3">
             {% for att in attachments if att.is_image %}
-            <a href="{{ url_for('static', filename='uploads/' + att.stored_filename) }}" target="_blank">
-                <img src="{{ url_for('static', filename='uploads/' + att.stored_filename) }}"
+            <a href="{{ url_for('uploaded_file', filename=att.stored_filename) }}" target="_blank">
+                <img src="{{ url_for('uploaded_file', filename=att.stored_filename) }}"
                      alt="{{ att.filename }}" class="attachment-thumb img-fluid w-100">
             </a>
             {% endfor %}
@@ -86,7 +86,7 @@
             {% for att in attachments if not att.is_image %}
             <li class="mb-1">
                 <i class="bi {{ att.icon }}"></i>
-                <a href="{{ url_for('static', filename='uploads/' + att.stored_filename) }}" target="_blank">
+                <a href="{{ url_for('uploaded_file', filename=att.stored_filename) }}" target="_blank">
                     {{ att.filename }}
                 </a>
                 <small class="text-muted">({{ att.file_size_display }})</small>

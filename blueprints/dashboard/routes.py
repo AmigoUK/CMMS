@@ -88,7 +88,7 @@ def index():
     )
 
 
-@dashboard_bp.route("/switch-site/<int:site_id>")
+@dashboard_bp.route("/switch-site/<int:site_id>", methods=["POST"])
 @login_required
 def switch_site(site_id):
     if not current_user.has_site_access(site_id):
