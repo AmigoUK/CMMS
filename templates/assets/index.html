@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Assets — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-gear me-2"></i>Assets</h1>
+    {% if current_user.is_supervisor %}
+    <a href="{{ url_for('assets.new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>New Asset
+    </a>
+    {% endif %}
+</div>
+
+{# Search bar #}
+<form method="GET" action="{{ url_for('assets.list_assets') }}" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Search by name, tag, or serial number..."
+               value="{{ search_query }}">
+        {% if current_status %}
+        <input type="hidden" name="status" value="{{ current_status }}">
+        {% endif %}
+        <button type="submit" class="btn btn-outline-secondary">
+            <i class="bi bi-search"></i>
+        </button>
+        {% if search_query %}
+        <a href="{{ url_for('assets.list_assets', status=current_status) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-lg"></i>
+        </a>
+        {% endif %}
+    </div>
+</form>
+
+{# Status filter pills #}
+<div class="mb-3">
+    <a href="{{ url_for('assets.list_assets', q=search_query) }}"
+       class="btn btn-sm {% if not current_status %}btn-dark{% else %}btn-outline-dark{% endif %} me-1">
+        All
+    </a>
+    {% for s in statuses %}
+    <a href="{{ url_for('assets.list_assets', status=s, q=search_query) }}"
+       class="btn btn-sm {% if current_status == s %}btn-dark{% else %}btn-outline-dark{% endif %} me-1">
+        {{ s | replace('_', ' ') | title }}
+    </a>
+    {% endfor %}
+</div>
+
+{# Assets table #}
+{% if assets %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Tag</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Criticality</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asset in assets %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('assets.detail', id=asset.id) }}" class="text-decoration-none fw-semibold">
+                        {{ asset.name }}
+                    </a>
+                    {% if asset.category %}
+                    <br><small class="text-muted">{{ asset.category }}</small>
+                    {% endif %}
+                </td>
+                <td>{{ asset.asset_tag or '—' }}</td>
+                <td>{{ asset.location.name if asset.location else '—' }}</td>
+                <td>
+                    <span class="badge status-{{ asset.status }}"
+                          style="background-color: var(--bs-body-bg); border: 1px solid currentColor;">
+                        {{ asset.status | replace('_', ' ') | title }}
+                    </span>
+                </td>
+                <td>
+                    {% if asset.criticality == 'critical' %}
+                    <span class="badge bg-danger">Critical</span>
+                    {% elif asset.criticality == 'high' %}
+                    <span class="badge bg-warning text-dark">High</span>
+                    {% elif asset.criticality == 'medium' %}
+                    <span class="badge bg-info text-dark">Medium</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Low</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('assets.detail', id=asset.id) }}" class="btn btn-sm btn-outline-primary"
+                       title="View">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    {% if current_user.is_supervisor %}
+                    <a href="{{ url_for('assets.edit', id=asset.id) }}" class="btn btn-sm btn-outline-secondary"
+                       title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include "partials/_pagination.html" %}
+
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-gear display-4"></i>
+    <p class="mt-2">No assets found.</p>
+    {% if current_user.is_supervisor %}
+    <a href="{{ url_for('assets.new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add First Asset
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

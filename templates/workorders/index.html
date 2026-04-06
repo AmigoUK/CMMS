@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Work Orders — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Work Orders</h1>
+    {% if current_user.is_supervisor %}
+    <a href="{{ url_for('workorders.new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Work Order
+    </a>
+    {% endif %}
+</div>
+
+{# ── Filter bar ── #}
+<form method="GET" action="{{ url_for('workorders.index') }}" class="row g-2 mb-3">
+    <div class="col-auto">
+        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            {% for s in statuses %}
+            <option value="{{ s }}" {% if current_status == s %}selected{% endif %}>
+                {{ s|replace('_', ' ')|title }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-auto">
+        <select name="priority" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All Priorities</option>
+            {% for p in priorities %}
+            <option value="{{ p }}" {% if current_priority == p %}selected{% endif %}>
+                {{ p|title }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-auto">
+        <noscript><button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button></noscript>
+    </div>
+</form>
+
+{# ── Desktop table ── #}
+<div class="table-responsive d-none d-md-block">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>WO #</th>
+                <th>Title</th>
+                <th>Asset</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Assigned To</th>
+                <th>Due Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for wo in work_orders %}
+            <tr class="{% if wo.is_overdue %}wo-overdue{% endif %}">
+                <td class="text-nowrap">{{ wo.wo_number }}</td>
+                <td>{{ wo.title }}</td>
+                <td>{{ wo.asset.name if wo.asset else '—' }}</td>
+                <td>
+                    <span class="priority-{{ wo.priority }}">
+                        <i class="bi bi-circle-fill" style="font-size:.6rem"></i>
+                        {{ wo.priority|title }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge badge-{{ wo.status }}">
+                        {{ wo.status|replace('_', ' ')|title }}
+                    </span>
+                </td>
+                <td>{{ wo.assigned_to.display_name if wo.assigned_to else '—' }}</td>
+                <td class="text-nowrap">
+                    {% if wo.due_date %}
+                        <span class="{% if wo.is_overdue %}text-danger fw-bold{% endif %}">
+                            {{ wo.due_date.strftime('%d %b %Y') }}
+                        </span>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('workorders.detail', id=wo.id) }}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i> View
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                    No work orders found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# ── Mobile cards ── #}
+<div class="d-md-none">
+    {% for wo in work_orders %}
+    <div class="card mb-2 {% if wo.is_overdue %}wo-overdue{% endif %}">
+        <div class="card-body py-2 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="mb-1">
+                        <a href="{{ url_for('workorders.detail', id=wo.id) }}" class="text-decoration-none">
+                            {{ wo.wo_number }}
+                        </a>
+                    </h6>
+                    <p class="mb-1 small">{{ wo.title }}</p>
+                    <small class="text-muted">
+                        {% if wo.assigned_to %}{{ wo.assigned_to.display_name }}{% endif %}
+                        {% if wo.due_date %}
+                            &middot;
+                            <span class="{% if wo.is_overdue %}text-danger fw-bold{% endif %}">
+                                Due {{ wo.due_date.strftime('%d %b') }}
+                            </span>
+                        {% endif %}
+                    </small>
+                </div>
+                <div class="text-end">
+                    <span class="badge badge-{{ wo.status }} mb-1">
+                        {{ wo.status|replace('_', ' ')|title }}
+                    </span>
+                    <br>
+                    <small class="priority-{{ wo.priority }}">
+                        {{ wo.priority|title }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-center text-muted py-4">No work orders found.</p>
+    {% endfor %}
+</div>
+
+{% include "partials/_pagination.html" %}
+{% endblock %}

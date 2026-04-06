@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Team Management — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-shield-lock me-2"></i>Team Management</h1>
+    <a href="{{ url_for('admin.new_team') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>New Team
+    </a>
+</div>
+
+{# Sub-navigation tabs #}
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.list_users') }}">
+            <i class="bi bi-people me-1"></i>Users
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('admin.list_teams') }}">
+            <i class="bi bi-person-badge me-1"></i>Teams
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.list_sites') }}">
+            <i class="bi bi-building me-1"></i>Sites
+        </a>
+    </li>
+</ul>
+
+{# Teams table #}
+{% if teams %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Members</th>
+                <th>Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for team in teams %}
+            <tr class="{% if not team.is_active %}text-muted{% endif %}">
+                <td class="fw-semibold">{{ team.name }}</td>
+                <td>
+                    {% if team.is_contractor %}
+                    <span class="badge bg-warning text-dark">Contractor</span>
+                    {% else %}
+                    <span class="badge bg-info text-dark">Internal</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge bg-light text-dark border">{{ team.members | length }}</span>
+                </td>
+                <td>
+                    {% if team.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('admin.edit_team', id=team.id) }}" class="btn btn-sm btn-outline-secondary"
+                       title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-person-badge display-4"></i>
+    <p class="mt-2">No teams defined yet.</p>
+    <a href="{{ url_for('admin.new_team') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Create First Team
+    </a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Report a Problem — CMMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+        <h1 class="h3 mb-4">Report a Problem</h1>
+
+        <form method="POST"
+              action="{{ url_for('requests.create') }}"
+              enctype="multipart/form-data"
+              novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            {# Title #}
+            <div class="mb-3">
+                <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="title" name="title"
+                       placeholder="Short summary of the problem" required maxlength="200">
+            </div>
+
+            {# Description #}
+            <div class="mb-3">
+                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="description" name="description"
+                          rows="4" placeholder="Describe the problem..." required></textarea>
+            </div>
+
+            {# Priority #}
+            <div class="mb-3">
+                <label for="priority" class="form-label">Priority</label>
+                <select class="form-select" id="priority" name="priority">
+                    {% for p in priorities %}
+                    <option value="{{ p }}" {% if p == 'medium' %}selected{% endif %}>
+                        {{ p|title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# Location #}
+            <div class="mb-3">
+                <label for="location_id" class="form-label">Location</label>
+                <select class="form-select" id="location_id" name="location_id">
+                    <option value="">— Select location (optional) —</option>
+                    {% for loc in locations %}
+                    <option value="{{ loc.id }}">{{ loc.full_path }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# Asset #}
+            <div class="mb-3">
+                <label for="asset_id" class="form-label">Asset</label>
+                <select class="form-select" id="asset_id" name="asset_id">
+                    <option value="">— Select asset (optional) —</option>
+                    {% for asset in assets %}
+                    <option value="{{ asset.id }}">{{ asset.name }}{% if asset.asset_tag %} ({{ asset.asset_tag }}){% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# File upload #}
+            <div class="mb-4">
+                <label for="file" class="form-label">Photo / File</label>
+                <input type="file" class="form-control" id="file" name="file"
+                       accept="image/*,.pdf,.doc,.docx">
+                <div class="form-text">Optional. Images, PDF, or Word documents.</div>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg btn-report">
+                    <i class="bi bi-send"></i> Submit Request
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
