@@ -20,8 +20,11 @@ def allowed_file(filename):
 
 
 def is_allowed_image(file):
-    """Check if uploaded file has an allowed image MIME type."""
-    return file and file.content_type in ALLOWED_IMAGE_TYPES
+    """Check if uploaded file has an allowed image MIME type and extension."""
+    if not file or not file.filename:
+        return False
+    ext = file.filename.rsplit(".", 1)[1].lower() if "." in file.filename else ""
+    return file.content_type in ALLOWED_IMAGE_TYPES and ext in {"jpg", "jpeg", "png", "gif", "webp"}
 
 
 def generate_stored_filename(original_filename):

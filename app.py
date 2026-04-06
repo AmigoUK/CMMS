@@ -1,8 +1,8 @@
 import os
 from datetime import date, datetime, timezone
 
-from flask import Flask, g, redirect, render_template, request, session, url_for
-from flask_login import current_user
+from flask import Flask, flash, g, redirect, render_template, request, session, url_for
+from flask_login import current_user, login_required
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
@@ -83,19 +83,31 @@ def create_app(config_class=None):
     app.register_blueprint(admin_bp, url_prefix="/admin")
 
     # ── Site context middleware ─────────────────────────────
+    # Endpoints that work without site context
+    _NO_SITE_ENDPOINTS = {
+        "static", "auth.login", "auth.logout", "auth.change_password",
+        "dashboard.help_page", "dashboard.scan_report", "uploaded_file",
+    }
+
     @app.before_request
     def set_site_context():
         g.current_site = None
         if not current_user.is_authenticated:
             return
-        # Skip for static files
-        if request.endpoint and request.endpoint == "static":
+        # Skip endpoints that don't need site context
+        if request.endpoint and request.endpoint in _NO_SITE_ENDPOINTS:
             return
 
         from models.site import Site
 
         user_site_list = current_user.sites
         if not user_site_list:
+            # User has no sites — only allow safe endpoints
+            if request.endpoint and request.endpoint not in _NO_SITE_ENDPOINTS:
+                from flask import abort
+                flash("No site assigned to your account. Contact an administrator.", "warning")
+                if request.endpoint != "dashboard.index":
+                    return redirect(url_for("dashboard.index"))
             return
 
         active_id = session.get("active_site_id")
@@ -137,6 +149,7 @@ def create_app(config_class=None):
 
     # ── Serve uploaded files ───────────────────────────────
     @app.route("/uploads/<path:filename>")
+    @login_required
     def uploaded_file(filename):
         from flask import send_from_directory
         return send_from_directory(app.config["UPLOAD_FOLDER"], filename)

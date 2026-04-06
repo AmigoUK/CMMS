@@ -391,7 +391,7 @@ def add_task(id):
 
 
 @workorders_bp.route(
-    "/workorders/<int:id>/task/<int:tid>/toggle", methods=["POST"]
+    "/<int:id>/task/<int:tid>/toggle", methods=["POST"]
 )
 @contractor_or_above
 def toggle_task(id, tid):
@@ -431,7 +431,10 @@ def add_part(id):
         flash("Select a part and enter a valid quantity.", "warning")
         return redirect(url_for("workorders.detail", id=wo.id))
 
-    part = Part.query.get_or_404(part_id)
+    part = Part.query.filter(
+        Part.id == part_id,
+        db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
+    ).first_or_404()
 
     usage = PartUsage(
         work_order_id=wo.id,

@@ -82,10 +82,12 @@
                     <ul class="dropdown-menu dropdown-menu-end">
                         {% for site in user_sites %}
                         <li>
-                            <a class="dropdown-item {% if current_site and site.id == current_site.id %}active{% endif %}"
-                               href="{{ url_for('dashboard.switch_site', site_id=site.id) }}">
-                                <strong>{{ site.code }}</strong> — {{ site.name }}
-                            </a>
+                            <form method="POST" action="{{ url_for('dashboard.switch_site', site_id=site.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="dropdown-item {% if current_site and site.id == current_site.id %}active{% endif %}">
+                                    <strong>{{ site.code }}</strong> — {{ site.name }}
+                                </button>
+                            </form>
                         </li>
                         {% endfor %}
                     </ul>
