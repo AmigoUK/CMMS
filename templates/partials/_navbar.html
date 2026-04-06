@@ -1,0 +1,142 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{{ url_for('dashboard.index') }}">
+            <i class="bi bi-wrench-adjustable me-2"></i>CMMS
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}"
+                       href="{{ url_for('dashboard.index') }}">
+                        <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                    </a>
+                </li>
+
+                {# All users can see requests #}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'requests' %}active{% endif %}"
+                       href="{{ url_for('requests.index') }}">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Requests
+                    </a>
+                </li>
+
+                {# Contractor+ can see work orders #}
+                {% if current_user.has_role_at_least("contractor") %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'workorders' %}active{% endif %}"
+                       href="{{ url_for('workorders.index') }}">
+                        <i class="bi bi-clipboard-check me-1"></i>Work Orders
+                    </a>
+                </li>
+                {% endif %}
+
+                {# Technician+ can view assets #}
+                {% if current_user.has_role_at_least("technician") %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'assets' %}active{% endif %}"
+                       href="{{ url_for('assets.list_assets') }}">
+                        <i class="bi bi-gear me-1"></i>Assets
+                    </a>
+                </li>
+                {% endif %}
+
+                {# Supervisor+ can manage locations and parts #}
+                {% if current_user.is_supervisor %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'locations' %}active{% endif %}"
+                       href="{{ url_for('locations.list_locations') }}">
+                        <i class="bi bi-geo-alt me-1"></i>Locations
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'parts' %}active{% endif %}"
+                       href="{{ url_for('parts.list_parts') }}">
+                        <i class="bi bi-box-seam me-1"></i>Parts
+                    </a>
+                </li>
+                {% endif %}
+
+                {# Admin #}
+                {% if current_user.is_admin %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'admin' %}active{% endif %}"
+                       href="{{ url_for('admin.list_users') }}">
+                        <i class="bi bi-shield-lock me-1"></i>Admin
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <ul class="navbar-nav">
+                {# Site switcher #}
+                {% if user_sites|length > 1 %}
+                <li class="nav-item dropdown site-switcher">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-building me-1"></i>{{ current_site.name if current_site else "Select Site" }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% for site in user_sites %}
+                        <li>
+                            <a class="dropdown-item {% if current_site and site.id == current_site.id %}active{% endif %}"
+                               href="{{ url_for('dashboard.switch_site', site_id=site.id) }}">
+                                <strong>{{ site.code }}</strong> — {{ site.name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% elif current_site %}
+                <li class="nav-item">
+                    <span class="nav-link text-muted">
+                        <i class="bi bi-building me-1"></i>{{ current_site.code }}
+                    </span>
+                </li>
+                {% endif %}
+
+                {# User menu #}
+                <li class="nav-item dropdown ms-lg-2">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-1"></i>{{ current_user.display_name }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <span class="dropdown-item-text">
+                                {% if current_user.role == 'admin' %}
+                                <span class="badge bg-danger">Admin</span>
+                                {% elif current_user.role == 'supervisor' %}
+                                <span class="badge bg-primary">Supervisor</span>
+                                {% elif current_user.role == 'technician' %}
+                                <span class="badge bg-success">Technician</span>
+                                {% elif current_user.role == 'contractor' %}
+                                <span class="badge bg-warning text-dark">Contractor</span>
+                                {% else %}
+                                <span class="badge bg-secondary">User</span>
+                                {% endif %}
+                                {{ current_user.username }}
+                            </span>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
+                                <i class="bi bi-key me-2"></i>Change Password
+                            </a>
+                        </li>
+                        <li>
+                            <form method="POST" action="{{ url_for('auth.logout') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="dropdown-item">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Request #{{ request_obj.id }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        Request #{{ request_obj.id }}
+        <span class="badge badge-{{ request_obj.status }} ms-2">
+            {{ request_obj.status|replace('_', ' ')|title }}
+        </span>
+    </h1>
+    <a href="{{ url_for('requests.index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+{# ── Info card ── #}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">{{ request_obj.title }}</h5>
+        <p class="card-text">{{ request_obj.description }}</p>
+        <div class="row g-3">
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted d-block">Priority</small>
+                <span class="priority-{{ request_obj.priority }}">
+                    <i class="bi bi-circle-fill" style="font-size:.6rem"></i>
+                    {{ request_obj.priority|title }}
+                </span>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted d-block">Location</small>
+                {{ request_obj.location.full_path if request_obj.location else '—' }}
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted d-block">Asset</small>
+                {{ request_obj.asset.name if request_obj.asset else '—' }}
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted d-block">Requester</small>
+                {{ request_obj.requester.display_name }}
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted d-block">Submitted</small>
+                {{ request_obj.created_at.strftime('%d %b %Y %H:%M') }}
+            </div>
+            {% if request_obj.work_order %}
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted d-block">Work Order</small>
+                <a href="{{ url_for('workorders.detail', id=request_obj.work_order.id) }}">
+                    {{ request_obj.work_order.wo_number }}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# ── Attachments ── #}
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="bi bi-paperclip"></i> Attachments
+    </div>
+    <div class="card-body">
+        {% if attachments %}
+        <div class="attachment-grid mb-3">
+            {% for att in attachments if att.is_image %}
+            <a href="{{ url_for('static', filename='uploads/' + att.stored_filename) }}" target="_blank">
+                <img src="{{ url_for('static', filename='uploads/' + att.stored_filename) }}"
+                     alt="{{ att.filename }}" class="attachment-thumb img-fluid w-100">
+            </a>
+            {% endfor %}
+        </div>
+        <ul class="list-unstyled mb-0">
+            {% for att in attachments if not att.is_image %}
+            <li class="mb-1">
+                <i class="bi {{ att.icon }}"></i>
+                <a href="{{ url_for('static', filename='uploads/' + att.stored_filename) }}" target="_blank">
+                    {{ att.filename }}
+                </a>
+                <small class="text-muted">({{ att.file_size_display }})</small>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-0">No attachments.</p>
+        {% endif %}
+
+        {# Upload form #}
+        <hr>
+        <form method="POST"
+              action="{{ url_for('requests.upload_attachment', id=request_obj.id) }}"
+              enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="flex-grow-1">
+                <label for="file" class="form-label mb-1 small">Add file</label>
+                <input type="file" class="form-control form-control-sm" id="file" name="file"
+                       accept="image/*,.pdf,.doc,.docx">
+            </div>
+            <button type="submit" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-upload"></i> Upload
+            </button>
+        </form>
+    </div>
+</div>
+
+{# ── Action buttons ── #}
+<div class="card">
+    <div class="card-body d-flex flex-wrap gap-2">
+        {# Supervisor actions #}
+        {% if current_user.is_supervisor %}
+            {% if request_obj.status == 'new' %}
+            <form method="POST" action="{{ url_for('requests.acknowledge', id=request_obj.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-info">
+                    <i class="bi bi-check-circle"></i> Acknowledge
+                </button>
+            </form>
+            {% endif %}
+
+            {% if not request_obj.work_order %}
+            <form method="POST" action="{{ url_for('requests.convert', id=request_obj.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-arrow-right-circle"></i> Convert to Work Order
+                </button>
+            </form>
+            {% endif %}
+
+            {% if request_obj.status not in ('cancelled', 'resolved', 'closed') %}
+            <form method="POST" action="{{ url_for('requests.cancel', id=request_obj.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-danger"
+                        onclick="return confirm('Cancel this request?')">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+            </form>
+            {% endif %}
+        {% else %}
+            {# Regular user: cancel own request #}
+            {% if request_obj.requester_id == current_user.id and request_obj.status in ('new', 'acknowledged') %}
+            <form method="POST" action="{{ url_for('requests.cancel', id=request_obj.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-danger"
+                        onclick="return confirm('Cancel this request?')">
+                    <i class="bi bi-x-circle"></i> Cancel Request
+                </button>
+            </form>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

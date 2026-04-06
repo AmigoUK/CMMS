@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Requests — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Requests</h1>
+    <a href="{{ url_for('requests.new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Request
+    </a>
+</div>
+
+{# ── Status filter pills ── #}
+<ul class="nav nav-pills mb-3 flex-wrap gap-1">
+    <li class="nav-item">
+        <a class="nav-link {% if not current_status %}active{% endif %}"
+           href="{{ url_for('requests.index') }}">All</a>
+    </li>
+    {% for s in statuses %}
+    <li class="nav-item">
+        <a class="nav-link {% if current_status == s %}active{% endif %}"
+           href="{{ url_for('requests.index', status=s) }}">
+            {{ s|replace('_', ' ')|title }}
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+
+{# ── Desktop table ── #}
+<div class="table-responsive d-none d-md-block">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Location</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in requests %}
+            <tr>
+                <td>{{ req.id }}</td>
+                <td>{{ req.title }}</td>
+                <td>{{ req.location.name if req.location else '—' }}</td>
+                <td>
+                    <span class="priority-{{ req.priority }}">
+                        <i class="bi bi-circle-fill" style="font-size:.6rem"></i>
+                        {{ req.priority|title }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge badge-{{ req.status }}">
+                        {{ req.status|replace('_', ' ')|title }}
+                    </span>
+                </td>
+                <td>{{ req.created_at.strftime('%d %b %Y') }}</td>
+                <td>
+                    <a href="{{ url_for('requests.detail', id=req.id) }}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i> View
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                    No requests found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# ── Mobile cards ── #}
+<div class="d-md-none">
+    {% for req in requests %}
+    <div class="card mb-2">
+        <div class="card-body py-2 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="mb-1">
+                        <a href="{{ url_for('requests.detail', id=req.id) }}" class="text-decoration-none">
+                            #{{ req.id }} {{ req.title }}
+                        </a>
+                    </h6>
+                    <small class="text-muted">
+                        {{ req.location.name if req.location else '' }}
+                        &middot; {{ req.created_at.strftime('%d %b') }}
+                    </small>
+                </div>
+                <div class="text-end">
+                    <span class="badge badge-{{ req.status }} mb-1">
+                        {{ req.status|replace('_', ' ')|title }}
+                    </span>
+                    <br>
+                    <small class="priority-{{ req.priority }}">
+                        {{ req.priority|title }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-center text-muted py-4">No requests found.</p>
+    {% endfor %}
+</div>
+
+{% include "partials/_pagination.html" %}
+{% endblock %}

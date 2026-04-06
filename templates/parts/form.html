@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit Part' if part else 'New Part' }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('parts.list_parts') }}" class="text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i>Back to Parts
+    </a>
+</div>
+
+<h1 class="h3 mb-4">
+    <i class="bi bi-box-seam me-2"></i>{{ 'Edit Part' if part else 'New Part' }}
+</h1>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST"
+                      action="{{ url_for('parts.update', id=part.id) if part else url_for('parts.create') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               value="{{ part.name if part else '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="part_number" class="form-label">Part Number</label>
+                        <input type="text" class="form-control" id="part_number" name="part_number"
+                               value="{{ part.part_number if part and part.part_number else '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description"
+                                  rows="3">{{ part.description if part else '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <input type="text" class="form-control" id="category" name="category"
+                               value="{{ part.category if part else '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="unit" class="form-label">Unit</label>
+                        <select class="form-select" id="unit" name="unit">
+                            {% for u in ['each', 'meter', 'liter', 'kg'] %}
+                            <option value="{{ u }}"
+                                    {% if part and part.unit == u %}selected{% endif %}
+                                    {% if not part and u == 'each' %}selected{% endif %}>
+                                {{ u | title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="unit_cost" class="form-label">Unit Cost (&pound;)</label>
+                        <input type="number" class="form-control" id="unit_cost" name="unit_cost"
+                               step="0.01" min="0"
+                               value="{{ '%.2f' | format(part.unit_cost) if part else '0.00' }}">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="quantity_on_hand" class="form-label">Quantity on Hand</label>
+                                <input type="number" class="form-control" id="quantity_on_hand" name="quantity_on_hand"
+                                       min="0"
+                                       value="{{ part.quantity_on_hand if part else 0 }}">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="minimum_stock" class="form-label">Minimum Stock</label>
+                                <input type="number" class="form-control" id="minimum_stock" name="minimum_stock"
+                                       min="0"
+                                       value="{{ part.minimum_stock if part else 0 }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="storage_location" class="form-label">Storage Location</label>
+                        <input type="text" class="form-control" id="storage_location" name="storage_location"
+                               value="{{ part.storage_location if part else '' }}"
+                               placeholder="e.g. Shelf A3, Bin 12">
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>{{ 'Save Changes' if part else 'Create Part' }}
+                        </button>
+                        <a href="{{ url_for('parts.list_parts') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

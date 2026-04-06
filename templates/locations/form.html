@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit Location' if location else 'New Location' }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('locations.list_locations') }}" class="text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i>Back to Locations
+    </a>
+</div>
+
+<h1 class="h3 mb-4">
+    <i class="bi bi-geo-alt me-2"></i>{{ 'Edit Location' if location else 'New Location' }}
+</h1>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST"
+                      action="{{ url_for('locations.update', id=location.id) if location else url_for('locations.create') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               value="{{ location.name if location else '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="location_type" class="form-label">Type</label>
+                        <select class="form-select" id="location_type" name="location_type">
+                            {% for lt in location_types %}
+                            <option value="{{ lt }}"
+                                    {% if location and location.location_type == lt %}selected{% endif %}
+                                    {% if not location and lt == 'area' %}selected{% endif %}>
+                                {{ lt | title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description"
+                                  rows="3">{{ location.description if location else '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="parent_id" class="form-label">Parent Location</label>
+                        <select class="form-select" id="parent_id" name="parent_id">
+                            <option value="">— None (top level) —</option>
+                            {% for ploc in parent_locations %}
+                            <option value="{{ ploc.id }}"
+                                    {% if location and location.parent_id == ploc.id %}selected{% endif %}>
+                                {{ ploc.full_path }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>{{ 'Save Changes' if location else 'Create Location' }}
+                        </button>
+                        <a href="{{ url_for('locations.list_locations') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

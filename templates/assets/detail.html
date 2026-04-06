@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}{{ asset.name }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('assets.list_assets') }}" class="text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i>Back to Assets
+    </a>
+</div>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="h3 mb-1">
+            <i class="bi bi-gear me-2"></i>{{ asset.name }}
+            {% if asset.status == 'operational' %}
+            <span class="badge bg-success ms-2">Operational</span>
+            {% elif asset.status == 'needs_repair' %}
+            <span class="badge bg-warning text-dark ms-2">Needs Repair</span>
+            {% elif asset.status == 'out_of_service' %}
+            <span class="badge bg-danger ms-2">Out of Service</span>
+            {% elif asset.status == 'decommissioned' %}
+            <span class="badge bg-secondary ms-2">Decommissioned</span>
+            {% endif %}
+        </h1>
+        {% if asset.asset_tag %}
+        <small class="text-muted">Tag: {{ asset.asset_tag }}</small>
+        {% endif %}
+    </div>
+    {% if current_user.is_supervisor %}
+    <a href="{{ url_for('assets.edit', id=asset.id) }}" class="btn btn-outline-primary">
+        <i class="bi bi-pencil me-1"></i>Edit
+    </a>
+    {% endif %}
+</div>
+
+{# Asset info card #}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="mb-0">Asset Details</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-0">
+                    <tr>
+                        <th class="text-muted" style="width: 40%;">Category</th>
+                        <td>{{ asset.category or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Manufacturer</th>
+                        <td>{{ asset.manufacturer or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Model</th>
+                        <td>{{ asset.model or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Serial Number</th>
+                        <td>{{ asset.serial_number or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Location</th>
+                        <td>{{ asset.location.full_path if asset.location else '—' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="mb-0">Status &amp; Dates</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-0">
+                    <tr>
+                        <th class="text-muted" style="width: 40%;">Criticality</th>
+                        <td>
+                            {% if asset.criticality == 'critical' %}
+                            <span class="badge bg-danger">Critical</span>
+                            {% elif asset.criticality == 'high' %}
+                            <span class="badge bg-warning text-dark">High</span>
+                            {% elif asset.criticality == 'medium' %}
+                            <span class="badge bg-info text-dark">Medium</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Low</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Install Date</th>
+                        <td>{{ asset.install_date.strftime('%d %b %Y') if asset.install_date else '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Warranty Expiry</th>
+                        <td>{{ asset.warranty_expiry.strftime('%d %b %Y') if asset.warranty_expiry else '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Created</th>
+                        <td>{{ asset.created_at.strftime('%d %b %Y %H:%M') if asset.created_at else '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Last Updated</th>
+                        <td>{{ asset.updated_at.strftime('%d %b %Y %H:%M') if asset.updated_at else '—' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Description & Notes #}
+{% if asset.description or asset.notes %}
+<div class="card mb-4">
+    <div class="card-body">
+        {% if asset.description %}
+        <h6>Description</h6>
+        <p>{{ asset.description }}</p>
+        {% endif %}
+        {% if asset.notes %}
+        <h6>Notes</h6>
+        <p class="mb-0">{{ asset.notes }}</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{# Work Order History #}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Work Order History</h6>
+        <span class="badge bg-secondary">{{ work_orders | length }}</span>
+    </div>
+    <div class="card-body">
+        {% if work_orders %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>WO #</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for wo in work_orders %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('workorders.detail', id=wo.id) }}" class="text-decoration-none">
+                                {{ wo.wo_number }}
+                            </a>
+                        </td>
+                        <td>{{ wo.title }}</td>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                {{ wo.wo_type | replace('_', ' ') | title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ wo.status }}">
+                                {{ wo.status | replace('_', ' ') | title }}
+                            </span>
+                        </td>
+                        <td>{{ wo.created_at.strftime('%d %b %Y') if wo.created_at else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No work orders for this asset.</p>
+        {% endif %}
+    </div>
+</div>
+
+{# Attachments #}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-paperclip me-2"></i>Attachments</h6>
+        <span class="badge bg-secondary">{{ attachments | length }}</span>
+    </div>
+    <div class="card-body">
+        {% if attachments %}
+        <div class="list-group list-group-flush">
+            {% for att in attachments %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi {{ att.icon }} me-2"></i>
+                    <strong>{{ att.filename }}</strong>
+                    <small class="text-muted ms-2">{{ att.file_size_display }}</small>
+                </div>
+                <small class="text-muted">
+                    {{ att.created_at.strftime('%d %b %Y') if att.created_at else '' }}
+                </small>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No attachments.</p>
+        {% endif %}
+
+        {% if current_user.is_supervisor %}
+        <hr>
+        <form method="POST" action="{{ url_for('assets.upload_attachment', id=asset.id) }}"
+              enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="input-group">
+                <input type="file" class="form-control" name="file" required>
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-upload me-1"></i>Upload
+                </button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

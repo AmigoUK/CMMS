@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Parts Inventory — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-box-seam me-2"></i>Parts Inventory</h1>
+    <a href="{{ url_for('parts.new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>New Part
+    </a>
+</div>
+
+{# Search bar #}
+<form method="GET" action="{{ url_for('parts.list_parts') }}" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Search by name or part number..."
+               value="{{ search_query }}">
+        <button type="submit" class="btn btn-outline-secondary">
+            <i class="bi bi-search"></i>
+        </button>
+        {% if search_query %}
+        <a href="{{ url_for('parts.list_parts') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-lg"></i>
+        </a>
+        {% endif %}
+    </div>
+</form>
+
+{# Parts table #}
+{% if parts %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Part #</th>
+                <th>Category</th>
+                <th>Stock</th>
+                <th>Unit Cost</th>
+                <th>Location</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for part in parts %}
+            <tr class="{% if part.is_low_stock %}row-low-stock{% endif %}">
+                <td class="fw-semibold">{{ part.name }}</td>
+                <td>{{ part.part_number or '—' }}</td>
+                <td>{{ part.category or '—' }}</td>
+                <td>
+                    {% if part.is_low_stock %}
+                    <span class="text-danger fw-bold" title="Low stock">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        {{ part.quantity_on_hand }} / {{ part.minimum_stock }}
+                    </span>
+                    {% else %}
+                    {{ part.quantity_on_hand }}
+                    {% if part.minimum_stock > 0 %}
+                    <small class="text-muted">/ {{ part.minimum_stock }}</small>
+                    {% endif %}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if part.unit_cost %}
+                    &pound;{{ '%.2f' | format(part.unit_cost) }}
+                    <small class="text-muted">/ {{ part.unit }}</small>
+                    {% else %}
+                    —
+                    {% endif %}
+                </td>
+                <td>{{ part.storage_location or '—' }}</td>
+                <td>
+                    <a href="{{ url_for('parts.edit', id=part.id) }}" class="btn btn-sm btn-outline-secondary"
+                       title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include "partials/_pagination.html" %}
+
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-box-seam display-4"></i>
+    <p class="mt-2">No parts found.</p>
+    <a href="{{ url_for('parts.new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add First Part
+    </a>
+</div>
+{% endif %}
+{% endblock %}

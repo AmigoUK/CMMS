@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+{% block title %}{{ wo.wo_number }} — CMMS{% endblock %}
+
+{% block content %}
+{# ═══ 1. Header section ═══ #}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h1 class="h3 mb-1">
+            {{ wo.wo_number }}
+            <span class="badge badge-{{ wo.status }} ms-1">{{ wo.status|replace('_', ' ')|title }}</span>
+        </h1>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="priority-{{ wo.priority }}">
+                <i class="bi bi-circle-fill" style="font-size:.6rem"></i> {{ wo.priority|title }}
+            </span>
+            <span class="badge bg-secondary">{{ wo.wo_type|title }}</span>
+            {% if wo.assigned_to %}
+                <small class="text-muted">
+                    <i class="bi bi-person"></i> {{ wo.assigned_to.display_name }}
+                </small>
+            {% endif %}
+            {% if wo.due_date %}
+                <small class="{% if wo.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                    <i class="bi bi-calendar-event"></i>
+                    Due {{ wo.due_date.strftime('%d %b %Y') }}
+                    {% if wo.is_overdue %}(OVERDUE){% endif %}
+                </small>
+            {% endif %}
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        {% if current_user.is_supervisor %}
+        <a href="{{ url_for('workorders.edit', id=wo.id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        {% endif %}
+        <a href="{{ url_for('workorders.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+{# ═══ 2. Info card ═══ #}
+<div class="card mb-3 wo-detail-section">
+    <div class="card-header"><i class="bi bi-info-circle"></i> Details</div>
+    <div class="card-body">
+        <div class="row g-3 mb-3">
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted d-block">Asset</small>
+                {% if wo.asset %}
+                    <a href="{{ url_for('assets.detail', id=wo.asset.id) }}">{{ wo.asset.name }}</a>
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted d-block">Location</small>
+                {{ wo.location.full_path if wo.location else '—' }}
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted d-block">Created By</small>
+                {{ wo.created_by.display_name }}
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted d-block">Created</small>
+                {{ wo.created_at.strftime('%d %b %Y %H:%M') }}
+            </div>
+        </div>
+        {% if wo.description %}
+        <h6>Description</h6>
+        <p class="mb-0">{{ wo.description }}</p>
+        {% endif %}
+    </div>
+</div>
+
+{# ═══ Assign (supervisor, if unassigned/reassign) ═══ #}
+{% if current_user.is_supervisor %}
+<div class="card mb-3 wo-detail-section">
+    <div class="card-header"><i class="bi bi-person-plus"></i> Assignment</div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('workorders.assign', id=wo.id) }}"
+              class="d-flex gap-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="flex-grow-1">
+                <label for="assign_to" class="form-label mb-1 small">Assign to</label>
+                <select class="form-select form-select-sm" id="assign_to" name="assigned_to_id" required>
+                    <option value="">— Select —</option>
+                    {% for u in assignable_users %}
+                    <option value="{{ u.id }}" {% if wo.assigned_to_id == u.id %}selected{% endif %}>
+                        {{ u.display_name }} ({{ u.role|title }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-sm btn-primary">
+                <i class="bi bi-check"></i> Assign
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{# ═══ 3. Checklist section ═══ #}
+<div class="card mb-3 wo-detail-section">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-check2-square"></i> Checklist</span>
+        <small class="text-muted">{{ tasks_done }} of {{ tasks_total }} complete</small>
+    </div>
+    <div class="card-body">
+        {% if wo.tasks %}
+        <ul class="list-group list-group-flush mb-3">
+            {% for task in wo.tasks %}
+            <li class="list-group-item d-flex align-items-center gap-2 px-0">
+                <form method="POST"
+                      action="{{ url_for('workorders.toggle_task', id=wo.id, tid=task.id) }}"
+                      class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-link p-0 text-decoration-none"
+                            title="Toggle complete">
+                        {% if task.is_completed %}
+                            <i class="bi bi-check-square-fill text-success fs-5"></i>
+                        {% else %}
+                            <i class="bi bi-square fs-5 text-muted"></i>
+                        {% endif %}
+                    </button>
+                </form>
+                <span class="{% if task.is_completed %}text-decoration-line-through text-muted{% endif %}">
+                    {{ task.description }}
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-3">No tasks yet.</p>
+        {% endif %}
+
+        {# Add task form #}
+        <form method="POST" action="{{ url_for('workorders.add_task', id=wo.id) }}"
+              class="d-flex gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" class="form-control form-control-sm" name="description"
+                   placeholder="Add a task..." required>
+            <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">
+                <i class="bi bi-plus"></i> Add
+            </button>
+        </form>
+    </div>
+</div>
+
+{# ═══ 4. Parts Used section ═══ #}
+<div class="card mb-3 wo-detail-section">
+    <div class="card-header"><i class="bi bi-box-seam"></i> Parts Used</div>
+    <div class="card-body">
+        {% if wo.parts_used %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-2">
+                <thead>
+                    <tr>
+                        <th>Part</th>
+                        <th class="text-center">Qty</th>
+                        {% if not current_user.is_contractor %}
+                        <th class="text-end">Cost</th>
+                        {% endif %}
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pu in wo.parts_used %}
+                    <tr>
+                        <td>{{ pu.part.name }}</td>
+                        <td class="text-center">{{ pu.quantity_used }}</td>
+                        {% if not current_user.is_contractor %}
+                        <td class="text-end">
+                            &pound;{{ '%.2f'|format(pu.quantity_used * pu.unit_cost_at_use) }}
+                        </td>
+                        {% endif %}
+                        <td>{{ pu.created_at.strftime('%d %b') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if not current_user.is_contractor %}
+        <div class="text-end">
+            <strong>Total: &pound;{{ '%.2f'|format(wo.total_parts_cost) }}</strong>
+        </div>
+        {% endif %}
+        {% else %}
+        <p class="text-muted mb-0">No parts recorded.</p>
+        {% endif %}
+
+        {# Add part form #}
+        {% if parts %}
+        <hr>
+        <form method="POST" action="{{ url_for('workorders.add_part', id=wo.id) }}"
+              class="row g-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-sm-6">
+                <label class="form-label mb-1 small">Part</label>
+                <select class="form-select form-select-sm" name="part_id" required>
+                    <option value="">— Select —</option>
+                    {% for p in parts %}
+                    <option value="{{ p.id }}">{{ p.name }} ({{ p.quantity_on_hand }} in stock)</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label mb-1 small">Qty</label>
+                <input type="number" class="form-control form-control-sm" name="quantity_used"
+                       min="1" value="1" required>
+            </div>
+            <div class="col-sm-3">
+                <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                    <i class="bi bi-plus"></i> Add Part
+                </button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{# ═══ 5. Time Log section ═══ #}
+<div class="card mb-3 wo-detail-section">
+    <div class="card-header"><i class="bi bi-clock-history"></i> Time Log</div>
+    <div class="card-body">
+        {% if wo.time_logs %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-2">
+                <thead>
+                    <tr>
+                        <th>Technician</th>
+                        <th class="text-center">Duration</th>
+                        <th>Notes</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tl in wo.time_logs %}
+                    <tr>
+                        <td>{{ tl.user.display_name }}</td>
+                        <td class="text-center">{{ tl.duration_minutes }} min</td>
+                        <td>{{ tl.notes or '—' }}</td>
+                        <td>{{ tl.created_at.strftime('%d %b') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="text-end">
+            <strong>Total: {{ wo.total_labor_hours }} hrs</strong>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No time logged.</p>
+        {% endif %}
+
+        {# Log time form #}
+        <hr>
+        <form method="POST" action="{{ url_for('workorders.log_time', id=wo.id) }}"
+              class="row g-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-sm-4">
+                <label class="form-label mb-1 small">Duration (minutes)</label>
+                <input type="number" class="form-control form-control-sm" name="duration_minutes"
+                       min="1" placeholder="e.g. 30" required>
+            </div>
+            <div class="col-sm-5">
+                <label class="form-label mb-1 small">Notes</label>
+                <input type="text" class="form-control form-control-sm" name="notes"
+                       placeholder="What was done...">
+            </div>
+            <div class="col-sm-3">
+                <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                    <i class="bi bi-plus"></i> Log Time
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ═══ 6. Attachments section ═══ #}
+<div class="card mb-3 wo-detail-section">
+    <div class="card-header"><i class="bi bi-paperclip"></i> Attachments</div>
+    <div class="card-body">
+        {% if attachments %}
+        <div class="attachment-grid mb-3">
+            {% for att in attachments if att.is_image %}
+            <a href="{{ url_for('static', filename='uploads/' + att.stored_filename) }}" target="_blank">
+                <img src="{{ url_for('static', filename='uploads/' + att.stored_filename) }}"
+                     alt="{{ att.filename }}" class="attachment-thumb img-fluid w-100">
+            </a>
+            {% endfor %}
+        </div>
+        <ul class="list-unstyled mb-0">
+            {% for att in attachments if not att.is_image %}
+            <li class="mb-1">
+                <i class="bi {{ att.icon }}"></i>
+                <a href="{{ url_for('static', filename='uploads/' + att.stored_filename) }}" target="_blank">
+                    {{ att.filename }}
+                </a>
+                <small class="text-muted">({{ att.file_size_display }})</small>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-0">No attachments.</p>
+        {% endif %}
+
+        {# Upload form #}
+        <hr>
+        <form method="POST"
+              action="{{ url_for('workorders.upload_attachment', id=wo.id) }}"
+              enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="flex-grow-1">
+                <label for="wo_file" class="form-label mb-1 small">Add file</label>
+                <input type="file" class="form-control form-control-sm" id="wo_file" name="file"
+                       accept="image/*,.pdf,.doc,.docx">
+            </div>
+            <button type="submit" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-upload"></i> Upload
+            </button>
+        </form>
+    </div>
+</div>
+
+{# ═══ 7. Findings / Notes (shown for completed/closed or supervisor) ═══ #}
+{% if wo.status in ('completed', 'closed') or current_user.is_supervisor %}
+<div class="card mb-3 wo-detail-section">
+    <div class="card-header"><i class="bi bi-journal-text"></i> Findings &amp; Notes</div>
+    <div class="card-body">
+        {% if wo.completion_notes %}
+        <h6>Completion Notes</h6>
+        <p>{{ wo.completion_notes }}</p>
+        {% endif %}
+        {% if wo.findings %}
+        <h6>Findings</h6>
+        <p>{{ wo.findings }}</p>
+        {% endif %}
+        {% if not wo.completion_notes and not wo.findings %}
+        <p class="text-muted mb-0">No notes recorded yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{# ═══ 8. Action buttons ═══ #}
+<div class="card mb-4 wo-detail-section">
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+            {# Start Work #}
+            {% if wo.status in ('open', 'assigned') %}
+                {% if current_user.is_supervisor or wo.assigned_to_id == current_user.id %}
+                <form method="POST" action="{{ url_for('workorders.start', id=wo.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-play-fill"></i> Start Work
+                    </button>
+                </form>
+                {% endif %}
+            {% endif %}
+
+            {# Put on Hold #}
+            {% if wo.status == 'in_progress' %}
+                {% if current_user.is_supervisor or wo.assigned_to_id == current_user.id %}
+                <form method="POST" action="{{ url_for('workorders.hold', id=wo.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-pause-fill"></i> Put on Hold
+                    </button>
+                </form>
+                {% endif %}
+            {% endif %}
+
+            {# Resume from hold #}
+            {% if wo.status == 'on_hold' %}
+                {% if current_user.is_supervisor or wo.assigned_to_id == current_user.id %}
+                <form method="POST" action="{{ url_for('workorders.start', id=wo.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-play-fill"></i> Resume Work
+                    </button>
+                </form>
+                {% endif %}
+            {% endif %}
+
+            {# Complete — shows modal / inline form #}
+            {% if wo.status == 'in_progress' %}
+                {% if current_user.is_supervisor or wo.assigned_to_id == current_user.id %}
+                <button type="button" class="btn btn-primary" data-bs-toggle="collapse"
+                        data-bs-target="#completeForm">
+                    <i class="bi bi-check-circle"></i> Complete
+                </button>
+                {% endif %}
+            {% endif %}
+
+            {# Close (supervisor only, if completed) #}
+            {% if wo.status == 'completed' and current_user.is_supervisor %}
+            <form method="POST" action="{{ url_for('workorders.close', id=wo.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-dark"
+                        onclick="return confirm('Close this work order?')">
+                    <i class="bi bi-lock"></i> Close
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        {# Completion form (collapsible) #}
+        {% if wo.status == 'in_progress' %}
+        <div class="collapse mt-3" id="completeForm">
+            <form method="POST" action="{{ url_for('workorders.complete', id=wo.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label for="completion_notes" class="form-label">Completion Notes</label>
+                    <textarea class="form-control" id="completion_notes" name="completion_notes"
+                              rows="3" placeholder="What was done to resolve the issue..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="findings" class="form-label">Findings</label>
+                    <textarea class="form-control" id="findings" name="findings"
+                              rows="3" placeholder="Root cause, observations, recommendations..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle-fill"></i> Mark Complete
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# ── Linked request ── #}
+{% if wo.request %}
+<div class="card mb-4 wo-detail-section">
+    <div class="card-header"><i class="bi bi-link-45deg"></i> Linked Request</div>
+    <div class="card-body">
+        <a href="{{ url_for('requests.detail', id=wo.request.id) }}">
+            Request #{{ wo.request.id }}: {{ wo.request.title }}
+        </a>
+        <span class="badge badge-{{ wo.request.status }} ms-2">
+            {{ wo.request.status|replace('_', ' ')|title }}
+        </span>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

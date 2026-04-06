@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Locations — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-geo-alt me-2"></i>Locations</h1>
+    <a href="{{ url_for('locations.new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>New Location
+    </a>
+</div>
+
+{# Recursive macro to render location tree #}
+{% macro render_tree(nodes, depth=0) %}
+{% for node in nodes %}
+{% set loc = node.location %}
+<div class="list-group-item {% if not loc.is_active %}text-muted bg-light{% endif %}"
+     style="padding-left: {{ 1.25 + depth * 1.5 }}rem;">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            {% if depth == 0 %}
+            <i class="bi bi-building me-1"></i>
+            <strong>{{ loc.name }}</strong>
+            {% elif depth == 1 %}
+            <i class="bi bi-layers me-1"></i>
+            <span class="fw-semibold">{{ loc.name }}</span>
+            {% else %}
+            <i class="bi bi-door-open me-1"></i>
+            {{ loc.name }}
+            {% endif %}
+
+            <span class="badge bg-light text-dark border ms-2">{{ loc.location_type | title }}</span>
+
+            {% if loc.assets | length > 0 %}
+            <span class="badge bg-info text-dark ms-1" title="Assets in this location">
+                <i class="bi bi-gear"></i> {{ loc.assets | length }}
+            </span>
+            {% endif %}
+
+            {% if not loc.is_active %}
+            <span class="badge bg-secondary ms-1">Inactive</span>
+            {% endif %}
+        </div>
+        <div>
+            <a href="{{ url_for('locations.edit', id=loc.id) }}" class="btn btn-sm btn-outline-secondary"
+               title="Edit">
+                <i class="bi bi-pencil"></i>
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-{{ 'warning' if loc.is_active else 'success' }}"
+                    data-bs-toggle="modal" data-bs-target="#confirmModal"
+                    data-action="{{ url_for('locations.toggle', id=loc.id) }}"
+                    data-message="{{ 'Deactivate' if loc.is_active else 'Activate' }} location '{{ loc.name }}'?"
+                    title="{{ 'Deactivate' if loc.is_active else 'Activate' }}">
+                <i class="bi bi-{{ 'pause' if loc.is_active else 'play' }}"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% if node.children %}
+{{ render_tree(node.children, depth + 1) }}
+{% endif %}
+{% endfor %}
+{% endmacro %}
+
+{# Location tree #}
+{% if tree %}
+<div class="list-group">
+    {{ render_tree(tree) }}
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-geo-alt display-4"></i>
+    <p class="mt-2">No locations defined yet.</p>
+    <a href="{{ url_for('locations.new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add First Location
+    </a>
+</div>
+{% endif %}
+{% endblock %}
