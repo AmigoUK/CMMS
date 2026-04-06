@@ -102,6 +102,20 @@ def switch_site(site_id):
     return redirect(url_for("dashboard.index"))
 
 
+@dashboard_bp.route("/set-language", methods=["POST"])
+def set_language():
+    """Switch UI language."""
+    lang = request.form.get("language", "en")
+    from models import AppSettings
+    available = AppSettings.get().available_languages_list
+    if lang in available:
+        session["language"] = lang
+        if current_user.is_authenticated:
+            current_user.language = lang
+            db.session.commit()
+    return redirect(request.referrer or url_for("dashboard.index"))
+
+
 @dashboard_bp.route("/report/<identifier>", methods=["GET", "POST"])
 @csrf.exempt
 def scan_report(identifier):

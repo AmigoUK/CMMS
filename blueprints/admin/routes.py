@@ -382,6 +382,245 @@ def update_settings():
     settings.allow_anonymous_requests = "allow_anonymous_requests" in request.form
     settings.anonymous_require_name = "anonymous_require_name" in request.form
     settings.anonymous_require_email = "anonymous_require_email" in request.form
+    settings.default_language = request.form.get("default_language", "en")
+    settings.available_languages = request.form.get("available_languages", "en,pl")
     db.session.commit()
     flash("Settings saved.", "success")
     return redirect(url_for("admin.settings"))
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  TRANSLATIONS
+# ═══════════════════════════════════════════════════════════════════════
+
+@admin_bp.route("/translations")
+@admin_required
+def translations():
+    from models.translation import Translation
+    from utils.i18n import translate as _
+
+    settings = AppSettings.get()
+    target_lang = [l for l in settings.available_languages_list if l != "en"]
+    target = target_lang[0] if target_lang else "pl"
+    target_name = {"pl": "Polski", "de": "Deutsch", "fr": "Francais"}.get(target, target.upper())
+
+    q = request.args.get("q", "").strip()
+    category_filter = request.args.get("category", "")
+    show_filter = request.args.get("show", "")
+    page = request.args.get("page", 1, type=int)
+
+    # Get all English keys
+    en_query = Translation.query.filter_by(language="en")
+    if category_filter:
+        en_query = en_query.filter_by(category=category_filter)
+    if q:
+        like = f"%{q}%"
+        en_query = en_query.filter(
+            db.or_(Translation.key.ilike(like), Translation.value.ilike(like))
+        )
+
+    # Get target language translations as dict
+    target_dict = {
+        t.key: t.value
+        for t in Translation.query.filter_by(language=target).all()
+    }
+
+    # Build result list
+    en_all = en_query.order_by(Translation.category, Translation.key).all()
+    results = []
+    for t in en_all:
+        tv = target_dict.get(t.key)
+        if show_filter == "missing" and tv:
+            continue
+        results.append(type("Row", (), {
+            "key": t.key, "category": t.category,
+            "en_value": t.value, "target_value": tv,
+        }))
+
+    # Manual pagination
+    per_page = 50
+    total_items = len(results)
+    start = (page - 1) * per_page
+    page_items = results[start:start + per_page]
+
+    # Simple pagination object
+    class SimplePagination:
+        def __init__(self, items, page, per_page, total):
+            self.items = items
+            self.page = page
+            self.per_page = per_page
+            self.total = total
+            self.pages = max(1, (total + per_page - 1) // per_page)
+            self.has_prev = page > 1
+            self.has_next = page < self.pages
+            self.prev_num = page - 1
+            self.next_num = page + 1
+        def iter_pages(self, left_edge=1, right_edge=1, left_current=2, right_current=2):
+            pages = set()
+            for i in range(1, left_edge + 1):
+                pages.add(i)
+            for i in range(max(1, self.page - left_current), min(self.pages, self.page + right_current) + 1):
+                pages.add(i)
+            for i in range(max(1, self.pages - right_edge + 1), self.pages + 1):
+                pages.add(i)
+            last = 0
+            for p in sorted(pages):
+                if p - last > 1:
+                    yield None
+                yield p
+                last = p
+
+    pagination = SimplePagination(page_items, page, per_page, total_items)
+
+    # Stats
+    total_keys = Translation.query.filter_by(language="en").count()
+    translated_keys = len([k for k in target_dict if k])
+    missing_keys = total_keys - translated_keys
+
+    # Categories
+    cats = db.session.query(Translation.category).filter_by(language="en").distinct().all()
+    categories = sorted([c[0] for c in cats])
+
+    return render_template(
+        "admin/translations.html",
+        translations=page_items,
+        pagination=pagination,
+        total=total_keys,
+        translated=translated_keys,
+        missing=missing_keys,
+        categories=categories,
+        current_category=category_filter,
+        search_query=q,
+        show_filter=show_filter,
+        target_lang_name=target_name,
+    )
+
+
+@admin_bp.route("/translations/edit/<path:key>", methods=["GET", "POST"])
+@admin_required
+def edit_translation(key):
+    from models.translation import Translation
+    from utils.i18n import invalidate_cache
+
+    settings = AppSettings.get()
+    target_languages = [l for l in settings.available_languages_list if l != "en"]
+
+    en_translation = Translation.query.filter_by(key=key, language="en").first_or_404()
+
+    if request.method == "POST":
+        for lang in target_languages:
+            value = request.form.get(f"value_{lang}", "").strip()
+            if value:
+                existing = Translation.query.filter_by(key=key, language=lang).first()
+                if existing:
+                    existing.value = value
+                else:
+                    t = Translation(key=key, language=lang, value=value,
+                                    category=en_translation.category)
+                    db.session.add(t)
+        db.session.commit()
+        invalidate_cache()
+        flash("Translation saved.", "success")
+        return redirect(url_for("admin.translations"))
+
+    target_values = {}
+    for lang in target_languages:
+        t = Translation.query.filter_by(key=key, language=lang).first()
+        if t:
+            target_values[lang] = t.value
+
+    return render_template(
+        "admin/translation_edit.html",
+        key=key,
+        en_translation=en_translation,
+        target_languages=target_languages,
+        target_values=target_values,
+    )
+
+
+@admin_bp.route("/translations/export")
+@admin_required
+def export_translations():
+    """Export all translations as CSV."""
+    import csv
+    import io
+    from flask import make_response
+    from models.translation import Translation
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["key", "category", "language", "value"])
+
+    rows = Translation.query.order_by(
+        Translation.key, Translation.language
+    ).all()
+    for r in rows:
+        writer.writerow([r.key, r.category, r.language, r.value])
+
+    response = make_response(output.getvalue())
+    response.headers["Content-Type"] = "text/csv"
+    response.headers["Content-Disposition"] = "attachment; filename=cmms_translations.csv"
+    return response
+
+
+@admin_bp.route("/translations/help")
+@admin_required
+def help_translations():
+    from models.help_content import HelpContent
+    settings = AppSettings.get()
+    target_languages = [l for l in settings.available_languages_list if l != "en"]
+
+    slugs = ["index", "getting_started", "reporting", "requests",
+             "work_orders", "property", "admin_guide", "faq"]
+
+    pages = {}
+    for slug in slugs:
+        pages[slug] = {}
+        for lang in ["en"] + target_languages:
+            pages[slug][lang] = HelpContent.query.filter_by(
+                page_slug=slug, language=lang
+            ).first() is not None
+
+    return render_template(
+        "admin/help_editor.html",
+        pages=pages,
+        target_languages=target_languages,
+    )
+
+
+@admin_bp.route("/translations/help/<slug>/<lang>", methods=["GET", "POST"])
+@admin_required
+def edit_help_content(slug, lang):
+    from models.help_content import HelpContent
+
+    en_content = HelpContent.query.filter_by(page_slug=slug, language="en").first()
+    target_content = HelpContent.query.filter_by(page_slug=slug, language=lang).first()
+
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        content = request.form.get("content", "").strip()
+        if not title or not content:
+            flash("Title and content are required.", "danger")
+            return redirect(url_for("admin.edit_help_content", slug=slug, lang=lang))
+
+        if target_content:
+            target_content.title = title
+            target_content.content = content
+            target_content.updated_by_id = current_user.id
+        else:
+            target_content = HelpContent(
+                page_slug=slug, language=lang,
+                title=title, content=content,
+                updated_by_id=current_user.id,
+            )
+            db.session.add(target_content)
+        db.session.commit()
+        flash("Help content saved.", "success")
+        return redirect(url_for("admin.help_translations"))
+
+    return render_template(
+        "admin/help_edit.html",
+        slug=slug, lang=lang,
+        en_content=en_content,
+        target_content=target_content,
+    )

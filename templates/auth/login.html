@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ g.language|default('en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,14 +49,14 @@
                 <div class="text-center mb-4">
                     <i class="bi bi-wrench-adjustable brand-icon"></i>
                     <h4 class="mt-2 fw-bold">CMMS</h4>
-                    <p class="text-muted mb-0">Sign in to your account</p>
+                    <p class="text-muted mb-0">{{ _('ui.text.sign_in_to_account') }}</p>
                 </div>
 
                 <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next', '')) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
+                        <label for="username" class="form-label">{{ _('ui.label.username') }}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-person"></i></span>
                             <input type="text" class="form-control" id="username" name="username"
@@ -66,7 +66,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
+                        <label for="password" class="form-label">{{ _('ui.label.password') }}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-lock"></i></span>
                             <input type="password" class="form-control" id="password" name="password"
@@ -76,13 +76,26 @@
 
                     <div class="form-check mb-4">
                         <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1">
-                        <label class="form-check-label" for="remember">Remember me</label>
+                        <label class="form-check-label" for="remember">{{ _('ui.label.remember_me') }}</label>
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100 fw-semibold">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+                        <i class="bi bi-box-arrow-in-right me-1"></i>{{ _('ui.button.sign_in') }}
                     </button>
                 </form>
+
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        <a href="#" onclick="document.getElementById('langForm').language.value='en';document.getElementById('langForm').submit();return false;"
+                           class="{% if g.language == 'en' %}fw-bold{% endif %}">English</a>
+                        |
+                        <a href="#" onclick="document.getElementById('langForm').language.value='pl';document.getElementById('langForm').submit();return false;"
+                           class="{% if g.language == 'pl' %}fw-bold{% endif %}">Polski</a>
+                    </small>
+                    <form id="langForm" method="POST" action="{{ url_for('dashboard.set_language') }}" class="d-none">
+                        <input type="hidden" name="language" value="">
+                    </form>
+                </div>
             </div>
         </div>
 

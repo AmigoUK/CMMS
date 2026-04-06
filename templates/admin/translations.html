@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.translations') }} — CMMS{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4"><i class="bi bi-shield-lock me-2"></i>{{ _('ui.navbar.admin') }}</h1>
+
+{# Sub-navigation tabs #}
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.list_users') }}">{{ _('ui.label.users') }}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.list_teams') }}">{{ _('ui.label.teams') }}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.list_sites') }}">{{ _('ui.label.sites') }}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.settings') }}">{{ _('ui.label.settings') }}</a></li>
+    <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin.translations') }}">{{ _('ui.label.translations') }}</a></li>
+</ul>
+
+{# Stats #}
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="card text-center">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold">{{ total }}</div>
+                <small class="text-muted">{{ _('ui.label.total_keys') }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card text-center">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-success">{{ translated }}</div>
+                <small class="text-muted">{{ _('ui.label.translated') }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card text-center {% if missing > 0 %}border-danger{% endif %}">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold {% if missing > 0 %}text-danger{% endif %}">{{ missing }}</div>
+                <small class="text-muted">{{ _('ui.label.missing') }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Filters #}
+<form method="GET" class="row g-2 mb-3">
+    <div class="col-sm-4">
+        <input type="text" name="q" class="form-control form-control-sm" placeholder="Search key or value..."
+               value="{{ search_query }}">
+    </div>
+    <div class="col-sm-3">
+        <select name="category" class="form-select form-select-sm">
+            <option value="">All categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-sm-3">
+        <select name="show" class="form-select form-select-sm">
+            <option value="" {% if not show_filter %}selected{% endif %}>All</option>
+            <option value="missing" {% if show_filter == 'missing' %}selected{% endif %}>Missing only</option>
+        </select>
+    </div>
+    <div class="col-sm-2">
+        <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Filter</button>
+    </div>
+</form>
+
+{# Help content link #}
+<div class="mb-3">
+    <a href="{{ url_for('admin.help_translations') }}" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-book me-1"></i>{{ _('ui.button.manage_help_content') }}
+    </a>
+    <a href="{{ url_for('admin.export_translations') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-download me-1"></i>{{ _('ui.button.export_csv') }}
+    </a>
+</div>
+
+{# Translations table #}
+{% if translations %}
+<div class="table-responsive">
+    <table class="table table-sm table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Key</th>
+                <th>Category</th>
+                <th>English</th>
+                <th>{{ target_lang_name }}</th>
+                <th style="width: 80px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in translations %}
+            <tr class="{% if not t.target_value %}table-warning{% endif %}">
+                <td><code class="small">{{ t.key }}</code></td>
+                <td><span class="badge bg-light text-dark">{{ t.category }}</span></td>
+                <td class="small">{{ t.en_value[:80] }}{% if t.en_value|length > 80 %}...{% endif %}</td>
+                <td class="small">
+                    {% if t.target_value %}
+                    {{ t.target_value[:80] }}{% if t.target_value|length > 80 %}...{% endif %}
+                    {% else %}
+                    <span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Missing</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('admin.edit_translation', key=t.key) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include "partials/_pagination.html" %}
+
+{% else %}
+<div class="text-center text-muted py-4">No translations match your filters.</div>
+{% endif %}
+{% endblock %}

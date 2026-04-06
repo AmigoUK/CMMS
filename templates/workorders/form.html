@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}{% if wo %}Edit Work Order — CMMS{% else %}New Work Order — CMMS{% endif %}{% endblock %}
+{% block title %}{% if wo %}{{ _('ui.page.edit_work_order') }} — CMMS{% else %}{{ _('ui.page.new_work_order') }} — CMMS{% endif %}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8 col-xl-6">
-        <h1 class="h3 mb-4">{% if wo %}Edit Work Order{% else %}New Work Order{% endif %}</h1>
+        <h1 class="h3 mb-4">{% if wo %}{{ _('ui.page.edit_work_order') }}{% else %}{{ _('ui.page.new_work_order') }}{% endif %}</h1>
 
         <form method="POST"
               action="{% if wo %}{{ url_for('workorders.update', id=wo.id) }}{% else %}{{ url_for('workorders.create') }}{% endif %}"
@@ -13,7 +13,7 @@
 
             {# Title #}
             <div class="mb-3">
-                <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                <label for="title" class="form-label">{{ _('ui.label.title') }} <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="title" name="title"
                        value="{{ wo.title if wo else '' }}"
                        placeholder="Work order title" required maxlength="200">
@@ -21,7 +21,7 @@
 
             {# Description #}
             <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
+                <label for="description" class="form-label">{{ _('ui.label.description') }}</label>
                 <textarea class="form-control" id="description" name="description"
                           rows="4" placeholder="Detailed description...">{{ wo.description if wo else '' }}</textarea>
             </div>
@@ -29,7 +29,7 @@
             {# Type + Priority row #}
             <div class="row g-3 mb-3">
                 <div class="col-sm-6">
-                    <label for="wo_type" class="form-label">Type</label>
+                    <label for="wo_type" class="form-label">{{ _('ui.label.type') }}</label>
                     <select class="form-select" id="wo_type" name="wo_type">
                         {% for t in wo_types %}
                         <option value="{{ t }}"
@@ -38,7 +38,7 @@
                         </option>
                         {% endfor %}
                     </select>
-                    <div class="form-text">Corrective = fix a fault. Preventive = scheduled service. Inspection = condition check. Emergency = immediate safety/production risk.</div>
+                    <div class="form-text">{{ _('ui.text.wo_type_guidance') }}</div>
                 </div>
                 <div class="col-sm-6">
                     <label for="priority" class="form-label">Priority</label>

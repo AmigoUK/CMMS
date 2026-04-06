@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Work Orders — CMMS{% endblock %}
+{% block title %}{{ _('ui.page.work_orders') }} — CMMS{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Work Orders</h1>
+    <h1 class="h3 mb-0">{{ _('ui.page.work_orders') }}</h1>
     {% if current_user.is_supervisor %}
     <a href="{{ url_for('workorders.new') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> New Work Order
+        <i class="bi bi-plus-lg"></i> {{ _('ui.button.new_work_order') }}
     </a>
     {% endif %}
 </div>
@@ -15,7 +15,7 @@
 <form method="GET" action="{{ url_for('workorders.index') }}" class="row g-2 mb-3">
     <div class="col-auto">
         <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-            <option value="">All Statuses</option>
+            <option value="">{{ _('ui.label.all_statuses') }}</option>
             {% for s in statuses %}
             <option value="{{ s }}" {% if current_status == s %}selected{% endif %}>
                 {{ s|replace('_', ' ')|title }}
@@ -25,7 +25,7 @@
     </div>
     <div class="col-auto">
         <select name="priority" class="form-select form-select-sm" onchange="this.form.submit()">
-            <option value="">All Priorities</option>
+            <option value="">{{ _('ui.label.all_priorities') }}</option>
             {% for p in priorities %}
             <option value="{{ p }}" {% if current_priority == p %}selected{% endif %}>
                 {{ p|title }}
@@ -44,13 +44,13 @@
         <thead class="table-light">
             <tr>
                 <th>WO #</th>
-                <th>Title</th>
-                <th>Asset</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Assigned To</th>
-                <th>Due Date</th>
-                <th>Actions</th>
+                <th>{{ _('ui.label.title') }}</th>
+                <th>{{ _('ui.label.asset') }}</th>
+                <th>{{ _('ui.label.priority') }}</th>
+                <th>{{ _('ui.label.status') }}</th>
+                <th>{{ _('ui.label.assigned_to') }}</th>
+                <th>{{ _('ui.label.due_date') }}</th>
+                <th>{{ _('ui.label.actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -90,7 +90,7 @@
             {% else %}
             <tr>
                 <td colspan="8" class="text-center text-muted py-4">
-                    No work orders found.
+                    {{ _('ui.text.no_work_orders') }}
                 </td>
             </tr>
             {% endfor %}
@@ -134,7 +134,7 @@
         </div>
     </div>
     {% else %}
-    <p class="text-center text-muted py-4">No work orders found.</p>
+    <p class="text-center text-muted py-4">{{ _('ui.text.no_work_orders') }}</p>
     {% endfor %}
 </div>
 

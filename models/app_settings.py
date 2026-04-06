@@ -8,6 +8,12 @@ class AppSettings(db.Model):
     allow_anonymous_requests = db.Column(db.Boolean, default=False)
     anonymous_require_name = db.Column(db.Boolean, default=True)
     anonymous_require_email = db.Column(db.Boolean, default=False)
+    default_language = db.Column(db.String(5), default="en")
+    available_languages = db.Column(db.String(100), default="en,pl")
+
+    @property
+    def available_languages_list(self):
+        return [l.strip() for l in (self.available_languages or "en").split(",") if l.strip()]
 
     @staticmethod
     def get():

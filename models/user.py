@@ -40,6 +40,7 @@ class User(UserMixin, db.Model):
         db.Integer, db.ForeignKey("teams.id"), nullable=True
     )
     is_active_user = db.Column(db.Boolean, default=True)
+    language = db.Column(db.String(5), default="en")
     created_at = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc)
     )

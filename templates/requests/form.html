@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Report a Problem — CMMS{% endblock %}
+{% block title %}{{ _('ui.page.report_problem') }} — CMMS{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -14,7 +14,7 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8 col-xl-6">
-        <h1 class="h3 mb-4">Report a Problem</h1>
+        <h1 class="h3 mb-4">{{ _('ui.page.report_problem') }}</h1>
 
         {% if preselected_asset %}
         <div class="alert alert-info d-flex align-items-center mb-4">
@@ -37,41 +37,41 @@
 
             {# Title #}
             <div class="mb-3">
-                <label for="title" class="form-label">What's wrong? <span class="text-danger">*</span></label>
+                <label for="title" class="form-label">{{ _('ui.label.whats_wrong') }} <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="title" name="title"
-                       placeholder="e.g. Fridge not cold, door won't close, strange noise" required maxlength="200">
+                       placeholder="{{ _('ui.text.title_placeholder') }}" required maxlength="200">
             </div>
 
             {# Description #}
             <div class="mb-3">
-                <label for="description" class="form-label">Describe the problem <span class="text-danger">*</span></label>
+                <label for="description" class="form-label">{{ _('ui.label.describe_problem') }} <span class="text-danger">*</span></label>
                 <textarea class="form-control" id="description" name="description"
-                          rows="4" placeholder="What did you notice? When did it start? Is it getting worse?" required></textarea>
+                          rows="4" placeholder="{{ _('ui.text.description_placeholder') }}" required></textarea>
             </div>
 
             {# Priority — visual buttons #}
             <div class="mb-3">
-                <label class="form-label d-block">How urgent is this?</label>
+                <label class="form-label d-block">{{ _('ui.label.how_urgent') }}</label>
                 <div class="d-flex gap-2 priority-btn-group">
                     <input type="radio" class="btn-check" name="priority" value="low" id="p_low" autocomplete="off">
-                    <label class="btn btn-outline-success rounded-3" for="p_low">Not urgent</label>
+                    <label class="btn btn-outline-success rounded-3" for="p_low">{{ _('status.priority.low') }}</label>
 
                     <input type="radio" class="btn-check" name="priority" value="medium" id="p_med" autocomplete="off" checked>
-                    <label class="btn btn-outline-primary rounded-3" for="p_med">Normal</label>
+                    <label class="btn btn-outline-primary rounded-3" for="p_med">{{ _('status.priority.medium') }}</label>
 
                     <input type="radio" class="btn-check" name="priority" value="high" id="p_high" autocomplete="off">
-                    <label class="btn btn-outline-warning rounded-3" for="p_high">Urgent</label>
+                    <label class="btn btn-outline-warning rounded-3" for="p_high">{{ _('status.priority.high') }}</label>
 
                     <input type="radio" class="btn-check" name="priority" value="critical" id="p_crit" autocomplete="off">
-                    <label class="btn btn-outline-danger rounded-3" for="p_crit">Emergency</label>
+                    <label class="btn btn-outline-danger rounded-3" for="p_crit">{{ _('status.priority.critical') }}</label>
                 </div>
-                <div class="form-text">Not urgent = no impact. Normal = fix within days. Urgent = significant impact. Emergency = safety risk or operations stopped.</div>
+                <div class="form-text">{{ _('ui.text.priority_guidance') }}</div>
             </div>
 
             {# Location — hidden when QR scanned (auto-filled from asset) #}
             {% if not preselected_asset %}
             <div class="mb-3">
-                <label for="location_id" class="form-label">Location</label>
+                <label for="location_id" class="form-label">{{ _('ui.label.location') }}</label>
                 <select class="form-select" id="location_id" name="location_id">
                     <option value="">— Select location (optional) —</option>
                     {% for loc in locations %}
@@ -82,7 +82,7 @@
 
             {# Asset #}
             <div class="mb-3">
-                <label for="asset_id" class="form-label">Property</label>
+                <label for="asset_id" class="form-label">{{ _('ui.label.property') }}</label>
                 <select class="form-select" id="asset_id" name="asset_id">
                     <option value="">— Select property (optional) —</option>
                     {% for asset in assets %}
@@ -103,7 +103,7 @@
             {# File upload #}
             <div class="mb-4">
                 <label for="file" class="form-label">
-                    <i class="bi bi-camera me-1"></i>Add a photo
+                    <i class="bi bi-camera me-1"></i>{{ _('ui.label.add_photo') }}
                     <small class="text-muted">(optional)</small>
                 </label>
                 <input type="file" class="form-control" id="file" name="file"
@@ -112,7 +112,7 @@
 
             <div class="d-grid">
                 <button type="submit" class="btn btn-primary btn-lg btn-report">
-                    <i class="bi bi-send"></i> Submit Request
+                    <i class="bi bi-send"></i> {{ _('ui.button.submit_request') }}
                 </button>
             </div>
         </form>

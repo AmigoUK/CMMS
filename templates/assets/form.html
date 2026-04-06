@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}{{ 'Edit Property' if asset else 'New Property' }} — CMMS{% endblock %}
+{% block title %}{{ _('ui.page.edit_property') if asset else _('ui.button.new_property') }} — CMMS{% endblock %}
 
 {% block content %}
 <div class="mb-4">
     <a href="{{ url_for('assets.list_assets') }}" class="text-decoration-none">
-        <i class="bi bi-arrow-left me-1"></i>Back to Property
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.nav.back_to_property') }}
     </a>
 </div>
 
 <h1 class="h3 mb-4">
-    <i class="bi bi-buildings me-2"></i>{{ 'Edit Property' if asset else 'New Property' }}
+    <i class="bi bi-buildings me-2"></i>{{ _('ui.page.edit_property') if asset else _('ui.button.new_property') }}
 </h1>
 
 <form method="POST" enctype="multipart/form-data"
@@ -22,23 +22,23 @@
         <div class="col-md-6">
             <div class="card mb-3">
                 <div class="card-header">
-                    <h6 class="mb-0">Property Information</h6>
+                    <h6 class="mb-0">{{ _('ui.heading.property_information') }}</h6>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <label for="name" class="form-label">{{ _('ui.label.name') }} <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="name" name="name" required
                                value="{{ asset.name if asset else '' }}">
                     </div>
 
                     <div class="mb-3">
-                        <label for="asset_tag" class="form-label">Tag / ID</label>
+                        <label for="asset_tag" class="form-label">{{ _('ui.label.tag_id') }}</label>
                         <input type="text" class="form-control" id="asset_tag" name="asset_tag"
                                value="{{ asset.asset_tag if asset and asset.asset_tag else '' }}">
                     </div>
 
                     <div class="mb-3">
-                        <label for="category" class="form-label">Category</label>
+                        <label for="category" class="form-label">{{ _('ui.label.category') }}</label>
                         <select class="form-select" id="category" name="category">
                             <option value="">— Select —</option>
                             {% for cat in categories %}
@@ -51,19 +51,19 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="manufacturer" class="form-label">Manufacturer</label>
+                        <label for="manufacturer" class="form-label">{{ _('ui.label.manufacturer') }}</label>
                         <input type="text" class="form-control" id="manufacturer" name="manufacturer"
                                value="{{ asset.manufacturer if asset else '' }}">
                     </div>
 
                     <div class="mb-3">
-                        <label for="model" class="form-label">Model</label>
+                        <label for="model" class="form-label">{{ _('ui.label.model') }}</label>
                         <input type="text" class="form-control" id="model" name="model"
                                value="{{ asset.model if asset else '' }}">
                     </div>
 
                     <div class="mb-3">
-                        <label for="serial_number" class="form-label">Serial Number</label>
+                        <label for="serial_number" class="form-label">{{ _('ui.label.serial_number') }}</label>
                         <input type="text" class="form-control" id="serial_number" name="serial_number"
                                value="{{ asset.serial_number if asset else '' }}">
                     </div>
@@ -75,11 +75,11 @@
         <div class="col-md-6">
             <div class="card mb-3">
                 <div class="card-header">
-                    <h6 class="mb-0">Classification &amp; Location</h6>
+                    <h6 class="mb-0">{{ _('ui.heading.classification_location') }}</h6>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label for="location_id" class="form-label">Location</label>
+                        <label for="location_id" class="form-label">{{ _('ui.label.location') }}</label>
                         <select class="form-select" id="location_id" name="location_id">
                             <option value="">— None —</option>
                             {% for loc in locations %}
@@ -92,7 +92,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="status" class="form-label">Status</label>
+                        <label for="status" class="form-label">{{ _('ui.label.status') }}</label>
                         <select class="form-select" id="status" name="status">
                             {% for s in statuses %}
                             <option value="{{ s }}"
@@ -105,7 +105,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="criticality" class="form-label">Criticality</label>
+                        <label for="criticality" class="form-label">{{ _('ui.label.criticality') }}</label>
                         <select class="form-select" id="criticality" name="criticality">
                             {% for c in criticalities %}
                             <option value="{{ c }}"
@@ -118,13 +118,13 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="install_date" class="form-label">Install Date</label>
+                        <label for="install_date" class="form-label">{{ _('ui.label.install_date') }}</label>
                         <input type="date" class="form-control" id="install_date" name="install_date"
                                value="{{ asset.install_date.isoformat() if asset and asset.install_date else '' }}">
                     </div>
 
                     <div class="mb-3">
-                        <label for="warranty_expiry" class="form-label">Warranty Expiry</label>
+                        <label for="warranty_expiry" class="form-label">{{ _('ui.label.warranty_expiry') }}</label>
                         <input type="date" class="form-control" id="warranty_expiry" name="warranty_expiry"
                                value="{{ asset.warranty_expiry.isoformat() if asset and asset.warranty_expiry else '' }}">
                     </div>
@@ -134,7 +134,7 @@
             {# Image upload card #}
             <div class="card mb-3">
                 <div class="card-header">
-                    <h6 class="mb-0">Image</h6>
+                    <h6 class="mb-0">{{ _('ui.heading.image') }}</h6>
                 </div>
                 <div class="card-body">
                     {% if asset and asset.image %}
@@ -147,7 +147,7 @@
                                 <input type="checkbox" class="form-check-input" id="remove_image"
                                        name="remove_image" value="1">
                                 <label class="form-check-label text-danger" for="remove_image">
-                                    Remove current image
+                                    {{ _('ui.button.remove_image') }}
                                 </label>
                             </div>
                         </div>
@@ -155,7 +155,7 @@
                     {% endif %}
                     <div class="mb-0">
                         <label for="image" class="form-label">
-                            {{ 'Replace image' if asset and asset.image else 'Upload image' }}
+                            {{ _('ui.button.replace_image') if asset and asset.image else _('ui.button.upload_image') }}
                         </label>
                         <input type="file" class="form-control" id="image" name="image"
                                accept="image/jpeg,image/png,image/webp,image/gif">
@@ -170,13 +170,13 @@
     <div class="card mb-3">
         <div class="card-body">
             <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
+                <label for="description" class="form-label">{{ _('ui.label.description') }}</label>
                 <textarea class="form-control" id="description" name="description"
                           rows="3">{{ asset.description if asset else '' }}</textarea>
             </div>
 
             <div class="mb-3">
-                <label for="notes" class="form-label">Notes</label>
+                <label for="notes" class="form-label">{{ _('ui.label.notes') }}</label>
                 <textarea class="form-control" id="notes" name="notes"
                           rows="3">{{ asset.notes if asset else '' }}</textarea>
             </div>
@@ -185,9 +185,9 @@
 
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-lg me-1"></i>{{ 'Save Changes' if asset else 'Create Property' }}
+            <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save_changes') if asset else _('ui.button.create_property') }}
         </button>
-        <a href="{{ url_for('assets.list_assets') }}" class="btn btn-outline-secondary">Cancel</a>
+        <a href="{{ url_for('assets.list_assets') }}" class="btn btn-outline-secondary">{{ _('ui.button.cancel') }}</a>
     </div>
 </form>
 {% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.edit_translation') }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('admin.translations') }}" class="text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.button.back_to_translations') }}
+    </a>
+</div>
+
+<h1 class="h3 mb-4"><i class="bi bi-translate me-2"></i>{{ _('ui.page.edit_translation') }}</h1>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Key</label>
+                    <div><code>{{ key }}</code></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Category</label>
+                    <div><span class="badge bg-light text-dark">{{ en_translation.category if en_translation else '' }}</span></div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">English (reference)</label>
+                    <div class="bg-light rounded p-3">{{ en_translation.value if en_translation else '—' }}</div>
+                </div>
+
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    {% for lang in target_languages %}
+                    <div class="mb-3">
+                        <label for="value_{{ lang }}" class="form-label fw-bold">
+                            {% if lang == 'pl' %}Polski{% elif lang == 'de' %}Deutsch{% elif lang == 'fr' %}Francais{% else %}{{ lang|upper }}{% endif %}
+                        </label>
+                        <textarea class="form-control" id="value_{{ lang }}" name="value_{{ lang }}"
+                                  rows="3">{{ target_values.get(lang, '') }}</textarea>
+                    </div>
+                    {% endfor %}
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save') }}
+                        </button>
+                        <a href="{{ url_for('admin.translations') }}" class="btn btn-outline-secondary">{{ _('ui.button.cancel') }}</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

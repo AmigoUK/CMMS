@@ -25,17 +25,53 @@ def create_app(config_class=None):
 
     # Flask-Login config
     login_manager.login_view = "auth.login"
-    login_manager.login_message = "Please sign in to access this page."
-    login_manager.login_message_category = "info"
+    login_manager.login_message = None  # handled by unauthorized_handler
 
     @login_manager.user_loader
     def load_user(user_id):
         from models.user import User
         return db.session.get(User, int(user_id))
 
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        from utils.i18n import translate as _t
+        flash(_t("flash.login_required"), "info")
+        return redirect(url_for("auth.login", next=request.url))
+
+    # ── Translation engine ─────────────────────────────────
+    from utils.i18n import translate
+    app.jinja_env.globals["_"] = translate
+
+    # ── Language resolution middleware ──────────────────────
+    @app.before_request
+    def set_language():
+        g.language = "en"
+        # 1. Explicit session choice
+        if session.get("language"):
+            g.language = session["language"]
+            return
+        # 2. Authenticated user preference
+        if current_user.is_authenticated and current_user.language:
+            g.language = current_user.language
+            session["language"] = g.language
+            return
+        # 3. Accept-Language header
+        accept = request.headers.get("Accept-Language", "")
+        from models.app_settings import AppSettings
+        settings = AppSettings.get()
+        available = settings.available_languages_list
+        for part in accept.split(","):
+            lang = part.split(";")[0].strip().split("-")[0].lower()
+            if lang in available:
+                g.language = lang
+                return
+        # 4. Site default
+        g.language = settings.default_language or "en"
+
     # ── Jinja2 filters ─────────────────────────────────────
     @app.template_filter("relative_date")
     def relative_date(d):
+        from utils.i18n import translate as _t
         if d is None:
             return "\u2014"
         today = date.today()
@@ -45,23 +81,29 @@ def create_app(config_class=None):
             d = d.date()
         delta = (d - today).days
         if delta == 0:
-            return "Today"
+            return _t("filter.date.today")
         if delta == -1:
-            return "Yesterday"
+            return _t("filter.date.yesterday")
         if delta == 1:
-            return "Tomorrow"
+            return _t("filter.date.tomorrow")
         if -7 <= delta < -1:
-            return f"{abs(delta)} days ago"
+            return _t("filter.date.days_ago", count=abs(delta))
         if 1 < delta <= 7:
-            return f"In {delta} days"
+            return _t("filter.date.in_days", count=delta)
         return d.strftime("%d %b %Y")
 
     @app.template_filter("status_label")
-    def status_label(status):
-        """Convert snake_case status to Title Case label."""
+    def status_label(status, entity_type=""):
+        """Translate a status value to a localised label."""
         if not status:
             return ""
-        return status.replace("_", " ").title()
+        from utils.i18n import translate as _t
+        key = f"status.{entity_type}.{status}" if entity_type else f"status.{status}"
+        result = _t(key)
+        # If translation returned the formatted key fallback, use title case
+        if result == key.rsplit(".", 1)[-1].replace("_", " ").title():
+            return status.replace("_", " ").title()
+        return result
 
     # ── Register blueprints ────────────────────────────────
     from blueprints.auth import auth_bp
@@ -168,6 +210,7 @@ def create_app(config_class=None):
             WorkOrder, WorkOrderTask, Request,
             Part, PartUsage, TimeLog, Attachment,
             PreventiveTask, AppSettings, RequestActivity,
+            Translation, HelpContent,
         )
 
         db.create_all()

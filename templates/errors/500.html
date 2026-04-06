@@ -3,10 +3,10 @@
 {% block content %}
 <div class="text-center py-5">
     <i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>
-    <h2 class="mt-3">Something Went Wrong</h2>
-    <p class="text-muted">An unexpected error occurred. Please try again later.</p>
+    <h2 class="mt-3">{{ _('ui.page.server_error') }}</h2>
+    <p class="text-muted">{{ _('ui.text.server_error') }}</p>
     <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary mt-2">
-        <i class="bi bi-house me-1"></i>Back to Dashboard
+        <i class="bi bi-house me-1"></i>{{ _('ui.button.back_to_dashboard') }}
     </a>
 </div>
 {% endblock %}

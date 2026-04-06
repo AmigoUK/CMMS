@@ -27,10 +27,10 @@
     </h1>
     <div class="d-flex gap-2 no-print">
         <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-printer"></i> Print
+            <i class="bi bi-printer"></i> {{ _('ui.button.print') }}
         </button>
         <a href="{{ url_for('requests.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i> Back
+            <i class="bi bi-arrow-left"></i> {{ _('ui.button.back') }}
         </a>
     </div>
 </div>
@@ -39,7 +39,7 @@
 <div class="float-end ms-3 mb-3 text-center qr-print-block">
     <img src="{{ url_for('requests.qr_code', id=request_obj.id) }}" alt="QR Code"
          style="width: 120px; height: 120px;">
-    <div><small class="text-muted">Scan to open</small></div>
+    <div><small class="text-muted">{{ _('ui.text.scan_to_open') }}</small></div>
 </div>
 
 {# ── Info card ── #}
@@ -49,24 +49,24 @@
         <p class="card-text">{{ request_obj.description }}</p>
         <div class="row g-3">
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Priority</small>
+                <small class="text-muted d-block">{{ _('ui.label.priority') }}</small>
                 <span class="priority-{{ request_obj.priority }}">
                     <i class="bi bi-circle-fill" style="font-size:.6rem"></i>
                     {{ request_obj.priority|title }}
                 </span>
             </div>
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Location</small>
+                <small class="text-muted d-block">{{ _('ui.label.location') }}</small>
                 {{ request_obj.location.full_path if request_obj.location else '—' }}
             </div>
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Property</small>
+                <small class="text-muted d-block">{{ _('ui.label.property') }}</small>
                 {% if request_obj.asset %}
                 <a href="{{ url_for('assets.detail', id=request_obj.asset.id) }}">{{ request_obj.asset.name }}</a>
                 {% else %}—{% endif %}
             </div>
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Reported by</small>
+                <small class="text-muted d-block">{{ _('ui.label.reported_by') }}</small>
                 {% if request_obj.requester %}
                     {{ request_obj.requester.display_name }}
                 {% elif request_obj.reporter_name %}
@@ -75,16 +75,16 @@
                     <br><small class="text-muted">{{ request_obj.reporter_contact }}</small>
                     {% endif %}
                 {% else %}
-                    Anonymous
+                    {{ _('ui.text.anonymous') }}
                 {% endif %}
             </div>
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Submitted</small>
+                <small class="text-muted d-block">{{ _('ui.label.submitted') }}</small>
                 {{ request_obj.created_at.strftime('%d %b %Y %H:%M') }}
             </div>
             {% if request_obj.work_order %}
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Work Order</small>
+                <small class="text-muted d-block">{{ _('ui.label.work_order') }}</small>
                 <a href="{{ url_for('workorders.detail', id=request_obj.work_order.id) }}">
                     {{ request_obj.work_order.wo_number }}
                 </a>
@@ -97,7 +97,7 @@
 {# ── Activity Timeline ── #}
 <div class="card mb-4">
     <div class="card-header">
-        <i class="bi bi-clock-history me-1"></i> Activity
+        <i class="bi bi-clock-history me-1"></i> {{ _('ui.label.activity') }}
     </div>
     <div class="card-body">
         {% if activities %}
@@ -136,10 +136,10 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="flex-grow-1">
                 <input type="text" class="form-control form-control-sm" name="comment"
-                       placeholder="Add a comment..." required>
+                       placeholder="{{ _('ui.text.add_comment_placeholder') }}" required>
             </div>
             <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">
-                <i class="bi bi-chat-dots"></i> Comment
+                <i class="bi bi-chat-dots"></i> {{ _('ui.button.comment') }}
             </button>
         </form>
         {% endif %}
@@ -149,7 +149,7 @@
 {# ── Attachments ── #}
 <div class="card mb-4">
     <div class="card-header">
-        <i class="bi bi-paperclip"></i> Attachments
+        <i class="bi bi-paperclip"></i> {{ _('ui.label.attachments') }}
         {% if attachments %}<span class="badge bg-secondary ms-1">{{ attachments|length }}</span>{% endif %}
     </div>
     <div class="card-body">
@@ -174,7 +174,7 @@
             {% endfor %}
         </ul>
         {% else %}
-        <p class="text-muted mb-0">No attachments.</p>
+        <p class="text-muted mb-0">{{ _('ui.text.no_attachments') }}</p>
         {% endif %}
 
         {# Upload form #}
@@ -185,12 +185,12 @@
               enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="flex-grow-1">
-                <label for="file" class="form-label mb-1 small">Add file</label>
+                <label for="file" class="form-label mb-1 small">{{ _('ui.label.add_file') }}</label>
                 <input type="file" class="form-control form-control-sm" id="file" name="file"
                        accept="image/*,.pdf,.doc,.docx">
             </div>
             <button type="submit" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-upload"></i> Upload
+                <i class="bi bi-upload"></i> {{ _('ui.button.upload') }}
             </button>
         </form>
         {% endif %}
@@ -205,7 +205,7 @@
             <form method="POST" action="{{ url_for('requests.acknowledge', id=request_obj.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-info">
-                    <i class="bi bi-check-circle"></i> Acknowledge
+                    <i class="bi bi-check-circle"></i> {{ _('ui.button.acknowledge') }}
                 </button>
             </form>
             {% endif %}
@@ -214,7 +214,7 @@
             <form method="POST" action="{{ url_for('requests.convert', id=request_obj.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-success">
-                    <i class="bi bi-arrow-right-circle"></i> Convert to Work Order
+                    <i class="bi bi-arrow-right-circle"></i> {{ _('ui.button.convert_to_wo') }}
                 </button>
             </form>
             {% endif %}
@@ -224,7 +224,7 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-outline-danger"
                         onclick="return confirm('Cancel this request?')">
-                    <i class="bi bi-x-circle"></i> Cancel
+                    <i class="bi bi-x-circle"></i> {{ _('ui.button.cancel') }}
                 </button>
             </form>
             {% endif %}
@@ -234,7 +234,7 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-outline-danger"
                         onclick="return confirm('Cancel this request?')">
-                    <i class="bi bi-x-circle"></i> Cancel Request
+                    <i class="bi bi-x-circle"></i> {{ _('ui.button.cancel_request') }}
                 </button>
             </form>
             {% endif %}

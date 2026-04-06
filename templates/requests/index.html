@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Requests — CMMS{% endblock %}
+{% block title %}{{ _('ui.page.requests') }} — CMMS{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Requests</h1>
+    <h1 class="h3 mb-0">{{ _('ui.page.requests') }}</h1>
     <a href="{{ url_for('requests.new') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> New Request
+        <i class="bi bi-plus-lg"></i> {{ _('ui.button.new_request') }}
     </a>
 </div>
 
@@ -13,7 +13,7 @@
 <ul class="nav nav-pills mb-3 flex-wrap gap-1">
     <li class="nav-item">
         <a class="nav-link {% if not current_status %}active{% endif %}"
-           href="{{ url_for('requests.index') }}">All</a>
+           href="{{ url_for('requests.index') }}">{{ _('ui.label.all') }}</a>
     </li>
     {% for s in statuses %}
     <li class="nav-item">
@@ -31,12 +31,12 @@
         <thead class="table-light">
             <tr>
                 <th>#</th>
-                <th>Title</th>
-                <th>Location</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
+                <th>{{ _('ui.label.title') }}</th>
+                <th>{{ _('ui.label.location') }}</th>
+                <th>{{ _('ui.label.priority') }}</th>
+                <th>{{ _('ui.label.status') }}</th>
+                <th>{{ _('ui.label.date') }}</th>
+                <th>{{ _('ui.label.actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -67,7 +67,7 @@
             {% else %}
             <tr>
                 <td colspan="7" class="text-center text-muted py-4">
-                    No requests found.
+                    {{ _('ui.text.no_requests') }}
                 </td>
             </tr>
             {% endfor %}
@@ -105,7 +105,7 @@
         </div>
     </div>
     {% else %}
-    <p class="text-center text-muted py-4">No requests found.</p>
+    <p class="text-center text-muted py-4">{{ _('ui.text.no_requests') }}</p>
     {% endfor %}
 </div>
 

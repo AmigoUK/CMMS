@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report Submitted | CMMS</title>
+    <title>{{ _('ui.page.report_submitted') }} | CMMS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -31,13 +31,13 @@
                 <div class="text-success mb-3">
                     <i class="bi bi-check-circle" style="font-size: 4rem;"></i>
                 </div>
-                <h3 class="mb-2">Report Submitted</h3>
+                <h3 class="mb-2">{{ _('ui.page.report_submitted') }}</h3>
                 <p class="text-muted mb-4">
-                    Your report has been received and the maintenance team will review it shortly.
+                    {{ _('ui.text.report_received') }}
                 </p>
 
                 <div class="bg-light rounded-3 p-3 mb-4">
-                    <div class="text-muted small mb-1">Request Number</div>
+                    <div class="text-muted small mb-1">{{ _('ui.label.request_number') }}</div>
                     <div class="fs-3 fw-bold text-primary">#{{ req.id }}</div>
                     <div class="mt-2">
                         <strong>{{ asset.name }}</strong>
@@ -50,20 +50,20 @@
 
                 <div class="alert alert-info text-start" role="alert">
                     <i class="bi bi-info-circle me-2"></i>
-                    <strong>What happens next?</strong>
+                    <strong>{{ _('ui.label.what_happens_next') }}</strong>
                     <ul class="mb-0 mt-2">
-                        <li>A supervisor will review your report</li>
-                        <li>A technician will be assigned to fix the problem</li>
-                        <li>You can check back by scanning the same QR code</li>
+                        <li>{{ _('ui.text.next_step_1') }}</li>
+                        <li>{{ _('ui.text.next_step_2') }}</li>
+                        <li>{{ _('ui.text.next_step_3') }}</li>
                     </ul>
                 </div>
 
                 <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary mt-2">
-                    <i class="bi bi-box-arrow-in-right me-1"></i>Sign in to track this request
+                    <i class="bi bi-box-arrow-in-right me-1"></i>{{ _('ui.button.sign_in_to_track') }}
                 </a>
             </div>
             <div class="card-footer text-center text-muted py-3">
-                <small><i class="bi bi-wrench-adjustable me-1"></i>CMMS Maintenance Reporting</small>
+                <small><i class="bi bi-wrench-adjustable me-1"></i>{{ _('ui.text.cmms_maintenance_reporting') }}</small>
             </div>
         </div>
     </div>

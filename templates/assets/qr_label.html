@@ -96,9 +96,9 @@
 </head>
 <body>
     <div class="no-print">
-        <button onclick="window.print()">Print Labels</button>
-        <a href="{{ url_for('assets.qr_labels_select') }}">Back to Selection</a>
-        <a href="{{ url_for('assets.list_assets') }}">Back to Property</a>
+        <button onclick="window.print()">{{ _('ui.button.print_labels') }}</button>
+        <a href="{{ url_for('assets.qr_labels_select') }}">{{ _('ui.nav.back_to_selection') }}</a>
+        <a href="{{ url_for('assets.list_assets') }}">{{ _('ui.nav.back_to_property') }}</a>
         <span class="label-count">{{ assets | length }} label{{ 's' if assets | length != 1 }}</span>
     </div>
 

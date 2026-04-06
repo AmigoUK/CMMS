@@ -1,0 +1,16 @@
+{% extends "help/base_help.html" %}
+
+{% block title %}{{ help.title if help else _('ui.page.help') }} — CMMS{% endblock %}
+
+{% block help_content %}
+{% if help %}
+<h4 class="mb-3">{{ help.title }}</h4>
+{{ help.content|safe }}
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-translate display-4"></i>
+    <h5 class="mt-3">{{ _('ui.text.page_not_translated') }}</h5>
+    <p>{{ _('ui.text.translation_not_available') }}</p>
+</div>
+{% endif %}
+{% endblock %}

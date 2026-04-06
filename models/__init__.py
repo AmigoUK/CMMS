@@ -13,6 +13,8 @@ from models.attachment import Attachment, ENTITY_TYPES, ALLOWED_EXTENSIONS
 from models.preventive_task import PreventiveTask, FREQUENCY_UNITS
 from models.app_settings import AppSettings
 from models.request_activity import RequestActivity
+from models.translation import Translation
+from models.help_content import HelpContent
 
 __all__ = [
     "Site", "Team", "User", "ROLES", "user_sites",
@@ -26,4 +28,6 @@ __all__ = [
     "PreventiveTask", "FREQUENCY_UNITS",
     "AppSettings",
     "RequestActivity",
+    "Translation",
+    "HelpContent",
 ]
