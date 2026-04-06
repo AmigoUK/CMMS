@@ -304,13 +304,37 @@ def qr_label(id):
     return render_template("assets/qr_label.html", assets=[asset])
 
 
-@assets_bp.route("/qr-labels")
+@assets_bp.route("/qr-labels", methods=["GET"])
 @supervisor_required
-def qr_labels_bulk():
-    """Printable QR labels for all active property at current site."""
+def qr_labels_select():
+    """Selection page — pick which properties to print labels for."""
     assets = Asset.query.filter_by(
         site_id=g.current_site.id, is_active=True,
+    ).order_by(Asset.category, Asset.name).all()
+    return render_template("assets/qr_select.html", assets=assets)
+
+
+@assets_bp.route("/qr-labels/print", methods=["POST"])
+@supervisor_required
+def qr_labels_print():
+    """Print selected QR labels."""
+    asset_ids = request.form.getlist("asset_ids")
+    if not asset_ids:
+        flash("No property selected.", "warning")
+        return redirect(url_for("assets.qr_labels_select"))
+
+    ids = []
+    for aid in asset_ids:
+        try:
+            ids.append(int(aid))
+        except (ValueError, TypeError):
+            pass
+
+    assets = Asset.query.filter(
+        Asset.id.in_(ids),
+        Asset.site_id == g.current_site.id,
     ).order_by(Asset.name).all()
+
     return render_template("assets/qr_label.html", assets=assets)
 
 

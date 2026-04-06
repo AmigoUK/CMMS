@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Print QR Labels — CMMS{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('assets.list_assets') }}" class="text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i>Back to Property
+    </a>
+</div>
+
+<h1 class="h3 mb-4"><i class="bi bi-qr-code me-2"></i>Print QR Labels</h1>
+
+<form method="POST" action="{{ url_for('assets.qr_labels_print') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Select Property to Print</h6>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="selectAll">Select All</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="selectNone">None</button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if assets %}
+            {% set categories = assets | groupby('category') %}
+            {% for cat_name, cat_assets in categories %}
+            <div class="border-bottom">
+                <div class="px-3 py-2 bg-light d-flex justify-content-between align-items-center">
+                    <strong>{{ cat_name or 'Uncategorised' }}</strong>
+                    <small class="text-muted">{{ cat_assets | length }} items</small>
+                </div>
+                {% for asset in cat_assets %}
+                <label class="d-flex align-items-center px-3 py-2 border-top cursor-pointer"
+                       style="cursor: pointer;" for="asset_{{ asset.id }}">
+                    <input type="checkbox" class="form-check-input me-3 asset-cb" name="asset_ids"
+                           value="{{ asset.id }}" id="asset_{{ asset.id }}">
+                    {% if asset.image %}
+                    <img src="{{ url_for('uploaded_file', filename='property/' + asset.image) }}"
+                         class="rounded me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                    {% else %}
+                    <span class="d-inline-flex align-items-center justify-content-center bg-light rounded me-2"
+                          style="width: 32px; height: 32px;">
+                        <i class="bi bi-image text-muted small"></i>
+                    </span>
+                    {% endif %}
+                    <div class="flex-grow-1">
+                        <span class="fw-semibold">{{ asset.name }}</span>
+                        {% if asset.asset_tag %}
+                        <code class="ms-2">{{ asset.asset_tag }}</code>
+                        {% endif %}
+                    </div>
+                    {% if asset.location %}
+                    <small class="text-muted">{{ asset.location.name }}</small>
+                    {% endif %}
+                </label>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="p-4 text-center text-muted">No property found at this site.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if assets %}
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-printer me-1"></i>Print Selected Labels
+        </button>
+        <span class="align-self-center text-muted" id="selectedCount">0 selected</span>
+    </div>
+    {% endif %}
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var cbs = document.querySelectorAll(".asset-cb");
+    var countEl = document.getElementById("selectedCount");
+
+    function updateCount() {
+        var n = document.querySelectorAll(".asset-cb:checked").length;
+        countEl.textContent = n + " selected";
+    }
+    cbs.forEach(function(cb) { cb.addEventListener("change", updateCount); });
+
+    document.getElementById("selectAll").addEventListener("click", function() {
+        cbs.forEach(function(cb) { cb.checked = true; });
+        updateCount();
+    });
+    document.getElementById("selectNone").addEventListener("click", function() {
+        cbs.forEach(function(cb) { cb.checked = false; });
+        updateCount();
+    });
+});
+</script>
+{% endblock %}
