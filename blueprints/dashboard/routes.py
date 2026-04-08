@@ -5,7 +5,7 @@ from flask_login import current_user, login_required
 
 from blueprints.dashboard import dashboard_bp
 from extensions import csrf, db
-from models import AppSettings, Asset, Part, Request, WorkOrder, Site, Location, RequestActivity
+from models import AppSettings, Asset, Part, PreventiveTask, Request, WorkOrder, Site, Location, RequestActivity
 from utils.stock import get_low_stock_parts
 from models.request import REQUEST_PRIORITIES
 
@@ -30,6 +30,8 @@ def index():
     my_recent_requests = []
     recent_wos = []
     low_stock_parts = []
+    overdue_pm_count = 0
+    upcoming_pm_tasks = []
 
     if site_id:
         open_requests = Request.query.filter(
@@ -77,6 +79,22 @@ def index():
         if current_user.has_role_at_least("technician"):
             low_stock_parts = get_low_stock_parts(site_id, limit=10)
 
+        # ── Overdue & upcoming PM (technician+) ────────────────
+        if current_user.has_role_at_least("technician"):
+            overdue_pm_count = PreventiveTask.query.filter(
+                PreventiveTask.site_id == site_id,
+                PreventiveTask.is_active == True,
+                PreventiveTask.next_due < date.today(),
+            ).count()
+            from datetime import timedelta
+            upcoming_pm_tasks = PreventiveTask.query.filter(
+                PreventiveTask.site_id == site_id,
+                PreventiveTask.is_active == True,
+                PreventiveTask.next_due.isnot(None),
+                PreventiveTask.next_due <= date.today() + timedelta(days=7),
+                PreventiveTask.next_due >= date.today(),
+            ).order_by(PreventiveTask.next_due.asc()).limit(5).all()
+
         # ── Recent Work Orders (technician+) ────────────────────
         if current_user.is_technician:
             recent_wos = WorkOrder.query.filter(
@@ -93,6 +111,8 @@ def index():
         my_recent_requests=my_recent_requests,
         recent_wos=recent_wos,
         low_stock_parts=low_stock_parts,
+        overdue_pm_count=overdue_pm_count,
+        upcoming_pm_tasks=upcoming_pm_tasks,
     )
 
 

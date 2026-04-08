@@ -190,6 +190,13 @@ def create_app(config_class=None):
             if site and current_user.has_role_at_least("technician"):
                 from utils.stock import get_low_stock_count
                 ctx["low_stock_count"] = get_low_stock_count(site.id)
+                from models import PreventiveTask
+                from datetime import date
+                ctx["overdue_pm_count"] = PreventiveTask.query.filter(
+                    PreventiveTask.site_id == site.id,
+                    PreventiveTask.is_active == True,
+                    PreventiveTask.next_due < date.today(),
+                ).count()
         return ctx
 
     # ── Error handlers ─────────────────────────────────────

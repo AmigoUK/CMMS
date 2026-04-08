@@ -12,6 +12,7 @@ from extensions import db
 from models import (
     Site, Team, User, Location, Asset, Request, WorkOrder,
     WorkOrderTask, Part, PartUsage, TimeLog, Supplier,
+    Meter, MeterReading, PreventiveTask, PMCompletionLog,
 )
 
 app = create_app()
@@ -407,6 +408,205 @@ with app.app_context():
 
         db.session.commit()
 
+    # ── Meters ───────────────────────────────────────────────────
+    if Meter.query.count() == 0:
+        oven_bm1 = Asset.query.filter_by(asset_tag="BM-OV-001").first()
+        mixer_bm1 = Asset.query.filter_by(asset_tag="BM-MX-001").first()
+        oven_ob1 = Asset.query.filter_by(asset_tag="OB-OV-001").first()
+
+        m_oven_hrs = Meter(asset_id=oven_bm1.id, name="Run Hours", unit="hours", current_value=4280)
+        m_mixer_batches = Meter(asset_id=mixer_bm1.id, name="Batch Count", unit="batches", current_value=12450)
+        m_oven_ob_hrs = Meter(asset_id=oven_ob1.id, name="Run Hours", unit="hours", current_value=2100)
+        db.session.add_all([m_oven_hrs, m_mixer_batches, m_oven_ob_hrs])
+        db.session.flush()
+
+        # Sample readings
+        for m, readings in [
+            (m_oven_hrs, [4200, 4240, 4280]),
+            (m_mixer_batches, [12200, 12350, 12450]),
+            (m_oven_ob_hrs, [2000, 2050, 2100]),
+        ]:
+            prev = 0
+            for val in readings:
+                r = MeterReading(
+                    meter_id=m.id, value=val,
+                    previous_value=prev, delta=val - prev,
+                    recorded_by_id=anna.id, recorded_at=ago(days=30 - readings.index(val) * 10),
+                )
+                db.session.add(r)
+                prev = val
+        db.session.commit()
+    else:
+        m_oven_hrs = Meter.query.filter_by(name="Run Hours").first()
+        m_mixer_batches = Meter.query.filter_by(name="Batch Count").first()
+
+    # ── Preventive Tasks ──────────────────────────────────────────
+    if PreventiveTask.query.count() == 0:
+        oven_bm1 = Asset.query.filter_by(asset_tag="BM-OV-001").first()
+        mixer_bm1 = Asset.query.filter_by(asset_tag="BM-MX-001").first()
+        compressor = Asset.query.filter_by(asset_tag="BM-CR-001").first()
+        fridge_mas = Asset.query.filter_by(asset_tag="MAS-FR-001").first()
+        db_board = Asset.query.filter_by(asset_tag="BM-DB-001").first()
+        oven_ob1 = Asset.query.filter_by(asset_tag="OB-OV-001").first()
+
+        import json
+        pm_tasks = [
+            # BM daily
+            PreventiveTask(
+                site_id=bm.id, name="Production area daily clean",
+                description="End-of-day cleaning and sanitization of production hall",
+                location_id=bm_prod.id, schedule_type="fixed",
+                frequency_value=1, frequency_unit="days",
+                priority="medium", estimated_duration=60,
+                lead_days=0, group_tag="bm-daily",
+                assigned_to_id=anna.id, created_by_id=jan.id,
+                next_due=date.today(), last_completed=date.today() - timedelta(days=1),
+                checklist_template=json.dumps([
+                    "Sweep and mop production floor",
+                    "Clean mixer bowls and attachments",
+                    "Wipe down work surfaces",
+                    "Empty waste bins",
+                    "Check drain covers clear",
+                ]),
+            ),
+            # BM weekly mixer
+            PreventiveTask(
+                site_id=bm.id, name="Mixer belt & seal inspection",
+                description="Weekly check of spiral mixer drive belt tension and bowl seal condition",
+                asset_id=mixer_bm1.id, location_id=bm_prod.id,
+                schedule_type="floating", frequency_value=1, frequency_unit="weeks",
+                priority="high", estimated_duration=30,
+                lead_days=2, group_tag="bm-production-weekly",
+                assigned_to_id=anna.id, created_by_id=jan.id,
+                next_due=date.today() + timedelta(days=3),
+                last_completed=date.today() - timedelta(days=4),
+                checklist_template=json.dumps([
+                    "Check drive belt tension",
+                    "Inspect belt for cracks or wear",
+                    "Check bowl seal for damage",
+                    "Lubricate bowl lift mechanism",
+                ]),
+            ),
+            # BM weekly cold room
+            PreventiveTask(
+                site_id=bm.id, name="Cold room temperature calibration",
+                description="Weekly temperature probe calibration and door seal check",
+                asset_id=compressor.id, location_id=bm_cold.id,
+                schedule_type="fixed", frequency_value=1, frequency_unit="weeks",
+                priority="high", estimated_duration=20,
+                lead_days=1, group_tag="bm-cold-weekly",
+                assigned_to_id=anna.id, created_by_id=jan.id,
+                next_due=date.today() + timedelta(days=1),
+                checklist_template=json.dumps([
+                    "Calibrate temperature probes with reference thermometer",
+                    "Check door gasket seal",
+                    "Record current temperature readings",
+                ]),
+            ),
+            # BM monthly oven
+            PreventiveTask(
+                site_id=bm.id, name="Oven burner inspection",
+                asset_id=oven_bm1.id, location_id=bm_prod.id,
+                schedule_type="fixed", frequency_value=1, frequency_unit="months",
+                priority="critical", estimated_duration=90,
+                lead_days=7, group_tag="bm-production-monthly",
+                assigned_to_id=anna.id, created_by_id=jan.id,
+                next_due=date.today() - timedelta(days=3),  # OVERDUE
+                checklist_template=json.dumps([
+                    "Inspect burner nozzles for blockage",
+                    "Check gas pressure at manifold",
+                    "Test flame failure device",
+                    "Inspect flue and ventilation",
+                    "Clean burner assembly",
+                ]),
+            ),
+            # BM monthly compressor
+            PreventiveTask(
+                site_id=bm.id, name="Compressor oil check",
+                asset_id=compressor.id, location_id=bm_cold.id,
+                schedule_type="floating", frequency_value=1, frequency_unit="months",
+                priority="medium", estimated_duration=20,
+                lead_days=5, group_tag="bm-cold-monthly",
+                assigned_to_id=marek.id, created_by_id=jan.id,
+                next_due=date.today() + timedelta(days=12),
+                last_completed=date.today() - timedelta(days=18),
+            ),
+            # MAS monthly fridge
+            PreventiveTask(
+                site_id=mas.id, name="Walk-in fridge maintenance",
+                asset_id=fridge_mas.id, location_id=mas_storage.id,
+                schedule_type="floating", frequency_value=1, frequency_unit="months",
+                priority="high", estimated_duration=45,
+                lead_days=5,
+                assigned_to_id=anna.id, created_by_id=jan.id,
+                next_due=date.today() - timedelta(days=5),  # OVERDUE
+            ),
+            # BM quarterly electrical
+            PreventiveTask(
+                site_id=bm.id, name="Electrical distribution board inspection",
+                asset_id=db_board.id, location_id=bm_elec.id,
+                schedule_type="fixed", frequency_value=3, frequency_unit="months",
+                priority="critical", estimated_duration=120,
+                lead_days=14,
+                assigned_to_id=dave.id, created_by_id=jan.id,
+                next_due=date.today() + timedelta(days=20),
+            ),
+            # OB monthly oven
+            PreventiveTask(
+                site_id=ob.id, name="Deck oven clean & inspection",
+                asset_id=oven_ob1.id,
+                schedule_type="floating", frequency_value=1, frequency_unit="months",
+                priority="high", estimated_duration=60,
+                lead_days=5, group_tag="ob-bakery-monthly",
+                assigned_to_id=marek.id, created_by_id=jan.id,
+                next_due=date.today() + timedelta(days=8),
+                last_completed=date.today() - timedelta(days=22),
+            ),
+            # Counter-based: mixer bearing lubrication
+            PreventiveTask(
+                site_id=bm.id, name="Mixer bearing lubrication",
+                description="Lubricate main and secondary bearings every 500 batches",
+                asset_id=mixer_bm1.id, location_id=bm_prod.id,
+                schedule_type="floating", frequency_value=30, frequency_unit="days",
+                priority="high", estimated_duration=45,
+                lead_days=3,
+                meter_id=m_mixer_batches.id, meter_trigger_value=500,
+                last_meter_reading=12000,
+                assigned_to_id=anna.id, created_by_id=jan.id,
+                next_due=date.today() + timedelta(days=10),
+            ),
+            # Counter-based: oven element inspection
+            PreventiveTask(
+                site_id=bm.id, name="Oven element inspection",
+                description="Inspect and test heating elements every 1000 run hours",
+                asset_id=oven_bm1.id, location_id=bm_prod.id,
+                schedule_type="floating", frequency_value=90, frequency_unit="days",
+                priority="critical", estimated_duration=60,
+                lead_days=7,
+                meter_id=m_oven_hrs.id, meter_trigger_value=1000,
+                last_meter_reading=3500,
+                assigned_to_id=anna.id, created_by_id=jan.id,
+                next_due=date.today() + timedelta(days=30),
+            ),
+        ]
+        db.session.add_all(pm_tasks)
+        db.session.flush()
+
+        # Add some completion history
+        for task in [pm_tasks[0], pm_tasks[1], pm_tasks[3]]:
+            for days_ago_val in [30, 23, 16, 9]:
+                log = PMCompletionLog(
+                    preventive_task_id=task.id,
+                    scheduled_date=date.today() - timedelta(days=days_ago_val),
+                    completed_date=date.today() - timedelta(days=days_ago_val - 1),
+                    completed_by_id=anna.id,
+                    days_early=1,
+                    was_on_time=True,
+                )
+                db.session.add(log)
+
+        db.session.commit()
+
     print("Demo data seeded successfully!")
     print(f"  Sites: {Site.query.count()}")
     print(f"  Teams: {Team.query.count()}")
@@ -420,3 +620,6 @@ with app.app_context():
     print(f"  WO Tasks: {WorkOrderTask.query.count()}")
     print(f"  Time Logs: {TimeLog.query.count()}")
     print(f"  Part Usages: {PartUsage.query.count()}")
+    print(f"  Meters: {Meter.query.count()}")
+    print(f"  PM Tasks: {PreventiveTask.query.count()}")
+    print(f"  PM Logs: {PMCompletionLog.query.count()}")

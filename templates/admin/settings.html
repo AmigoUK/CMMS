@@ -1,22 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Settings — CMMS{% endblock %}
+{% block title %}{{ _('ui.page.settings') }} — CMMS{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-4"><i class="bi bi-shield-lock me-2"></i>Admin</h1>
+<h1 class="h3 mb-4"><i class="bi bi-shield-lock me-2"></i>{{ _('ui.navbar.admin') }}</h1>
 
 {# Sub-navigation tabs #}
 <ul class="nav nav-tabs mb-4">
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.list_users') }}">Users</a>
+        <a class="nav-link" href="{{ url_for('admin.list_users') }}">{{ _('ui.text.admin_tab_users') }}</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.list_teams') }}">Teams</a>
+        <a class="nav-link" href="{{ url_for('admin.list_teams') }}">{{ _('ui.text.admin_tab_teams') }}</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.list_sites') }}">Sites</a>
+        <a class="nav-link" href="{{ url_for('admin.list_sites') }}">{{ _('ui.text.admin_tab_sites') }}</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link active" href="{{ url_for('admin.settings') }}">Settings</a>
+        <a class="nav-link active" href="{{ url_for('admin.settings') }}">{{ _('ui.text.admin_tab_settings') }}</a>
     </li>
 </ul>
 
@@ -28,13 +28,11 @@
             {# Anonymous Reporting #}
             <div class="card mb-4">
                 <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-qr-code-scan me-2"></i>Anonymous QR Reporting</h6>
+                    <h6 class="mb-0"><i class="bi bi-qr-code-scan me-2"></i>{{ _('ui.label.anonymous_qr_reporting') }}</h6>
                 </div>
                 <div class="card-body">
                     <p class="text-muted small mb-3">
-                        When enabled, anyone who scans a QR code on a piece of property can submit a
-                        maintenance request without logging in. Their name and contact details are captured
-                        on the form instead.
+                        {{ _('ui.text.anonymous_reporting_help') }}
                     </p>
 
                     <div class="form-check form-switch mb-3">
@@ -42,7 +40,7 @@
                                name="allow_anonymous_requests"
                                {% if app_settings.allow_anonymous_requests %}checked{% endif %}>
                         <label class="form-check-label fw-semibold" for="allow_anonymous_requests">
-                            Allow anonymous requests via QR scan
+                            {{ _('ui.label.allow_anonymous_requests') }}
                         </label>
                     </div>
 
@@ -53,7 +51,7 @@
                                name="anonymous_require_name"
                                {% if app_settings.anonymous_require_name %}checked{% endif %}>
                         <label class="form-check-label" for="anonymous_require_name">
-                            Require reporter's name
+                            {{ _('ui.label.require_reporter_name') }}
                         </label>
                     </div>
 
@@ -62,15 +60,72 @@
                                name="anonymous_require_email"
                                {% if app_settings.anonymous_require_email %}checked{% endif %}>
                         <label class="form-check-label" for="anonymous_require_email">
-                            Require reporter's email or phone
+                            {{ _('ui.label.require_reporter_email') }}
                         </label>
+                    </div>
+                </div>
+            </div>
+
+            {# Preventive Maintenance #}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-calendar-check me-2"></i>{{ _('ui.label.pm_settings') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label for="pm_auto_generate_days" class="form-label">{{ _('ui.label.pm_auto_generate_days') }}</label>
+                            <input type="number" class="form-control" id="pm_auto_generate_days"
+                                   name="pm_auto_generate_days" min="1" max="90"
+                                   value="{{ app_settings.pm_auto_generate_days }}">
+                            <div class="form-text">{{ _('ui.text.pm_auto_generate_help') }}</div>
+                        </div>
+                        <div class="col-6">
+                            <label for="pm_default_lead_days" class="form-label">{{ _('ui.label.pm_default_lead_days') }}</label>
+                            <input type="number" class="form-control" id="pm_default_lead_days"
+                                   name="pm_default_lead_days" min="0" max="30"
+                                   value="{{ app_settings.pm_default_lead_days }}">
+                            <div class="form-text">{{ _('ui.text.pm_lead_days_help') }}</div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label for="pm_overdue_warning_days" class="form-label">{{ _('ui.label.pm_overdue_warning') }}</label>
+                            <input type="number" class="form-control" id="pm_overdue_warning_days"
+                                   name="pm_overdue_warning_days" min="1"
+                                   value="{{ app_settings.pm_overdue_warning_days }}">
+                        </div>
+                        <div class="col-6">
+                            <label for="pm_overdue_critical_days" class="form-label">{{ _('ui.label.pm_overdue_critical') }}</label>
+                            <input type="number" class="form-control" id="pm_overdue_critical_days"
+                                   name="pm_overdue_critical_days" min="1"
+                                   value="{{ app_settings.pm_overdue_critical_days }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pm_wo_prefix" class="form-label">{{ _('ui.label.pm_wo_prefix') }}</label>
+                        <input type="text" class="form-control" id="pm_wo_prefix"
+                               name="pm_wo_prefix" maxlength="10"
+                               value="{{ app_settings.pm_wo_prefix }}" style="width: 120px;">
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input type="checkbox" class="form-check-input" id="pm_allow_early_complete"
+                               name="pm_allow_early_complete"
+                               {% if app_settings.pm_allow_early_complete %}checked{% endif %}>
+                        <label class="form-check-label" for="pm_allow_early_complete">{{ _('ui.label.pm_allow_early') }}</label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input type="checkbox" class="form-check-input" id="pm_auto_group_suggest"
+                               name="pm_auto_group_suggest"
+                               {% if app_settings.pm_auto_group_suggest %}checked{% endif %}>
+                        <label class="form-check-label" for="pm_auto_group_suggest">{{ _('ui.label.pm_auto_group') }}</label>
                     </div>
                 </div>
             </div>
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-lg me-1"></i>Save Settings
+                    <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save_settings') }}
                 </button>
             </div>
         </form>

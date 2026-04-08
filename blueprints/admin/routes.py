@@ -384,6 +384,16 @@ def update_settings():
     settings.anonymous_require_email = "anonymous_require_email" in request.form
     settings.default_language = request.form.get("default_language", "en")
     settings.available_languages = request.form.get("available_languages", "en,pl")
+
+    # PM settings
+    settings.pm_auto_generate_days = request.form.get("pm_auto_generate_days", 14, type=int)
+    settings.pm_default_lead_days = request.form.get("pm_default_lead_days", 7, type=int)
+    settings.pm_overdue_warning_days = request.form.get("pm_overdue_warning_days", 7, type=int)
+    settings.pm_overdue_critical_days = request.form.get("pm_overdue_critical_days", 14, type=int)
+    settings.pm_allow_early_complete = "pm_allow_early_complete" in request.form
+    settings.pm_auto_group_suggest = "pm_auto_group_suggest" in request.form
+    settings.pm_wo_prefix = request.form.get("pm_wo_prefix", "PM").strip()
+
     db.session.commit()
     flash("Settings saved.", "success")
     return redirect(url_for("admin.settings"))

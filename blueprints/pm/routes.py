@@ -320,6 +320,7 @@ def planner():
     today = date.today()
     week_start = today - timedelta(days=today.weekday())  # Monday
     week_end = week_start + timedelta(days=6)  # Sunday
+    week_days = [week_start + timedelta(days=i) for i in range(7)]
 
     # Group tags for filter
     group_tags = _existing_group_tags()
@@ -330,6 +331,7 @@ def planner():
         upcoming_tasks=upcoming_tasks,
         week_start=week_start,
         week_end=week_end,
+        week_days=week_days,
         today=today,
         group_tags=group_tags,
     )
