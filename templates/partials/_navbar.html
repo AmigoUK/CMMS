@@ -62,6 +62,12 @@
                         {% endif %}
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'suppliers' %}active{% endif %}"
+                       href="{{ url_for('suppliers.list_suppliers') }}">
+                        <i class="bi bi-truck me-1"></i>{{ _('ui.navbar.suppliers') }}
+                    </a>
+                </li>
                 {% endif %}
 
                 {# Admin #}

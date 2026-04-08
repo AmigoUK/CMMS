@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit Part' if part else 'New Part' }} — CMMS{% endblock %}
+{% block title %}{{ _('ui.page.edit_part') if part else _('ui.page.new_part') }} — CMMS{% endblock %}
 
 {% block content %}
 <div class="mb-4">
     <a href="{{ url_for('parts.list_parts') }}" class="text-decoration-none">
-        <i class="bi bi-arrow-left me-1"></i>Back to Parts
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.button.back_to_parts') }}
     </a>
 </div>
 
 <h1 class="h3 mb-4">
-    <i class="bi bi-box-seam me-2"></i>{{ 'Edit Part' if part else 'New Part' }}
+    <i class="bi bi-box-seam me-2"></i>{{ _('ui.page.edit_part') if part else _('ui.page.new_part') }}
 </h1>
 
 <form method="POST" enctype="multipart/form-data"
@@ -20,34 +20,34 @@
         {# Left column — Part info #}
         <div class="col-md-6">
             <div class="card mb-3">
-                <div class="card-header"><h6 class="mb-0">Part Information</h6></div>
+                <div class="card-header"><h6 class="mb-0">{{ _('ui.label.part_information') }}</h6></div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <label for="name" class="form-label">{{ _('ui.label.name') }} <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="name" name="name" required
                                value="{{ part.name if part else '' }}">
                     </div>
                     <div class="mb-3">
-                        <label for="part_number" class="form-label">Part Number</label>
+                        <label for="part_number" class="form-label">{{ _('ui.label.part_number') }}</label>
                         <input type="text" class="form-control" id="part_number" name="part_number"
                                value="{{ part.part_number if part and part.part_number else '' }}">
                     </div>
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
+                        <label for="description" class="form-label">{{ _('ui.label.description') }}</label>
                         <textarea class="form-control" id="description" name="description"
                                   rows="3">{{ part.description if part else '' }}</textarea>
                     </div>
                     <div class="row">
                         <div class="col-6">
                             <div class="mb-3">
-                                <label for="category" class="form-label">Category</label>
+                                <label for="category" class="form-label">{{ _('ui.label.category') }}</label>
                                 <input type="text" class="form-control" id="category" name="category"
                                        value="{{ part.category if part else '' }}">
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="mb-3">
-                                <label for="unit" class="form-label">Unit</label>
+                                <label for="unit" class="form-label">{{ _('ui.label.unit') }}</label>
                                 <select class="form-select" id="unit" name="unit">
                                     {% for u in ['each', 'meter', 'liter', 'kg', 'set', 'pair', 'box'] %}
                                     <option value="{{ u }}"
@@ -63,7 +63,7 @@
                     <div class="row">
                         <div class="col-6">
                             <div class="mb-3">
-                                <label for="unit_cost" class="form-label">Unit Cost (&pound;)</label>
+                                <label for="unit_cost" class="form-label">{{ _('ui.label.unit_cost') }} (&pound;)</label>
                                 <input type="number" class="form-control" id="unit_cost" name="unit_cost"
                                        step="0.01" min="0"
                                        value="{{ '%.2f' | format(part.unit_cost) if part else '0.00' }}">
@@ -71,10 +71,10 @@
                         </div>
                         <div class="col-6">
                             <div class="mb-3">
-                                <label for="storage_location" class="form-label">Storage Location</label>
+                                <label for="storage_location" class="form-label">{{ _('ui.label.storage_location') }}</label>
                                 <input type="text" class="form-control" id="storage_location" name="storage_location"
                                        value="{{ part.storage_location if part else '' }}"
-                                       placeholder="e.g. Shelf A3">
+                                       placeholder="{{ _('ui.text.storage_location_placeholder') }}">
                             </div>
                         </div>
                     </div>
@@ -83,7 +83,7 @@
 
             {# Image #}
             <div class="card mb-3">
-                <div class="card-header"><h6 class="mb-0">Image</h6></div>
+                <div class="card-header"><h6 class="mb-0">{{ _('ui.label.image') }}</h6></div>
                 <div class="card-body">
                     {% if part and part.image %}
                     <div class="text-center mb-3">
@@ -93,14 +93,14 @@
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input" id="remove_image"
                                        name="remove_image" value="1">
-                                <label class="form-check-label text-danger" for="remove_image">Remove image</label>
+                                <label class="form-check-label text-danger" for="remove_image">{{ _('ui.label.remove_image') }}</label>
                             </div>
                         </div>
                     </div>
                     {% endif %}
                     <input type="file" class="form-control" id="image" name="image"
                            accept="image/jpeg,image/png,image/webp,image/gif">
-                    <div class="form-text">JPEG, PNG, WebP, or GIF.</div>
+                    <div class="form-text">{{ _('ui.text.image_formats_short') }}</div>
                 </div>
             </div>
         </div>
@@ -108,28 +108,28 @@
         {# Right column — Stock & Supplier #}
         <div class="col-md-6">
             <div class="card mb-3">
-                <div class="card-header"><h6 class="mb-0">Stock Levels</h6></div>
+                <div class="card-header"><h6 class="mb-0">{{ _('ui.label.stock_levels') }}</h6></div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label for="quantity_on_hand" class="form-label">Quantity on Hand</label>
+                        <label for="quantity_on_hand" class="form-label">{{ _('ui.label.quantity_on_hand') }}</label>
                         <input type="number" class="form-control" id="quantity_on_hand" name="quantity_on_hand"
                                min="0" value="{{ part.quantity_on_hand if part else 0 }}">
                     </div>
                     <div class="row">
                         <div class="col-6">
                             <div class="mb-3">
-                                <label for="minimum_stock" class="form-label">Minimum Stock</label>
+                                <label for="minimum_stock" class="form-label">{{ _('ui.label.minimum_stock') }}</label>
                                 <input type="number" class="form-control" id="minimum_stock" name="minimum_stock"
                                        min="0" value="{{ part.minimum_stock if part else 0 }}">
-                                <div class="form-text">Reorder alert triggers at this level.</div>
+                                <div class="form-text">{{ _('ui.text.reorder_alert_trigger') }}</div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="mb-3">
-                                <label for="maximum_stock" class="form-label">Maximum Stock</label>
+                                <label for="maximum_stock" class="form-label">{{ _('ui.label.maximum_stock') }}</label>
                                 <input type="number" class="form-control" id="maximum_stock" name="maximum_stock"
                                        min="0" value="{{ part.maximum_stock if part else 0 }}">
-                                <div class="form-text">Target level for reorder quantity.</div>
+                                <div class="form-text">{{ _('ui.text.target_level') }}</div>
                             </div>
                         </div>
                     </div>
@@ -137,30 +137,38 @@
             </div>
 
             <div class="card mb-3">
-                <div class="card-header"><h6 class="mb-0">Supplier</h6></div>
+                <div class="card-header"><h6 class="mb-0">{{ _('ui.label.supplier') }}</h6></div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label for="supplier" class="form-label">Supplier Name</label>
-                        <input type="text" class="form-control" id="supplier" name="supplier"
-                               value="{{ part.supplier if part else '' }}">
+                        <label for="supplier_id" class="form-label">{{ _('ui.label.supplier_name') }}</label>
+                        <div class="d-flex gap-2">
+                            <select class="form-select" id="supplier_id" name="supplier_id">
+                                <option value="">— {{ _('ui.label.none') }} —</option>
+                                {% for s in suppliers %}
+                                <option value="{{ s.id }}"
+                                        {% if part and part.supplier_id == s.id %}selected{% endif %}>
+                                    {{ s.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap"
+                                    data-bs-toggle="modal" data-bs-target="#quickSupplierModal">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="mb-3">
-                        <label for="supplier_part_number" class="form-label">Supplier Part Number</label>
+                        <label for="supplier_part_number" class="form-label">{{ _('ui.label.supplier_part_number') }}</label>
                         <input type="text" class="form-control" id="supplier_part_number" name="supplier_part_number"
                                value="{{ part.supplier_part_number if part else '' }}">
-                    </div>
-                    <div class="mb-3">
-                        <label for="supplier_email" class="form-label">Supplier Email</label>
-                        <input type="email" class="form-control" id="supplier_email" name="supplier_email"
-                               value="{{ part.supplier_email if part else '' }}">
                     </div>
                 </div>
             </div>
 
             <div class="card mb-3">
-                <div class="card-header"><h6 class="mb-0">Compatible Property</h6></div>
+                <div class="card-header"><h6 class="mb-0">{{ _('ui.label.compatible_property') }}</h6></div>
                 <div class="card-body">
-                    <p class="form-text mt-0 mb-2">Select which machines, tools, or equipment this part fits.</p>
+                    <p class="form-text mt-0 mb-2">{{ _('ui.text.select_compatible_property') }}</p>
                     <div style="max-height: 250px; overflow-y: auto;">
                         {% for asset in site_assets %}
                         <div class="form-check">
@@ -181,9 +189,65 @@
 
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-lg me-1"></i>{{ 'Save Changes' if part else 'Create Part' }}
+            <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save_changes') if part else _('ui.button.create_part') }}
         </button>
-        <a href="{{ url_for('parts.list_parts') }}" class="btn btn-outline-secondary">Cancel</a>
+        <a href="{{ url_for('parts.list_parts') }}" class="btn btn-outline-secondary">{{ _('ui.button.cancel') }}</a>
     </div>
 </form>
+
+{# Quick-create supplier modal #}
+<div class="modal fade" id="quickSupplierModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-truck me-2"></i>{{ _('ui.button.new_supplier') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="quick_supplier_name" class="form-label">
+                        {{ _('ui.label.name') }} <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="quick_supplier_name" required>
+                </div>
+                <div id="quick_supplier_error" class="text-danger small d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('ui.button.cancel') }}</button>
+                <button type="button" class="btn btn-primary" id="quickSupplierSave">
+                    <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.create_supplier') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('quickSupplierSave')?.addEventListener('click', function() {
+    const name = document.getElementById('quick_supplier_name').value.trim();
+    const errorEl = document.getElementById('quick_supplier_error');
+    if (!name) {
+        errorEl.textContent = 'Name is required';
+        errorEl.classList.remove('d-none');
+        return;
+    }
+    const csrfToken = document.querySelector('[name="csrf_token"]').value;
+    fetch('{{ url_for("suppliers.quick_create") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken},
+        body: 'name=' + encodeURIComponent(name),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) { errorEl.textContent = data.error; errorEl.classList.remove('d-none'); return; }
+        const select = document.getElementById('supplier_id');
+        const option = new Option(data.name, data.id, true, true);
+        select.add(option);
+        bootstrap.Modal.getInstance(document.getElementById('quickSupplierModal')).hide();
+        document.getElementById('quick_supplier_name').value = '';
+        errorEl.classList.add('d-none');
+    })
+    .catch(() => { errorEl.textContent = 'Failed to create supplier'; errorEl.classList.remove('d-none'); });
+});
+</script>
 {% endblock %}

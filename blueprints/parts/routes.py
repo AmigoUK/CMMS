@@ -13,7 +13,7 @@ from flask_login import current_user, login_required
 from blueprints.parts import parts_bp
 from decorators import supervisor_required, technician_required
 from extensions import db
-from models import Asset, Part, PartUsage, StockAdjustment, part_assets
+from models import Asset, Part, PartUsage, StockAdjustment, Supplier, part_assets
 from utils.stock import adjust_stock
 from utils.uploads import is_allowed_image, generate_stored_filename
 
@@ -63,11 +63,11 @@ def list_parts():
 
     if q:
         like = f"%{q}%"
-        query = query.filter(
+        query = query.outerjoin(Supplier, Part.supplier_id == Supplier.id).filter(
             db.or_(
                 Part.name.ilike(like),
                 Part.part_number.ilike(like),
-                Part.supplier.ilike(like),
+                Supplier.name.ilike(like),
             )
         )
 
@@ -141,7 +141,8 @@ def new():
     site_assets = Asset.query.filter_by(
         site_id=g.current_site.id, is_active=True,
     ).order_by(Asset.name).all()
-    return render_template("parts/form.html", part=None, site_assets=site_assets)
+    suppliers = Supplier.query.filter_by(is_active=True).order_by(Supplier.name).all()
+    return render_template("parts/form.html", part=None, site_assets=site_assets, suppliers=suppliers)
 
 
 @parts_bp.route("/new", methods=["POST"])
@@ -159,9 +160,8 @@ def create():
         category=request.form.get("category", "").strip(),
         unit=request.form.get("unit", "each").strip(),
         storage_location=request.form.get("storage_location", "").strip(),
-        supplier=request.form.get("supplier", "").strip(),
+        supplier_id=request.form.get("supplier_id", type=int) or None,
         supplier_part_number=request.form.get("supplier_part_number", "").strip(),
-        supplier_email=request.form.get("supplier_email", "").strip(),
         site_id=g.current_site.id,
     )
 
@@ -214,7 +214,8 @@ def edit(id):
     site_assets = Asset.query.filter_by(
         site_id=g.current_site.id, is_active=True,
     ).order_by(Asset.name).all()
-    return render_template("parts/form.html", part=part, site_assets=site_assets)
+    suppliers = Supplier.query.filter_by(is_active=True).order_by(Supplier.name).all()
+    return render_template("parts/form.html", part=part, site_assets=site_assets, suppliers=suppliers)
 
 
 @parts_bp.route("/<int:id>/edit", methods=["POST"])
@@ -233,9 +234,8 @@ def update(id):
     part.category = request.form.get("category", "").strip()
     part.unit = request.form.get("unit", "each").strip()
     part.storage_location = request.form.get("storage_location", "").strip()
-    part.supplier = request.form.get("supplier", "").strip()
+    part.supplier_id = request.form.get("supplier_id", type=int) or None
     part.supplier_part_number = request.form.get("supplier_part_number", "").strip()
-    part.supplier_email = request.form.get("supplier_email", "").strip()
 
     try:
         part.unit_cost = float(request.form.get("unit_cost", 0))
@@ -344,12 +344,14 @@ def remove_compatibility(id, asset_id):
 @supervisor_required
 def reorder_report():
     """Printable reorder report — parts at or below minimum stock."""
-    parts = Part.query.filter(
+    query = Part.query.filter(
         db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
         Part.is_active == True,  # noqa: E712
         Part.minimum_stock > 0,
         Part.quantity_on_hand <= Part.minimum_stock,
-    ).order_by(Part.supplier, Part.name).all()
+    )
+    query = query.options(db.joinedload(Part.supplier_rel))
+    parts = query.order_by(Part.supplier_id, Part.name).all()
 
     total_cost = sum(p.reorder_cost for p in parts)
 

@@ -92,11 +92,29 @@
                     {% endif %}
                 </div>
                 <table class="table table-borderless table-sm mb-0">
-                    <tr><th class="text-muted" style="width:40%;">{{ _('ui.label.supplier') }}</th><td>{{ part.supplier or '—' }}</td></tr>
-                    <tr><th class="text-muted">{{ _('ui.label.supplier_part_number') }}</th><td>{{ part.supplier_part_number or '—' }}</td></tr>
-                    <tr><th class="text-muted">{{ _('ui.label.supplier_email') }}</th>
-                        <td>{% if part.supplier_email %}<a href="mailto:{{ part.supplier_email }}">{{ part.supplier_email }}</a>{% else %}—{% endif %}</td>
+                    <tr><th class="text-muted" style="width:40%;">{{ _('ui.label.supplier') }}</th>
+                        <td>{% if part.supplier_rel %}<a href="{{ url_for('suppliers.detail', id=part.supplier_rel.id) }}">{{ part.supplier_rel.name }}</a>{% else %}—{% endif %}</td>
                     </tr>
+                    <tr><th class="text-muted">{{ _('ui.label.supplier_part_number') }}</th><td>{{ part.supplier_part_number or '—' }}</td></tr>
+                    {% if part.supplier_rel %}
+                    {% if part.supplier_rel.email %}
+                    <tr><th class="text-muted">{{ _('ui.label.email') }}</th>
+                        <td><a href="mailto:{{ part.supplier_rel.email }}">{{ part.supplier_rel.email }}</a></td>
+                    </tr>
+                    {% endif %}
+                    {% if part.supplier_rel.phone %}
+                    <tr><th class="text-muted">{{ _('ui.label.phone') }}</th>
+                        <td><a href="tel:{{ part.supplier_rel.phone }}">{{ part.supplier_rel.phone }}</a></td>
+                    </tr>
+                    {% endif %}
+                    {% if part.supplier_rel.shop_url %}
+                    <tr><th class="text-muted">{{ _('ui.label.shop_url') }}</th>
+                        <td><a href="{{ part.supplier_rel.shop_url }}" target="_blank" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-cart me-1"></i>{{ _('ui.button.order_online') }}
+                        </a></td>
+                    </tr>
+                    {% endif %}
+                    {% endif %}
                 </table>
             </div>
         </div>

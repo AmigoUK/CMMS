@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Parts Inventory — CMMS{% endblock %}
+{% block title %}{{ _('ui.page.parts_inventory') }} — CMMS{% endblock %}
 
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
-    <h1 class="h3 mb-0"><i class="bi bi-box-seam me-2"></i>Parts Inventory</h1>
+    <h1 class="h3 mb-0"><i class="bi bi-box-seam me-2"></i>{{ _('ui.page.parts_inventory') }}</h1>
     <div class="d-flex gap-2">
         {% if reorder_count > 0 %}
         <a href="{{ url_for('parts.reorder_report') }}" class="btn btn-warning">
-            <i class="bi bi-cart me-1"></i>Reorder Report
+            <i class="bi bi-cart me-1"></i>{{ _('ui.button.reorder_report') }}
             <span class="badge bg-danger ms-1">{{ reorder_count }}</span>
         </a>
         {% endif %}
         <a href="{{ url_for('parts.new') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>New Part
+            <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_part') }}
         </a>
     </div>
 </div>
@@ -21,7 +21,7 @@
 <form method="GET" action="{{ url_for('parts.list_parts') }}" class="mb-3">
     <div class="input-group">
         <input type="text" name="q" class="form-control"
-               placeholder="Search by name, part number, or supplier..."
+               placeholder="{{ _('ui.text.search_parts_placeholder') }}"
                value="{{ search_query }}">
         <button type="submit" class="btn btn-outline-secondary">
             <i class="bi bi-search"></i>
@@ -38,11 +38,11 @@
 <div class="mb-3">
     <a href="{{ url_for('parts.list_parts', q=search_query) }}"
        class="btn btn-sm {% if not show_filter %}btn-dark{% else %}btn-outline-dark{% endif %} me-1">
-        All
+        {{ _('ui.label.all') }}
     </a>
     <a href="{{ url_for('parts.list_parts', show='reorder', q=search_query) }}"
        class="btn btn-sm {% if show_filter == 'reorder' %}btn-danger{% else %}btn-outline-danger{% endif %} me-1">
-        <i class="bi bi-exclamation-triangle me-1"></i>Needs Reorder
+        <i class="bi bi-exclamation-triangle me-1"></i>{{ _('ui.button.needs_reorder') }}
         {% if reorder_count > 0 %}
         <span class="badge bg-danger">{{ reorder_count }}</span>
         {% endif %}
@@ -55,13 +55,13 @@
         <thead class="table-light">
             <tr>
                 <th style="width: 44px;"></th>
-                <th>Name</th>
-                <th>Part #</th>
-                <th>Category</th>
-                <th>Stock Level</th>
-                <th>Unit Cost</th>
-                <th>Supplier</th>
-                <th>Actions</th>
+                <th>{{ _('ui.label.name') }}</th>
+                <th>{{ _('ui.label.part_number') }}</th>
+                <th>{{ _('ui.label.category') }}</th>
+                <th>{{ _('ui.label.stock_level') }}</th>
+                <th>{{ _('ui.label.unit_cost') }}</th>
+                <th>{{ _('ui.label.supplier') }}</th>
+                <th>{{ _('ui.label.actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -114,7 +114,11 @@
                     <small class="text-muted">/ {{ part.unit }}</small>
                     {% else %}—{% endif %}
                 </td>
-                <td>{{ part.supplier or '—' }}</td>
+                <td>
+                    {% if part.supplier_rel %}
+                    <a href="{{ url_for('suppliers.detail', id=part.supplier_rel.id) }}">{{ part.supplier_rel.name }}</a>
+                    {% else %}—{% endif %}
+                </td>
                 <td>
                     <a href="{{ url_for('parts.detail', id=part.id) }}" class="btn btn-sm btn-outline-primary" title="View">
                         <i class="bi bi-eye"></i>
@@ -134,7 +138,7 @@
 {% else %}
 <div class="text-center text-muted py-5">
     <i class="bi bi-box-seam display-4"></i>
-    <p class="mt-2">{% if show_filter == 'reorder' %}No parts need reordering.{% else %}No parts found.{% endif %}</p>
+    <p class="mt-2">{% if show_filter == 'reorder' %}{{ _('ui.text.no_parts_need_reorder') }}{% else %}{{ _('ui.text.no_parts_found') }}{% endif %}</p>
 </div>
 {% endif %}
 {% endblock %}
