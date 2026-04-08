@@ -165,27 +165,28 @@ with app.app_context():
 
     # ── Parts ────────────────────────────────────────────────────
     if Part.query.count() == 0:
+        # (site_id, name, part_number, category, unit, cost, qty, min, max)
         parts_data = [
-            (None, "Drive Belt V-Type A68", "BLT-A68", "Belts", "each", 12.50, 8, 3),
-            (None, "Bearing 6205-2RS", "BRG-6205", "Bearings", "each", 8.75, 15, 5),
-            (None, "Compressor Oil PAG-46", "OIL-PAG46", "Lubricants", "liter", 22.00, 10, 4),
-            (None, "Air Filter 20x25x4 MERV-11", "FLT-2025", "Filters", "each", 18.50, 6, 2),
-            (None, "Refrigerant R404A", "REF-404A", "Refrigerants", "kg", 35.00, 5, 2),
-            (None, "Contactor 3P 40A", "ELC-CT40", "Electrical", "each", 45.00, 4, 2),
-            (None, "Thermal Overload 18-25A", "ELC-TO25", "Electrical", "each", 28.00, 3, 2),
-            (None, "Door Gasket 600x400mm", "GSK-6040", "Seals", "each", 35.00, 4, 2),
-            (None, "Mixer Bowl Seal Kit", "GSK-MBS1", "Seals", "each", 65.00, 2, 1),
-            (None, "Oven Element 3kW", "HTR-OV3K", "Heating", "each", 85.00, 3, 1),
-            (None, "LED Tube 4ft 18W", "LGT-LED4", "Lighting", "each", 6.50, 20, 10),
-            (None, "Fuse 13A BS1362", "ELC-F13A", "Electrical", "each", 0.50, 50, 20),
-            (None, "Cable Tie 300mm", "FIX-CT300", "Fixings", "each", 0.05, 200, 50),
-            (None, "Silicone Sealant Clear", "ADH-SIL1", "Adhesives", "each", 5.50, 6, 2),
-            (None, "Conveyor Belt 50mm PU", "BLT-CV50", "Belts", "meter", 28.00, 5, 2),
+            (None, "Drive Belt V-Type A68", "BLT-A68", "Belts", "each", 12.50, 8, 3, 0),
+            (None, "Bearing 6205-2RS", "BRG-6205", "Bearings", "each", 8.75, 4, 5, 20),       # LOW: 4 < min 5
+            (None, "Compressor Oil PAG-46", "OIL-PAG46", "Lubricants", "liter", 22.00, 10, 4, 0),
+            (None, "Air Filter 20x25x4 MERV-11", "FLT-2025", "Filters", "each", 18.50, 6, 2, 0),
+            (None, "Refrigerant R404A", "REF-404A", "Refrigerants", "kg", 35.00, 5, 2, 0),
+            (None, "Contactor 3P 40A", "ELC-CT40", "Electrical", "each", 45.00, 4, 2, 0),
+            (None, "Thermal Overload 18-25A", "ELC-TO25", "Electrical", "each", 28.00, 2, 2, 0),  # LOW: 2 = min 2
+            (None, "Door Gasket 600x400mm", "GSK-6040", "Seals", "each", 35.00, 1, 2, 0),       # LOW: 1 < min 2
+            (None, "Mixer Bowl Seal Kit", "GSK-MBS1", "Seals", "each", 65.00, 0, 1, 0),          # OUT OF STOCK
+            (None, "Oven Element 3kW", "HTR-OV3K", "Heating", "each", 85.00, 1, 1, 0),           # LOW: 1 = min 1
+            (None, "LED Tube 4ft 18W", "LGT-LED4", "Lighting", "each", 6.50, 20, 10, 40),
+            (None, "Fuse 13A BS1362", "ELC-F13A", "Electrical", "each", 0.50, 50, 20, 100),
+            (None, "Cable Tie 300mm", "FIX-CT300", "Fixings", "each", 0.05, 200, 50, 0),
+            (None, "Silicone Sealant Clear", "ADH-SIL1", "Adhesives", "each", 5.50, 6, 2, 0),
+            (None, "Conveyor Belt 50mm PU", "BLT-CV50", "Belts", "meter", 28.00, 5, 2, 0),
         ]
-        for sid, name, pn, cat, unit, cost, qty, minqty in parts_data:
+        for sid, name, pn, cat, unit, cost, qty, minqty, maxqty in parts_data:
             p = Part(site_id=sid, name=name, part_number=pn, category=cat,
                      unit=unit, unit_cost=cost, quantity_on_hand=qty,
-                     minimum_stock=minqty)
+                     minimum_stock=minqty, maximum_stock=maxqty)
             db.session.add(p)
         db.session.commit()
 

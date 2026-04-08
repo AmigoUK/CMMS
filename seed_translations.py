@@ -1032,6 +1032,66 @@ TRANSLATIONS = {
         'en': 'Low Stock',
         'pl': 'Niski zapas',
     },
+    ('ui.label.out_of_stock', 'ui'): {
+        'en': 'Out of Stock',
+        'pl': 'Brak na stanie',
+    },
+    ('ui.label.low_stock_parts', 'ui'): {
+        'en': 'Low Stock Parts',
+        'pl': 'Części z niskim zapasem',
+    },
+    ('ui.label.low_stock_alert', 'ui'): {
+        'en': 'Low Stock Alert',
+        'pl': 'Alert niskiego zapasu',
+    },
+    ('ui.label.adjust_stock', 'ui'): {
+        'en': 'Adjust Stock',
+        'pl': 'Skoryguj zapas',
+    },
+    ('ui.label.add_stock', 'ui'): {
+        'en': 'Add Stock',
+        'pl': 'Dodaj zapas',
+    },
+    ('ui.label.restock', 'ui'): {
+        'en': 'Restock',
+        'pl': 'Uzupełnienie',
+    },
+    ('ui.label.correction', 'ui'): {
+        'en': 'Correction',
+        'pl': 'Korekta',
+    },
+    ('ui.label.recent_adjustments', 'ui'): {
+        'en': 'Recent adjustments',
+        'pl': 'Ostatnie korekty',
+    },
+    ('ui.label.before', 'ui'): {
+        'en': 'Before',
+        'pl': 'Przed',
+    },
+    ('ui.label.after', 'ui'): {
+        'en': 'After',
+        'pl': 'Po',
+    },
+    ('ui.label.reversed', 'ui'): {
+        'en': 'Reversed',
+        'pl': 'Cofnięte',
+    },
+    ('ui.label.reason', 'ui'): {
+        'en': 'Reason',
+        'pl': 'Powód',
+    },
+    ('ui.label.by', 'ui'): {
+        'en': 'By',
+        'pl': 'Przez',
+    },
+    ('ui.text.adjustment_reason_placeholder', 'ui'): {
+        'en': 'e.g. Delivery received, stocktake correction',
+        'pl': 'np. Odebrano dostawę, korekta inwentaryzacji',
+    },
+    ('ui.button.reverse', 'ui'): {
+        'en': 'Reverse',
+        'pl': 'Cofnij',
+    },
     ('ui.label.grouped_by_supplier', 'ui'): {
         'en': 'Grouped by Supplier',
         'pl': 'Pogrupowane wg dostawcy',
