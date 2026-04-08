@@ -59,6 +59,10 @@ class Part(db.Model):
         return self.minimum_stock > 0 and self.quantity_on_hand <= self.minimum_stock
 
     @property
+    def is_out_of_stock(self):
+        return self.quantity_on_hand == 0 and self.minimum_stock > 0
+
+    @property
     def needs_reorder(self):
         """True if stock is at or below minimum and max is set."""
         if self.minimum_stock <= 0:
@@ -106,6 +110,7 @@ class PartUsage(db.Model):
     used_by_id = db.Column(
         db.Integer, db.ForeignKey("users.id"), nullable=True
     )
+    is_reversed = db.Column(db.Boolean, default=False)
     created_at = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc)
     )
@@ -115,3 +120,33 @@ class PartUsage(db.Model):
 
     def __repr__(self):
         return f"<PartUsage {self.part_id} x{self.quantity_used}>"
+
+
+class StockAdjustment(db.Model):
+    __tablename__ = "stock_adjustments"
+
+    id = db.Column(db.Integer, primary_key=True)
+    part_id = db.Column(
+        db.Integer, db.ForeignKey("parts.id"), nullable=False
+    )
+    adjustment_type = db.Column(db.String(20), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    quantity_before = db.Column(db.Integer, nullable=False)
+    quantity_after = db.Column(db.Integer, nullable=False)
+    reason = db.Column(db.String(500), default="")
+    part_usage_id = db.Column(
+        db.Integer, db.ForeignKey("part_usages.id"), nullable=True
+    )
+    adjusted_by_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=False
+    )
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    part = db.relationship("Part", backref="adjustments")
+    adjusted_by = db.relationship("User")
+    part_usage = db.relationship("PartUsage")
+
+    def __repr__(self):
+        return f"<StockAdjustment {self.part_id} {self.adjustment_type} {self.quantity}>"
