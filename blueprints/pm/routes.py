@@ -10,7 +10,7 @@ from blueprints.pm import pm_bp
 from decorators import supervisor_required, technician_required
 from extensions import db
 from models import (
-    Asset, Location, Meter, Part, PreventiveTask, PMCompletionLog, User,
+    Asset, Location, Meter, MeterReading, Part, PreventiveTask, PMCompletionLog, User,
     FREQUENCY_UNITS, SCHEDULE_TYPES,
 )
 
@@ -400,3 +400,85 @@ def complete_quick(id):
 
     flash(f"PM task '{task.name}' completed. Next due: {task.next_due.strftime('%d %b %Y') if task.next_due else '—'}.", "success")
     return redirect(url_for("pm.task_detail", id=task.id))
+
+
+# ── meters ────────────────────────────────────────────────────────────
+
+@pm_bp.route("/meters")
+@technician_required
+def meters():
+    """List meters grouped by asset for the current site."""
+    site_meters = (
+        Meter.query.join(Asset)
+        .filter(Asset.site_id == g.current_site.id)
+        .order_by(Asset.name, Meter.name)
+        .all()
+    )
+
+    # Group by asset
+    from itertools import groupby
+    grouped = []
+    for asset_name, meter_group in groupby(site_meters, key=lambda m: m.asset.name):
+        grouped.append((asset_name, list(meter_group)))
+
+    return render_template("pm/meters.html", grouped_meters=grouped)
+
+
+@pm_bp.route("/meters/new", methods=["GET", "POST"])
+@supervisor_required
+def meter_new():
+    if request.method == "POST":
+        asset_id = request.form.get("asset_id", type=int)
+        name = request.form.get("name", "").strip()
+        if not asset_id or not name:
+            flash("Asset and meter name are required.", "danger")
+            return redirect(url_for("pm.meter_new"))
+
+        meter = Meter(
+            asset_id=asset_id,
+            name=name,
+            unit=request.form.get("unit", "").strip(),
+            current_value=request.form.get("current_value", 0, type=float),
+        )
+        db.session.add(meter)
+        db.session.commit()
+        flash(f"Meter '{name}' created.", "success")
+        return redirect(url_for("pm.meters"))
+
+    assets = _site_assets()
+    return render_template("pm/meter_form.html", assets=assets)
+
+
+@pm_bp.route("/meters/<int:id>/reading", methods=["POST"])
+@technician_required
+def log_reading(id):
+    """Log a new meter reading."""
+    meter = Meter.query.get_or_404(id)
+
+    try:
+        value = float(request.form.get("value", 0))
+    except (ValueError, TypeError):
+        flash("Invalid reading value.", "danger")
+        return redirect(url_for("pm.meters"))
+
+    if value < meter.current_value:
+        flash("Reading cannot be less than current value.", "warning")
+        return redirect(url_for("pm.meters"))
+
+    reading = MeterReading(
+        meter_id=meter.id,
+        value=value,
+        previous_value=meter.current_value,
+        delta=value - meter.current_value,
+        recorded_by_id=current_user.id,
+        notes=request.form.get("notes", "").strip(),
+    )
+    db.session.add(reading)
+
+    meter.current_value = value
+    from datetime import datetime, timezone as tz
+    meter.last_updated = datetime.now(tz.utc)
+
+    db.session.commit()
+    flash(f"Reading logged: {value} {meter.unit}.", "success")
+    return redirect(url_for("pm.meters"))
