@@ -11,7 +11,11 @@ from models.supplier import Supplier
 from models.part import Part, PartUsage, StockAdjustment, part_assets
 from models.time_log import TimeLog
 from models.attachment import Attachment, ENTITY_TYPES, ALLOWED_EXTENSIONS
-from models.preventive_task import PreventiveTask, FREQUENCY_UNITS, preventive_task_parts
+from models.meter import Meter, MeterReading
+from models.preventive_task import (
+    PreventiveTask, PMCompletionLog, FREQUENCY_UNITS, SCHEDULE_TYPES,
+    preventive_task_parts,
+)
 from models.app_settings import AppSettings
 from models.request_activity import RequestActivity
 from models.translation import Translation
@@ -27,7 +31,8 @@ __all__ = [
     "Part", "PartUsage", "StockAdjustment",
     "TimeLog",
     "Attachment", "ENTITY_TYPES", "ALLOWED_EXTENSIONS",
-    "PreventiveTask", "FREQUENCY_UNITS",
+    "Meter", "MeterReading",
+    "PreventiveTask", "PMCompletionLog", "FREQUENCY_UNITS", "SCHEDULE_TYPES",
     "AppSettings",
     "RequestActivity",
     "Translation",

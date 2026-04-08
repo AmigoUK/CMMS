@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.edit_pm_task') if task else _('ui.page.new_pm_task') }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('pm.task_list') }}" class="text-decoration-none small">
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.button.back_to_pm_tasks') }}
+    </a>
+</div>
+
+<h1 class="h3 mb-4">
+    <i class="bi bi-calendar-check me-2"></i>
+    {{ _('ui.page.edit_pm_task') if task else _('ui.page.new_pm_task') }}
+</h1>
+
+<form method="POST"
+      action="{{ url_for('pm.task_update', id=task.id) if task else url_for('pm.task_create') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="row">
+        <div class="col-md-6">
+            {# Task Details #}
+            <div class="card mb-3">
+                <div class="card-header"><h6 class="mb-0">{{ _('ui.label.task_details') }}</h6></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">{{ _('ui.label.name') }} <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               value="{{ task.name if task else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">{{ _('ui.label.description') }}</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ task.description if task else '' }}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="asset_id" class="form-label">{{ _('ui.label.asset') }}</label>
+                                <select class="form-select" id="asset_id" name="asset_id">
+                                    <option value="">— {{ _('ui.label.none') }} —</option>
+                                    {% for a in assets %}
+                                    <option value="{{ a.id }}" {% if task and task.asset_id == a.id %}selected{% endif %}>
+                                        {{ a.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="location_id" class="form-label">{{ _('ui.label.location') }}</label>
+                                <select class="form-select" id="location_id" name="location_id">
+                                    <option value="">— {{ _('ui.label.none') }} —</option>
+                                    {% for loc in locations %}
+                                    <option value="{{ loc.id }}" {% if task and task.location_id == loc.id %}selected{% endif %}>
+                                        {{ loc.full_path }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">{{ _('ui.label.priority') }}</label>
+                                <select class="form-select" id="priority" name="priority">
+                                    {% for p in ['low', 'medium', 'high', 'critical'] %}
+                                    <option value="{{ p }}" {% if task and task.priority == p %}selected{% endif %}
+                                            {% if not task and p == 'medium' %}selected{% endif %}>
+                                        {{ p | title }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="estimated_duration" class="form-label">{{ _('ui.label.estimated_duration') }} (min)</label>
+                                <input type="number" class="form-control" id="estimated_duration" name="estimated_duration"
+                                       min="0" value="{{ task.estimated_duration if task else 0 }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="assigned_to_id" class="form-label">{{ _('ui.label.assign_to') }}</label>
+                        <select class="form-select" id="assigned_to_id" name="assigned_to_id">
+                            <option value="">— {{ _('ui.label.none') }} —</option>
+                            {% for u in users %}
+                            <option value="{{ u.id }}" {% if task and task.assigned_to_id == u.id %}selected{% endif %}>
+                                {{ u.display_name }} ({{ u.role | title }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {# Checklist Template #}
+            <div class="card mb-3">
+                <div class="card-header"><h6 class="mb-0"><i class="bi bi-check2-square me-2"></i>{{ _('ui.label.checklist_template') }}</h6></div>
+                <div class="card-body">
+                    <div id="checklist-container">
+                        {% if task and task.checklist_items %}
+                        {% for item in task.checklist_items %}
+                        <div class="input-group mb-2 checklist-row">
+                            <input type="text" class="form-control form-control-sm" name="checklist_item" value="{{ item }}">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-checklist-btn">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="addChecklistItem">
+                        <i class="bi bi-plus me-1"></i>{{ _('ui.button.add_checklist_item') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            {# Schedule #}
+            <div class="card mb-3">
+                <div class="card-header"><h6 class="mb-0"><i class="bi bi-clock me-2"></i>{{ _('ui.label.schedule') }}</h6></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('ui.label.schedule_type') }}</label>
+                        <div>
+                            {% for st in schedule_types %}
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="schedule_type"
+                                       id="st_{{ st }}" value="{{ st }}"
+                                       {% if task and task.schedule_type == st %}checked{% endif %}
+                                       {% if not task and st == 'floating' %}checked{% endif %}>
+                                <label class="form-check-label" for="st_{{ st }}">{{ st | title }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="form-text">{{ _('ui.text.schedule_type_help') }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="frequency_value" class="form-label">{{ _('ui.label.every') }}</label>
+                                <input type="number" class="form-control" id="frequency_value" name="frequency_value"
+                                       min="1" value="{{ task.frequency_value if task else 30 }}">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="frequency_unit" class="form-label">{{ _('ui.label.unit') }}</label>
+                                <select class="form-select" id="frequency_unit" name="frequency_unit">
+                                    {% for u in frequency_units %}
+                                    <option value="{{ u }}" {% if task and task.frequency_unit == u %}selected{% endif %}
+                                            {% if not task and u == 'days' %}selected{% endif %}>
+                                        {{ u | title }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="next_due" class="form-label">{{ _('ui.label.next_due') }}</label>
+                                <input type="date" class="form-control" id="next_due" name="next_due"
+                                       value="{{ task.next_due.strftime('%Y-%m-%d') if task and task.next_due else '' }}">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="lead_days" class="form-label">{{ _('ui.label.lead_days') }}</label>
+                                <input type="number" class="form-control" id="lead_days" name="lead_days"
+                                       min="0" value="{{ task.lead_days if task else 7 }}">
+                                <div class="form-text">{{ _('ui.text.lead_days_help') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="group_tag" class="form-label">{{ _('ui.label.group_tag') }}</label>
+                        <input type="text" class="form-control" id="group_tag" name="group_tag"
+                               list="group_tags_list"
+                               value="{{ task.group_tag if task else '' }}">
+                        <datalist id="group_tags_list">
+                            {% for tag in group_tags %}
+                            <option value="{{ tag }}">
+                            {% endfor %}
+                        </datalist>
+                        <div class="form-text">{{ _('ui.text.group_tag_help') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {# Counter-Based (collapsible) #}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <a data-bs-toggle="collapse" href="#counterSection" class="text-decoration-none">
+                            <i class="bi bi-speedometer2 me-2"></i>{{ _('ui.label.counter_based') }}
+                            <i class="bi bi-chevron-down small ms-1"></i>
+                        </a>
+                    </h6>
+                </div>
+                <div class="collapse {% if task and task.is_counter_based %}show{% endif %}" id="counterSection">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="meter_id" class="form-label">{{ _('ui.label.meter') }}</label>
+                            <select class="form-select" id="meter_id" name="meter_id">
+                                <option value="">— {{ _('ui.label.none') }} —</option>
+                                {% for m in meters %}
+                                <option value="{{ m.id }}" {% if task and task.meter_id == m.id %}selected{% endif %}>
+                                    {{ m.asset.name }} — {{ m.name }} ({{ m.current_value }} {{ m.unit }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="meter_trigger_value" class="form-label">{{ _('ui.label.trigger_every') }}</label>
+                            <input type="number" class="form-control" id="meter_trigger_value" name="meter_trigger_value"
+                                   min="1" value="{{ task.meter_trigger_value if task and task.meter_trigger_value else '' }}">
+                            <div class="form-text">{{ _('ui.text.meter_trigger_help') }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if task %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="form-check">
+                        <input type="hidden" name="is_active" value="0">
+                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
+                               {% if task.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">{{ _('ui.label.active') }}</label>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save_changes') if task else _('ui.button.create_pm_task') }}
+        </button>
+        <a href="{{ url_for('pm.task_list') }}" class="btn btn-outline-secondary">{{ _('ui.button.cancel') }}</a>
+    </div>
+</form>
+
+<script>
+document.getElementById('addChecklistItem')?.addEventListener('click', function() {
+    const container = document.getElementById('checklist-container');
+    const row = document.createElement('div');
+    row.className = 'input-group mb-2 checklist-row';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-control form-control-sm';
+    input.name = 'checklist_item';
+    input.placeholder = 'Checklist step...';
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-sm btn-outline-danger remove-checklist-btn';
+    const icon = document.createElement('i');
+    icon.className = 'bi bi-x';
+    btn.appendChild(icon);
+
+    row.appendChild(input);
+    row.appendChild(btn);
+    container.appendChild(row);
+    input.focus();
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-checklist-btn')) {
+        e.target.closest('.checklist-row').remove();
+    }
+});
+</script>
+{% endblock %}

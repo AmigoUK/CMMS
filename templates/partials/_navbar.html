@@ -18,9 +18,9 @@
                     </a>
                 </li>
 
-                {# Work — Requests + Work Orders #}
+                {# Work — Requests + Work Orders + PM Planner #}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {% if request.blueprint in ('requests', 'workorders') %}active{% endif %}"
+                    <a class="nav-link dropdown-toggle {% if request.blueprint in ('requests', 'workorders', 'pm') %}active{% endif %}"
                        href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-clipboard-check me-1"></i>{{ _('ui.navbar.work') }}
                     </a>
@@ -36,6 +36,18 @@
                             <a class="dropdown-item {% if request.blueprint == 'workorders' %}active{% endif %}"
                                href="{{ url_for('workorders.index') }}">
                                 <i class="bi bi-clipboard-check me-2"></i>{{ _('ui.navbar.work_orders') }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if current_user.has_role_at_least("technician") %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item {% if request.blueprint == 'pm' %}active{% endif %}"
+                               href="{{ url_for('pm.task_list') }}">
+                                <i class="bi bi-calendar-check me-2"></i>{{ _('ui.navbar.pm_planner') }}
+                                {% if overdue_pm_count is defined and overdue_pm_count > 0 %}
+                                <span class="badge bg-danger rounded-pill float-end">{{ overdue_pm_count }}</span>
+                                {% endif %}
                             </a>
                         </li>
                         {% endif %}

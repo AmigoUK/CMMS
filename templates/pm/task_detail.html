@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}{{ task.name }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <a href="{{ url_for('pm.task_list') }}" class="text-decoration-none small">
+            <i class="bi bi-arrow-left me-1"></i>{{ _('ui.button.back_to_pm_tasks') }}
+        </a>
+        <h1 class="h3 mt-2 mb-0">
+            <i class="bi bi-calendar-check me-2"></i>{{ task.name }}
+            {% if not task.is_active %}
+            <span class="badge bg-secondary ms-2">{{ _('ui.label.inactive') }}</span>
+            {% elif task.is_overdue %}
+            <span class="badge bg-danger ms-2">{{ _('ui.label.overdue') }}</span>
+            {% elif task.is_in_lead_window() %}
+            <span class="badge bg-primary ms-2">{{ _('ui.label.eligible') }}</span>
+            {% endif %}
+        </h1>
+    </div>
+    <div class="d-flex gap-2 no-print">
+        <a href="{{ url_for('pm.task_edit', id=task.id) }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil"></i> {{ _('ui.button.edit') }}
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    {# Task Info #}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0">{{ _('ui.label.task_details') }}</h6></div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-0">
+                    <tr><th class="text-muted" style="width:40%;">{{ _('ui.label.asset') }}</th>
+                        <td>{% if task.asset %}<a href="{{ url_for('assets.detail', id=task.asset.id) }}">{{ task.asset.name }}</a>{% else %}—{% endif %}</td>
+                    </tr>
+                    <tr><th class="text-muted">{{ _('ui.label.location') }}</th>
+                        <td>{{ task.location.full_path if task.location else '—' }}</td>
+                    </tr>
+                    <tr><th class="text-muted">{{ _('ui.label.priority') }}</th>
+                        <td><span class="priority-{{ task.priority }}">{{ task.priority | title }}</span></td>
+                    </tr>
+                    <tr><th class="text-muted">{{ _('ui.label.estimated_duration') }}</th>
+                        <td>{{ task.estimated_duration }} min</td>
+                    </tr>
+                    <tr><th class="text-muted">{{ _('ui.label.assign_to') }}</th>
+                        <td>{{ task.assigned_to.display_name if task.assigned_to else '—' }}</td>
+                    </tr>
+                    {% if task.description %}
+                    <tr><th class="text-muted">{{ _('ui.label.description') }}</th>
+                        <td>{{ task.description }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {# Schedule Info #}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0"><i class="bi bi-clock me-2"></i>{{ _('ui.label.schedule') }}</h6></div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-0">
+                    <tr><th class="text-muted" style="width:40%;">{{ _('ui.label.frequency') }}</th>
+                        <td>{{ task.frequency_display }}</td>
+                    </tr>
+                    <tr><th class="text-muted">{{ _('ui.label.schedule_type') }}</th>
+                        <td><span class="badge bg-{{ 'info' if task.schedule_type == 'fixed' else 'secondary' }}">{{ task.schedule_type | title }}</span></td>
+                    </tr>
+                    <tr><th class="text-muted">{{ _('ui.label.next_due') }}</th>
+                        <td>
+                            {% if task.next_due %}
+                            <span class="{% if task.is_overdue %}text-danger fw-bold{% elif task.is_in_lead_window() %}text-primary fw-bold{% endif %}">
+                                {{ task.next_due.strftime('%d %b %Y') }}
+                            </span>
+                            {% if task.days_until_due is not none %}
+                            <small class="text-muted ms-1">({{ task.days_until_due }} days)</small>
+                            {% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    <tr><th class="text-muted">{{ _('ui.label.last_completed') }}</th>
+                        <td>{{ task.last_completed.strftime('%d %b %Y') if task.last_completed else '—' }}</td>
+                    </tr>
+                    <tr><th class="text-muted">{{ _('ui.label.lead_days') }}</th>
+                        <td>{{ task.lead_days }} days</td>
+                    </tr>
+                    {% if task.group_tag %}
+                    <tr><th class="text-muted">{{ _('ui.label.group_tag') }}</th>
+                        <td><span class="badge bg-light text-dark border">{{ task.group_tag }}</span></td>
+                    </tr>
+                    {% endif %}
+                    {% if task.is_counter_based %}
+                    <tr><th class="text-muted">{{ _('ui.label.meter') }}</th>
+                        <td>{{ task.meter.name if task.meter else '—' }} ({{ task.meter.asset.name if task.meter else '' }})</td>
+                    </tr>
+                    <tr><th class="text-muted">{{ _('ui.label.trigger_every') }}</th>
+                        <td>{{ task.meter_trigger_value }} {{ task.meter.unit if task.meter else '' }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Checklist Template #}
+{% if task.checklist_items %}
+<div class="card mb-4">
+    <div class="card-header"><h6 class="mb-0"><i class="bi bi-check2-square me-2"></i>{{ _('ui.label.checklist_template') }}</h6></div>
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
+            {% for item in task.checklist_items %}
+            <li class="list-group-item px-0"><i class="bi bi-square text-muted me-2"></i>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+{# Completion History #}
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>{{ _('ui.label.completion_history') }}</h6>
+    </div>
+    <div class="card-body p-0">
+        {% if logs %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ _('ui.label.scheduled') }}</th>
+                        <th>{{ _('ui.label.completed') }}</th>
+                        <th>{{ _('ui.label.completed_by') }}</th>
+                        <th class="text-center">{{ _('ui.label.days_early') }}</th>
+                        <th>{{ _('ui.label.on_time') }}</th>
+                        <th>{{ _('ui.label.work_order') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.scheduled_date.strftime('%d %b %Y') }}</td>
+                        <td>{{ log.completed_date.strftime('%d %b %Y') if log.completed_date else '—' }}</td>
+                        <td>{{ log.completed_by.display_name if log.completed_by else '—' }}</td>
+                        <td class="text-center">
+                            {% if log.days_early > 0 %}
+                            <span class="text-success">+{{ log.days_early }}</span>
+                            {% elif log.days_early < 0 %}
+                            <span class="text-danger">{{ log.days_early }}</span>
+                            {% else %}0{% endif %}
+                        </td>
+                        <td>
+                            {% if log.was_on_time %}
+                            <span class="badge bg-success">{{ _('ui.label.yes') }}</span>
+                            {% else %}
+                            <span class="badge bg-danger">{{ _('ui.label.no') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if log.work_order %}
+                            <a href="{{ url_for('workorders.detail', id=log.work_order.id) }}">{{ log.work_order.wo_number }}</a>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+            <p class="mb-0">{{ _('ui.text.no_completion_history') }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

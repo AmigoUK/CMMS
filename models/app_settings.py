@@ -11,6 +11,15 @@ class AppSettings(db.Model):
     default_language = db.Column(db.String(5), default="en")
     available_languages = db.Column(db.String(100), default="en,pl")
 
+    # Preventive Maintenance settings
+    pm_auto_generate_days = db.Column(db.Integer, default=14)
+    pm_default_lead_days = db.Column(db.Integer, default=7)
+    pm_overdue_warning_days = db.Column(db.Integer, default=7)
+    pm_overdue_critical_days = db.Column(db.Integer, default=14)
+    pm_allow_early_complete = db.Column(db.Boolean, default=True)
+    pm_auto_group_suggest = db.Column(db.Boolean, default=True)
+    pm_wo_prefix = db.Column(db.String(10), default="PM")
+
     @property
     def available_languages_list(self):
         return [l.strip() for l in (self.available_languages or "en").split(",") if l.strip()]

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.pm_tasks') }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-calendar-check me-2"></i>{{ _('ui.page.pm_tasks') }}</h1>
+    <a href="{{ url_for('pm.task_new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_pm_task') }}
+    </a>
+</div>
+
+{# Search #}
+<form method="GET" action="{{ url_for('pm.task_list') }}" class="mb-3">
+    {% if show_filter %}<input type="hidden" name="show" value="{{ show_filter }}">{% endif %}
+    <div class="input-group">
+        <input type="text" name="q" class="form-control"
+               placeholder="{{ _('ui.text.search_pm_placeholder') }}"
+               value="{{ search_query }}">
+        <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+        {% if search_query %}
+        <a href="{{ url_for('pm.task_list', show=show_filter) }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+        {% endif %}
+    </div>
+</form>
+
+{# Filter tabs #}
+<div class="mb-3 d-flex gap-2">
+    <a href="{{ url_for('pm.task_list', q=search_query) }}"
+       class="btn btn-sm {% if not show_filter %}btn-dark{% else %}btn-outline-dark{% endif %}">
+        {{ _('ui.label.active') }}
+    </a>
+    <a href="{{ url_for('pm.task_list', q=search_query, show='overdue') }}"
+       class="btn btn-sm {% if show_filter == 'overdue' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+        {{ _('ui.label.overdue') }}
+        {% if overdue_count > 0 %}<span class="badge bg-danger ms-1">{{ overdue_count }}</span>{% endif %}
+    </a>
+    <a href="{{ url_for('pm.task_list', q=search_query, show='inactive') }}"
+       class="btn btn-sm {% if show_filter == 'inactive' %}btn-dark{% else %}btn-outline-dark{% endif %}">
+        {{ _('ui.label.inactive') }}
+    </a>
+</div>
+
+{% if tasks %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>{{ _('ui.label.name') }}</th>
+                <th>{{ _('ui.label.asset') }}</th>
+                <th>{{ _('ui.label.frequency') }}</th>
+                <th>{{ _('ui.label.schedule_type') }}</th>
+                <th>{{ _('ui.label.next_due') }}</th>
+                <th>{{ _('ui.label.priority') }}</th>
+                <th>{{ _('ui.label.group_tag') }}</th>
+                <th class="text-end">{{ _('ui.label.actions') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr class="{% if task.is_overdue %}pm-overdue{% elif task.is_in_lead_window() %}pm-in-lead{% endif %}">
+                <td>
+                    <a href="{{ url_for('pm.task_detail', id=task.id) }}" class="fw-semibold">
+                        {{ task.name }}
+                    </a>
+                    {% if task.is_counter_based %}
+                    <span class="badge bg-light text-purple border ms-1" title="Counter-based">
+                        <i class="bi bi-speedometer2"></i>
+                    </span>
+                    {% endif %}
+                </td>
+                <td>{{ task.asset.name if task.asset else '—' }}</td>
+                <td>{{ task.frequency_display }}</td>
+                <td>
+                    <span class="badge bg-{{ 'info' if task.schedule_type == 'fixed' else 'secondary' }}">
+                        {{ task.schedule_type | title }}
+                    </span>
+                </td>
+                <td>
+                    {% if task.next_due %}
+                        {% if task.is_overdue %}
+                        <span class="text-danger fw-bold">
+                            <i class="bi bi-exclamation-triangle me-1"></i>{{ task.next_due.strftime('%d %b %Y') }}
+                        </span>
+                        <br><small class="text-danger">{{ task.days_until_due }} days</small>
+                        {% elif task.is_in_lead_window() %}
+                        <span class="text-primary fw-bold">{{ task.next_due.strftime('%d %b %Y') }}</span>
+                        <br><small class="text-primary">{{ _('ui.label.eligible') }}</small>
+                        {% else %}
+                        {{ task.next_due.strftime('%d %b %Y') }}
+                        <br><small class="text-muted">{{ task.days_until_due }} days</small>
+                        {% endif %}
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td><span class="priority-{{ task.priority }}">{{ task.priority | title }}</span></td>
+                <td>
+                    {% if task.group_tag %}
+                    <span class="badge bg-light text-dark border">{{ task.group_tag }}</span>
+                    {% else %}—{% endif %}
+                </td>
+                <td class="text-end">
+                    <a href="{{ url_for('pm.task_edit', id=task.id) }}"
+                       class="btn btn-sm btn-outline-secondary" title="{{ _('ui.button.edit') }}">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('pm.task_toggle', id=task.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if task.is_active else 'success' }}"
+                                title="{{ _('ui.label.deactivate') if task.is_active else _('ui.label.activate') }}">
+                            <i class="bi bi-{{ 'pause' if task.is_active else 'play' }}"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include "partials/_pagination.html" %}
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-calendar-check display-4"></i>
+    <p class="mt-2">{{ _('ui.text.no_pm_tasks') }}</p>
+</div>
+{% endif %}
+{% endblock %}
