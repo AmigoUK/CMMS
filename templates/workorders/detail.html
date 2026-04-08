@@ -22,23 +22,23 @@
             {% if wo.due_date %}
                 <small class="{% if wo.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %}">
                     <i class="bi bi-calendar-event"></i>
-                    Due {{ wo.due_date.strftime('%d %b %Y') }}
-                    {% if wo.is_overdue %}(OVERDUE){% endif %}
+                    {{ _('ui.label.due_date') }} {{ wo.due_date.strftime('%d %b %Y') }}
+                    {% if wo.is_overdue %}({{ _('ui.label.overdue') | upper }}){% endif %}
                 </small>
             {% endif %}
         </div>
     </div>
     <div class="d-flex gap-2 no-print">
         <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-printer"></i> Print
+            <i class="bi bi-printer"></i> {{ _('ui.button.print') }}
         </button>
         {% if current_user.is_supervisor %}
         <a href="{{ url_for('workorders.edit', id=wo.id) }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-pencil"></i> Edit
+            <i class="bi bi-pencil"></i> {{ _('ui.button.edit') }}
         </a>
         {% endif %}
         <a href="{{ url_for('workorders.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i> Back
+            <i class="bi bi-arrow-left"></i> {{ _('ui.button.back') }}
         </a>
     </div>
 </div>
@@ -47,16 +47,16 @@
 <div class="float-end ms-3 mb-3 text-center qr-print-block">
     <img src="{{ url_for('workorders.qr_code', id=wo.id) }}" alt="QR Code"
          style="width: 120px; height: 120px;">
-    <div><small class="text-muted">Scan to open</small></div>
+    <div><small class="text-muted">{{ _('ui.text.scan_to_open') }}</small></div>
 </div>
 
 {# ═══ 2. Info card ═══ #}
 <div class="card mb-3 wo-detail-section">
-    <div class="card-header"><i class="bi bi-info-circle"></i> Details</div>
+    <div class="card-header"><i class="bi bi-info-circle"></i> {{ _('ui.label.details') }}</div>
     <div class="card-body">
         <div class="row g-3 mb-3">
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Asset</small>
+                <small class="text-muted d-block">{{ _('ui.label.asset') }}</small>
                 {% if wo.asset %}
                     <a href="{{ url_for('assets.detail', id=wo.asset.id) }}">{{ wo.asset.name }}</a>
                 {% else %}
@@ -64,20 +64,20 @@
                 {% endif %}
             </div>
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Location</small>
+                <small class="text-muted d-block">{{ _('ui.label.location') }}</small>
                 {{ wo.location.full_path if wo.location else '—' }}
             </div>
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Created By</small>
+                <small class="text-muted d-block">{{ _('ui.label.created_by') }}</small>
                 {{ wo.created_by.display_name }}
             </div>
             <div class="col-sm-6 col-md-3">
-                <small class="text-muted d-block">Created</small>
+                <small class="text-muted d-block">{{ _('ui.label.created') }}</small>
                 {{ wo.created_at.strftime('%d %b %Y %H:%M') }}
             </div>
         </div>
         {% if wo.description %}
-        <h6>Description</h6>
+        <h6>{{ _('ui.label.description') }}</h6>
         <p class="mb-0">{{ wo.description }}</p>
         {% endif %}
     </div>
@@ -86,15 +86,15 @@
 {# ═══ Assign (supervisor, if unassigned/reassign) ═══ #}
 {% if current_user.is_supervisor %}
 <div class="card mb-3 wo-detail-section">
-    <div class="card-header"><i class="bi bi-person-plus"></i> Assignment</div>
+    <div class="card-header"><i class="bi bi-person-plus"></i> {{ _('ui.label.assignment') }}</div>
     <div class="card-body">
         <form method="POST" action="{{ url_for('workorders.assign', id=wo.id) }}"
               class="d-flex gap-2 align-items-end">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="flex-grow-1">
-                <label for="assign_to" class="form-label mb-1 small">Assign to</label>
+                <label for="assign_to" class="form-label mb-1 small">{{ _('ui.label.assign_to') }}</label>
                 <select class="form-select form-select-sm" id="assign_to" name="assigned_to_id" required>
-                    <option value="">— Select —</option>
+                    <option value="">{{ _('ui.label.select') }}</option>
                     {% for u in assignable_users %}
                     <option value="{{ u.id }}" {% if wo.assigned_to_id == u.id %}selected{% endif %}>
                         {{ u.display_name }} ({{ u.role|title }})
@@ -103,7 +103,7 @@
                 </select>
             </div>
             <button type="submit" class="btn btn-sm btn-primary">
-                <i class="bi bi-check"></i> Assign
+                <i class="bi bi-check"></i> {{ _('ui.button.assign') }}
             </button>
         </form>
     </div>
@@ -113,8 +113,8 @@
 {# ═══ 3. Checklist section ═══ #}
 <div class="card mb-3 wo-detail-section">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-check2-square"></i> Checklist <a href="{{ url_for('help.work_orders') }}#checklists" class="text-muted ms-1 no-print" title="Help"><i class="bi bi-question-circle small"></i></a></span>
-        <small class="text-muted">{{ tasks_done }} of {{ tasks_total }} complete</small>
+        <span><i class="bi bi-check2-square"></i> {{ _('ui.label.checklist') }} <a href="{{ url_for('help.work_orders') }}#checklists" class="text-muted ms-1 no-print" title="Help"><i class="bi bi-question-circle small"></i></a></span>
+        <small class="text-muted">{{ _('ui.text.of_complete').replace('{done}', tasks_done|string).replace('{total}', tasks_total|string) }}</small>
     </div>
     <div class="card-body">
         {% if wo.tasks %}
@@ -141,7 +141,7 @@
             {% endfor %}
         </ul>
         {% else %}
-        <p class="text-muted mb-3">No tasks yet.</p>
+        <p class="text-muted mb-3">{{ _('ui.text.no_tasks_yet') }}</p>
         {% endif %}
 
         {# Add task form #}
@@ -149,9 +149,9 @@
               class="d-flex gap-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="text" class="form-control form-control-sm" name="description"
-                   placeholder="Add a task..." required>
+                   placeholder="{{ _('ui.text.add_task_placeholder') }}" required>
             <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">
-                <i class="bi bi-plus"></i> Add
+                <i class="bi bi-plus"></i> {{ _('ui.button.add') }}
             </button>
         </form>
     </div>
@@ -159,24 +159,27 @@
 
 {# ═══ 4. Parts Used section ═══ #}
 <div class="card mb-3 wo-detail-section">
-    <div class="card-header"><i class="bi bi-box-seam"></i> Parts Used <a href="{{ url_for('help.work_orders') }}#parts-time" class="text-muted ms-1 no-print" title="Help"><i class="bi bi-question-circle small"></i></a></div>
+    <div class="card-header"><i class="bi bi-box-seam"></i> {{ _('ui.label.parts_used') }} <a href="{{ url_for('help.work_orders') }}#parts-time" class="text-muted ms-1 no-print" title="Help"><i class="bi bi-question-circle small"></i></a></div>
     <div class="card-body">
         {% if wo.parts_used %}
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-2">
                 <thead>
                     <tr>
-                        <th>Part</th>
-                        <th class="text-center">Qty</th>
+                        <th>{{ _('ui.label.part') }}</th>
+                        <th class="text-center">{{ _('ui.label.qty') }}</th>
                         {% if not current_user.is_contractor %}
-                        <th class="text-end">Cost</th>
+                        <th class="text-end">{{ _('ui.label.cost') }}</th>
                         {% endif %}
-                        <th>Date</th>
+                        <th>{{ _('ui.label.date') }}</th>
+                        {% if current_user.is_supervisor %}
+                        <th class="text-end no-print"></th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for pu in wo.parts_used %}
-                    <tr>
+                    <tr class="{{ 'part-usage-reversed' if pu.is_reversed }}">
                         <td>{{ pu.part.name }}</td>
                         <td class="text-center">{{ pu.quantity_used }}</td>
                         {% if not current_user.is_contractor %}
@@ -185,6 +188,24 @@
                         </td>
                         {% endif %}
                         <td>{{ pu.created_at.strftime('%d %b') }}</td>
+                        {% if current_user.is_supervisor %}
+                        <td class="text-end no-print">
+                            {% if not pu.is_reversed %}
+                            <form method="POST"
+                                  action="{{ url_for('workorders.reverse_part', id=wo.id, usage_id=pu.id) }}"
+                                  class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-warning py-0 px-1"
+                                        title="{{ _('ui.button.reverse') }}"
+                                        onclick="return confirm('Reverse this part usage and return stock?')">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ _('ui.label.reversed') }}</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -192,11 +213,11 @@
         </div>
         {% if not current_user.is_contractor %}
         <div class="text-end">
-            <strong>Total: &pound;{{ '%.2f'|format(wo.total_parts_cost) }}</strong>
+            <strong>{{ _('ui.label.total') }}: &pound;{{ '%.2f'|format(wo.total_parts_cost) }}</strong>
         </div>
         {% endif %}
         {% else %}
-        <p class="text-muted mb-0">No parts recorded.</p>
+        <p class="text-muted mb-0">{{ _('ui.text.no_parts_recorded') }}</p>
         {% endif %}
 
         {# Add part form #}
@@ -206,22 +227,22 @@
               class="row g-2 align-items-end">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="col-sm-6">
-                <label class="form-label mb-1 small">Part</label>
+                <label class="form-label mb-1 small">{{ _('ui.label.part') }}</label>
                 <select class="form-select form-select-sm" name="part_id" required>
-                    <option value="">— Select —</option>
+                    <option value="">{{ _('ui.label.select') }}</option>
                     {% for p in parts %}
-                    <option value="{{ p.id }}">{{ p.name }} ({{ p.quantity_on_hand }} in stock)</option>
+                    <option value="{{ p.id }}">{{ p.name }} ({{ p.quantity_on_hand }} {{ _('ui.label.in_stock') }})</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-sm-3">
-                <label class="form-label mb-1 small">Qty</label>
+                <label class="form-label mb-1 small">{{ _('ui.label.qty') }}</label>
                 <input type="number" class="form-control form-control-sm" name="quantity_used"
                        min="1" value="1" required>
             </div>
             <div class="col-sm-3">
                 <button type="submit" class="btn btn-sm btn-outline-primary w-100">
-                    <i class="bi bi-plus"></i> Add Part
+                    <i class="bi bi-plus"></i> {{ _('ui.button.add_part') }}
                 </button>
             </div>
         </form>
@@ -231,17 +252,17 @@
 
 {# ═══ 5. Time Log section ═══ #}
 <div class="card mb-3 wo-detail-section">
-    <div class="card-header"><i class="bi bi-clock-history"></i> Time Log <a href="{{ url_for('help.work_orders') }}#parts-time" class="text-muted ms-1 no-print" title="Help"><i class="bi bi-question-circle small"></i></a></div>
+    <div class="card-header"><i class="bi bi-clock-history"></i> {{ _('ui.label.time_log') }} <a href="{{ url_for('help.work_orders') }}#parts-time" class="text-muted ms-1 no-print" title="Help"><i class="bi bi-question-circle small"></i></a></div>
     <div class="card-body">
         {% if wo.time_logs %}
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-2">
                 <thead>
                     <tr>
-                        <th>Technician</th>
-                        <th class="text-center">Duration</th>
-                        <th>Notes</th>
-                        <th>Date</th>
+                        <th>{{ _('ui.label.technician') }}</th>
+                        <th class="text-center">{{ _('ui.label.duration') }}</th>
+                        <th>{{ _('ui.label.notes') }}</th>
+                        <th>{{ _('ui.label.date') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -257,10 +278,10 @@
             </table>
         </div>
         <div class="text-end">
-            <strong>Total: {{ wo.total_labor_hours }} hrs</strong>
+            <strong>{{ _('ui.label.total') }}: {{ wo.total_labor_hours }} hrs</strong>
         </div>
         {% else %}
-        <p class="text-muted mb-0">No time logged.</p>
+        <p class="text-muted mb-0">{{ _('ui.text.no_time_logged') }}</p>
         {% endif %}
 
         {# Log time form #}
@@ -269,18 +290,18 @@
               class="row g-2 align-items-end">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="col-sm-4">
-                <label class="form-label mb-1 small">Duration (minutes)</label>
+                <label class="form-label mb-1 small">{{ _('ui.label.duration_minutes') }}</label>
                 <input type="number" class="form-control form-control-sm" name="duration_minutes"
                        min="1" placeholder="e.g. 30" required>
             </div>
             <div class="col-sm-5">
-                <label class="form-label mb-1 small">Notes</label>
+                <label class="form-label mb-1 small">{{ _('ui.label.notes') }}</label>
                 <input type="text" class="form-control form-control-sm" name="notes"
-                       placeholder="What was done...">
+                       placeholder="{{ _('ui.text.time_notes_placeholder') }}">
             </div>
             <div class="col-sm-3">
                 <button type="submit" class="btn btn-sm btn-outline-primary w-100">
-                    <i class="bi bi-plus"></i> Log Time
+                    <i class="bi bi-plus"></i> {{ _('ui.button.log_time') }}
                 </button>
             </div>
         </form>
@@ -289,7 +310,7 @@
 
 {# ═══ 6. Attachments section ═══ #}
 <div class="card mb-3 wo-detail-section">
-    <div class="card-header"><i class="bi bi-paperclip"></i> Attachments</div>
+    <div class="card-header"><i class="bi bi-paperclip"></i> {{ _('ui.label.attachments') }}</div>
     <div class="card-body">
         {% if attachments %}
         <div class="attachment-grid mb-3">
@@ -312,7 +333,7 @@
             {% endfor %}
         </ul>
         {% else %}
-        <p class="text-muted mb-0">No attachments.</p>
+        <p class="text-muted mb-0">{{ _('ui.text.no_attachments') }}</p>
         {% endif %}
 
         {# Upload form #}
@@ -322,12 +343,12 @@
               enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="flex-grow-1">
-                <label for="wo_file" class="form-label mb-1 small">Add file</label>
+                <label for="wo_file" class="form-label mb-1 small">{{ _('ui.label.add_file') }}</label>
                 <input type="file" class="form-control form-control-sm" id="wo_file" name="file"
                        accept="image/*,.pdf,.doc,.docx">
             </div>
             <button type="submit" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-upload"></i> Upload
+                <i class="bi bi-upload"></i> {{ _('ui.button.upload') }}
             </button>
         </form>
     </div>
@@ -336,18 +357,18 @@
 {# ═══ 7. Findings / Notes (shown for completed/closed or supervisor) ═══ #}
 {% if wo.status in ('completed', 'closed') or current_user.is_supervisor %}
 <div class="card mb-3 wo-detail-section">
-    <div class="card-header"><i class="bi bi-journal-text"></i> Findings &amp; Notes</div>
+    <div class="card-header"><i class="bi bi-journal-text"></i> {{ _('ui.label.findings_notes') }}</div>
     <div class="card-body">
         {% if wo.completion_notes %}
-        <h6>Completion Notes</h6>
+        <h6>{{ _('ui.label.completion_notes') }}</h6>
         <p>{{ wo.completion_notes }}</p>
         {% endif %}
         {% if wo.findings %}
-        <h6>Findings</h6>
+        <h6>{{ _('ui.label.findings') }}</h6>
         <p>{{ wo.findings }}</p>
         {% endif %}
         {% if not wo.completion_notes and not wo.findings %}
-        <p class="text-muted mb-0">No notes recorded yet.</p>
+        <p class="text-muted mb-0">{{ _('ui.text.no_notes_recorded') }}</p>
         {% endif %}
     </div>
 </div>
@@ -363,7 +384,7 @@
                 <form method="POST" action="{{ url_for('workorders.start', id=wo.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-play-fill"></i> Start Work
+                        <i class="bi bi-play-fill"></i> {{ _('ui.button.start_work') }}
                     </button>
                 </form>
                 {% endif %}
@@ -375,7 +396,7 @@
                 <form method="POST" action="{{ url_for('workorders.hold', id=wo.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-warning">
-                        <i class="bi bi-pause-fill"></i> Put on Hold
+                        <i class="bi bi-pause-fill"></i> {{ _('ui.button.put_on_hold') }}
                     </button>
                 </form>
                 {% endif %}
@@ -387,7 +408,7 @@
                 <form method="POST" action="{{ url_for('workorders.start', id=wo.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-play-fill"></i> Resume Work
+                        <i class="bi bi-play-fill"></i> {{ _('ui.button.resume_work') }}
                     </button>
                 </form>
                 {% endif %}
@@ -398,7 +419,7 @@
                 {% if current_user.is_supervisor or wo.assigned_to_id == current_user.id %}
                 <button type="button" class="btn btn-primary" data-bs-toggle="collapse"
                         data-bs-target="#completeForm">
-                    <i class="bi bi-check-circle"></i> Complete
+                    <i class="bi bi-check-circle"></i> {{ _('ui.button.complete') }}
                 </button>
                 {% endif %}
             {% endif %}
@@ -408,8 +429,8 @@
             <form method="POST" action="{{ url_for('workorders.close', id=wo.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-dark"
-                        onclick="return confirm('Close this work order?')">
-                    <i class="bi bi-lock"></i> Close
+                        onclick="return confirm('{{ _('ui.text.close_this_wo') }}')">
+                    <i class="bi bi-lock"></i> {{ _('ui.button.close') }}
                 </button>
             </form>
             {% endif %}
@@ -421,17 +442,17 @@
             <form method="POST" action="{{ url_for('workorders.complete', id=wo.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3">
-                    <label for="completion_notes" class="form-label">Completion Notes</label>
+                    <label for="completion_notes" class="form-label">{{ _('ui.label.completion_notes') }}</label>
                     <textarea class="form-control" id="completion_notes" name="completion_notes"
-                              rows="3" placeholder="What was done to resolve the issue..."></textarea>
+                              rows="3" placeholder="{{ _('ui.text.completion_notes_placeholder') }}"></textarea>
                 </div>
                 <div class="mb-3">
-                    <label for="findings" class="form-label">Findings</label>
+                    <label for="findings" class="form-label">{{ _('ui.label.findings') }}</label>
                     <textarea class="form-control" id="findings" name="findings"
-                              rows="3" placeholder="Root cause, observations, recommendations..."></textarea>
+                              rows="3" placeholder="{{ _('ui.text.findings_placeholder') }}"></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle-fill"></i> Mark Complete
+                    <i class="bi bi-check-circle-fill"></i> {{ _('ui.button.mark_complete') }}
                 </button>
             </form>
         </div>
@@ -442,7 +463,7 @@
 {# ── Linked request ── #}
 {% if wo.request %}
 <div class="card mb-4 wo-detail-section">
-    <div class="card-header"><i class="bi bi-link-45deg"></i> Linked Request</div>
+    <div class="card-header"><i class="bi bi-link-45deg"></i> {{ _('ui.label.linked_request') }}</div>
     <div class="card-body">
         <a href="{{ url_for('requests.detail', id=wo.request.id) }}">
             Request #{{ wo.request.id }}: {{ wo.request.title }}

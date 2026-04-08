@@ -18,6 +18,7 @@ from models import (
     WorkOrder, WorkOrderTask,
     WO_STATUSES, WO_TYPES, WO_PRIORITIES,
 )
+from utils.stock import adjust_stock
 from utils.uploads import allowed_file, save_attachment
 
 
@@ -462,6 +463,31 @@ def add_part(id):
         )
     else:
         flash("Part recorded.", "success")
+    return redirect(url_for("workorders.detail", id=wo.id))
+
+
+@workorders_bp.route("/<int:id>/part/<int:usage_id>/reverse", methods=["POST"])
+@supervisor_required
+def reverse_part(id, usage_id):
+    """Reverse a part usage entry and return stock."""
+    wo = _get_wo_or_404(id)
+    usage = PartUsage.query.filter_by(
+        id=usage_id, work_order_id=wo.id,
+    ).first_or_404()
+
+    if usage.is_reversed:
+        flash("This part usage has already been reversed.", "warning")
+        return redirect(url_for("workorders.detail", id=wo.id))
+
+    usage.is_reversed = True
+    part = usage.part
+    adjust_stock(
+        part, usage.quantity_used, "reversal",
+        f"Reversed usage on {wo.wo_number}",
+        current_user.id, part_usage_id=usage.id,
+    )
+    db.session.commit()
+    flash(f'Reversed: {usage.quantity_used} x "{part.name}" returned to stock.', "info")
     return redirect(url_for("workorders.detail", id=wo.id))
 
 

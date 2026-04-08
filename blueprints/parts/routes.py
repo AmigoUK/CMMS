@@ -13,7 +13,8 @@ from flask_login import current_user, login_required
 from blueprints.parts import parts_bp
 from decorators import supervisor_required, technician_required
 from extensions import db
-from models import Asset, Part, PartUsage, part_assets
+from models import Asset, Part, PartUsage, StockAdjustment, part_assets
+from utils.stock import adjust_stock
 from utils.uploads import is_allowed_image, generate_stored_filename
 
 
@@ -110,6 +111,12 @@ def detail(id):
         .limit(20)
         .all()
     )
+    recent_adjustments = (
+        StockAdjustment.query.filter_by(part_id=part.id)
+        .order_by(StockAdjustment.created_at.desc())
+        .limit(10)
+        .all()
+    )
     # Available assets for adding compatibility
     site_assets = Asset.query.filter_by(
         site_id=g.current_site.id, is_active=True,
@@ -120,6 +127,7 @@ def detail(id):
         "parts/detail.html",
         part=part,
         recent_usage=recent_usage,
+        recent_adjustments=recent_adjustments,
         site_assets=site_assets,
         already_linked_ids=already_linked_ids,
     )
@@ -269,6 +277,36 @@ def update(id):
 
     db.session.commit()
     flash("Part updated successfully.", "success")
+    return redirect(url_for("parts.detail", id=part.id))
+
+
+# ── stock adjustment ──────────────────────────────────────────────────
+
+@parts_bp.route("/<int:id>/adjust", methods=["POST"])
+@supervisor_required
+def adjust(id):
+    """Add or correct stock with audit trail."""
+    part = _get_part_or_404(id)
+
+    try:
+        quantity = int(request.form.get("quantity", 0))
+    except (ValueError, TypeError):
+        quantity = 0
+
+    if quantity < 1:
+        flash("Quantity must be at least 1.", "warning")
+        return redirect(url_for("parts.detail", id=part.id))
+
+    adjustment_type = request.form.get("adjustment_type", "restock")
+    if adjustment_type not in ("restock", "correction"):
+        adjustment_type = "restock"
+
+    reason = request.form.get("reason", "").strip()
+
+    adjust_stock(part, quantity, adjustment_type, reason, current_user.id)
+    db.session.commit()
+
+    flash(f"Stock adjusted: +{quantity} {part.unit}(s). Now {part.quantity_on_hand} on hand.", "success")
     return redirect(url_for("parts.detail", id=part.id))
 
 

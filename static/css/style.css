@@ -32,6 +32,13 @@
 /* Low stock highlight */
 .table .row-low-stock {
     background-color: rgba(220, 53, 69, 0.08);
+    border-left: 4px solid #dc3545;
+}
+
+/* Reversed part usage */
+.part-usage-reversed td {
+    text-decoration: line-through;
+    opacity: 0.5;
 }
 
 /* Site switcher in navbar */
