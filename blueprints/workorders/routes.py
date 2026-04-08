@@ -322,8 +322,24 @@ def complete(id):
     wo.completed_at = datetime.now(timezone.utc)
     wo.completion_notes = request.form.get("completion_notes", "").strip()
     wo.findings = request.form.get("findings", "").strip()
+
+    # PM completion callback: advance preventive task schedule
+    if wo.preventive_task_id and wo.preventive_task:
+        from utils.pm_scheduler import complete_pm_task
+        complete_pm_task(
+            wo.preventive_task,
+            completion_date=datetime.now(timezone.utc).date(),
+            completed_by_id=current_user.id,
+        )
+        flash(
+            f"Work order completed. PM schedule advanced — next due: "
+            f"{wo.preventive_task.next_due.strftime('%d %b %Y') if wo.preventive_task.next_due else '—'}.",
+            "success",
+        )
+    else:
+        flash("Work order marked as completed.", "success")
+
     db.session.commit()
-    flash("Work order marked as completed.", "success")
     return redirect(url_for("workorders.detail", id=wo.id))
 
 

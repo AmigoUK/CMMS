@@ -227,6 +227,62 @@ def create_app(config_class=None):
 
         _seed_defaults()
 
+    # ── CLI commands ─────────────────────────────────────────
+    @app.cli.command("pm-generate")
+    def pm_generate_cmd():
+        """Auto-generate work orders for upcoming PM tasks."""
+        from datetime import date, timedelta
+        from models import AppSettings, PreventiveTask, Site, WorkOrder, User
+        from utils.pm_scheduler import generate_pm_work_order, check_meter_triggers
+
+        settings = AppSettings.get()
+        days_ahead = settings.pm_auto_generate_days
+        cutoff = date.today() + timedelta(days=days_ahead)
+
+        # Find an admin user to be the creator
+        admin = User.query.filter_by(role="admin").first()
+        if not admin:
+            print("ERROR: No admin user found to create WOs.")
+            return
+
+        total = 0
+        for site in Site.query.filter_by(is_active=True).all():
+            tasks = PreventiveTask.query.filter(
+                PreventiveTask.site_id == site.id,
+                PreventiveTask.is_active == True,
+                PreventiveTask.next_due.isnot(None),
+                PreventiveTask.next_due <= cutoff,
+            ).all()
+
+            for task in tasks:
+                # Skip if WO already exists for this cycle
+                existing = WorkOrder.query.filter_by(
+                    preventive_task_id=task.id,
+                    status=db.not_(WorkOrder.status.in_(["completed", "closed", "cancelled"])),
+                ).first()
+                if existing:
+                    continue
+
+                wo = generate_pm_work_order(task, task.next_due, admin.id)
+                total += 1
+                print(f"  Generated {wo.wo_number} for '{task.name}' at {site.code}")
+
+            # Check meter triggers
+            for task, delta in check_meter_triggers(site.id):
+                existing = WorkOrder.query.filter_by(
+                    preventive_task_id=task.id,
+                ).filter(
+                    WorkOrder.status.notin_(["completed", "closed", "cancelled"]),
+                ).first()
+                if existing:
+                    continue
+                wo = generate_pm_work_order(task, date.today(), admin.id)
+                total += 1
+                print(f"  Generated {wo.wo_number} for '{task.name}' (meter trigger) at {site.code}")
+
+        db.session.commit()
+        print(f"PM generation complete: {total} work orders created.")
+
     return app
 
 

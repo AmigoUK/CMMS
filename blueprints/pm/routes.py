@@ -354,3 +354,49 @@ def calendar_data():
 
     events = project_occurrences(g.current_site.id, start_date, end_date)
     return jsonify(events)
+
+
+# ── WO generation ─────────────────────────────────────────────────────
+
+@pm_bp.route("/tasks/<int:id>/generate-wo", methods=["POST"])
+@supervisor_required
+def generate_wo(id):
+    """Manually generate a work order from a PM task."""
+    from utils.pm_scheduler import generate_pm_work_order
+    task = _get_task_or_404(id)
+
+    if not task.next_due:
+        flash("Cannot generate WO: no next due date set.", "warning")
+        return redirect(url_for("pm.task_detail", id=task.id))
+
+    wo = generate_pm_work_order(task, task.next_due, current_user.id)
+    db.session.commit()
+    flash(f"Work order {wo.wo_number} generated from PM task.", "success")
+    return redirect(url_for("workorders.detail", id=wo.id))
+
+
+@pm_bp.route("/tasks/<int:id>/complete-quick", methods=["POST"])
+@technician_required
+def complete_quick(id):
+    """Quick-complete a PM task without generating a full WO."""
+    from utils.pm_scheduler import complete_pm_task
+    task = _get_task_or_404(id)
+
+    # Create a minimal completion log
+    log = PMCompletionLog(
+        preventive_task_id=task.id,
+        scheduled_date=task.next_due or date.today(),
+        completed_date=date.today(),
+        completed_by_id=current_user.id,
+    )
+    if task.next_due:
+        log.days_early = (task.next_due - date.today()).days
+        log.was_on_time = True
+    db.session.add(log)
+
+    # Advance the schedule
+    task.complete_task(date.today())
+    db.session.commit()
+
+    flash(f"PM task '{task.name}' completed. Next due: {task.next_due.strftime('%d %b %Y') if task.next_due else '—'}.", "success")
+    return redirect(url_for("pm.task_detail", id=task.id))
