@@ -57,6 +57,9 @@
                     <a class="nav-link {% if request.blueprint == 'parts' %}active{% endif %}"
                        href="{{ url_for('parts.list_parts') }}">
                         <i class="bi bi-box-seam me-1"></i>{{ _('ui.navbar.parts') }}
+                        {% if low_stock_count > 0 %}
+                        <span class="badge rounded-pill bg-danger ms-1">{{ low_stock_count }}</span>
+                        {% endif %}
                     </a>
                 </li>
                 {% endif %}
@@ -73,6 +76,17 @@
             </ul>
 
             <ul class="navbar-nav">
+                {# Low-stock indicator for technicians (who cannot see Parts link) #}
+                {% if current_user.is_authenticated and current_user.has_role_at_least("technician") and not current_user.is_supervisor and low_stock_count > 0 %}
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="{{ url_for('dashboard.index') }}"
+                       title="{{ _('ui.label.low_stock_parts') }}">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span class="badge rounded-pill bg-danger">{{ low_stock_count }}</span>
+                    </a>
+                </li>
+                {% endif %}
+
                 {# Site switcher #}
                 {% if user_sites|length > 1 %}
                 <li class="nav-item dropdown site-switcher">

@@ -48,6 +48,21 @@
         </a>
     </div>
     {% endif %}
+    {% if current_user.has_role_at_least("technician") and low_stock_count > 0 %}
+    <div class="col-sm-6 col-lg-3">
+        <a href="{{ url_for('parts.list_parts', show='reorder') }}" class="text-decoration-none">
+            <div class="card text-white bg-danger h-100 shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-box-seam fs-2 me-3 opacity-75"></i>
+                    <div>
+                        <div class="fs-2 fw-bold">{{ low_stock_count }}</div>
+                        <div class="small">{{ _('ui.label.low_stock_parts') }}</div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endif %}
 </div>
 
 {# ── Report a Problem ──────────────────────────────────────── #}
@@ -89,6 +104,59 @@
                         <td>{{ req.requester.display_name }}</td>
                         <td><span class="priority-{{ req.priority }}">{{ req.priority|capitalize }}</span></td>
                         <td>{{ req.created_at.strftime('%d %b %Y %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# ── Low Stock Alert (technician+) ─────────────────────────── #}
+{% if current_user.has_role_at_least("technician") and low_stock_parts %}
+<div class="card shadow-sm mb-4 border-danger">
+    <div class="card-header bg-danger bg-opacity-10 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ _('ui.label.low_stock_alert') }}
+            <span class="badge bg-danger ms-1">{{ low_stock_parts|length }}</span>
+        </h5>
+        {% if current_user.is_supervisor %}
+        <a href="{{ url_for('parts.list_parts', show='reorder') }}" class="btn btn-sm btn-outline-danger">
+            {{ _('ui.button.view_all') }}
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ _('ui.label.part') }}</th>
+                        <th class="text-center">{{ _('ui.label.on_hand') }}</th>
+                        <th class="text-center">{{ _('ui.label.minimum') }}</th>
+                        <th>{{ _('ui.label.status') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for part in low_stock_parts %}
+                    <tr>
+                        <td>
+                            {% if current_user.is_supervisor %}
+                            <a href="{{ url_for('parts.detail', id=part.id) }}">{{ part.name }}</a>
+                            {% else %}
+                            {{ part.name }}
+                            {% endif %}
+                        </td>
+                        <td class="text-center fw-bold text-danger">{{ part.quantity_on_hand }}</td>
+                        <td class="text-center">{{ part.minimum_stock }}</td>
+                        <td>
+                            {% if part.quantity_on_hand == 0 %}
+                            <span class="badge bg-danger">{{ _('ui.label.out_of_stock') }}</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">{{ _('ui.label.low_stock') }}</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

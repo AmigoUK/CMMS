@@ -178,9 +178,14 @@ def create_app(config_class=None):
             "current_site": getattr(g, "current_site", None),
             "user_sites": [],
             "app_settings": AppSettings.get(),
+            "low_stock_count": 0,
         }
         if current_user.is_authenticated:
             ctx["user_sites"] = current_user.sites
+            site = getattr(g, "current_site", None)
+            if site and current_user.has_role_at_least("technician"):
+                from utils.stock import get_low_stock_count
+                ctx["low_stock_count"] = get_low_stock_count(site.id)
         return ctx
 
     # ── Error handlers ─────────────────────────────────────

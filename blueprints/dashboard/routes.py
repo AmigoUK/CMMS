@@ -5,7 +5,8 @@ from flask_login import current_user, login_required
 
 from blueprints.dashboard import dashboard_bp
 from extensions import csrf, db
-from models import AppSettings, Asset, Request, WorkOrder, Site, Location, RequestActivity
+from models import AppSettings, Asset, Part, Request, WorkOrder, Site, Location, RequestActivity
+from utils.stock import get_low_stock_parts
 from models.request import REQUEST_PRIORITIES
 
 
@@ -28,6 +29,7 @@ def index():
     triage_requests = []
     my_recent_requests = []
     recent_wos = []
+    low_stock_parts = []
 
     if site_id:
         open_requests = Request.query.filter(
@@ -71,6 +73,10 @@ def index():
                 Request.status == "new",
             ).order_by(Request.created_at.asc()).all()
 
+        # ── Low-stock parts (technician+) ──────────────────────
+        if current_user.has_role_at_least("technician"):
+            low_stock_parts = get_low_stock_parts(site_id, limit=10)
+
         # ── Recent Work Orders (technician+) ────────────────────
         if current_user.is_technician:
             recent_wos = WorkOrder.query.filter(
@@ -86,6 +92,7 @@ def index():
         triage_requests=triage_requests,
         my_recent_requests=my_recent_requests,
         recent_wos=recent_wos,
+        low_stock_parts=low_stock_parts,
     )
 
 

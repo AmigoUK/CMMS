@@ -448,7 +448,20 @@ def add_part(id):
     # Deduct from stock
     part.quantity_on_hand = max(0, part.quantity_on_hand - quantity)
     db.session.commit()
-    flash("Part recorded.", "success")
+
+    if part.quantity_on_hand == 0:
+        flash(
+            f'Part recorded. WARNING: "{part.name}" is now OUT OF STOCK (0 remaining).',
+            "danger",
+        )
+    elif part.is_low_stock:
+        flash(
+            f'Part recorded. "{part.name}" is below minimum stock '
+            f"({part.quantity_on_hand} remaining, minimum is {part.minimum_stock}).",
+            "warning",
+        )
+    else:
+        flash("Part recorded.", "success")
     return redirect(url_for("workorders.detail", id=wo.id))
 
 
