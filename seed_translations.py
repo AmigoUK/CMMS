@@ -2156,6 +2156,106 @@ TRANSLATIONS = {
     },
 
     # ───────────────────────────────────────────────────────────────────
+    #  SUPPLIER MODULE
+    # ───────────────────────────────────────────────────────────────────
+    ('ui.navbar.suppliers', 'ui'): {
+        'en': 'Suppliers',
+        'pl': 'Dostawcy',
+    },
+    ('ui.page.suppliers', 'ui'): {
+        'en': 'Suppliers',
+        'pl': 'Dostawcy',
+    },
+    ('ui.page.new_supplier', 'ui'): {
+        'en': 'New Supplier',
+        'pl': 'Nowy dostawca',
+    },
+    ('ui.page.edit_supplier', 'ui'): {
+        'en': 'Edit Supplier',
+        'pl': 'Edytuj dostawcę',
+    },
+    ('ui.label.contact_person', 'ui'): {
+        'en': 'Contact Person',
+        'pl': 'Osoba kontaktowa',
+    },
+    ('ui.label.address', 'ui'): {
+        'en': 'Address',
+        'pl': 'Adres',
+    },
+    ('ui.label.shop_url', 'ui'): {
+        'en': 'Online Shop URL',
+        'pl': 'Adres sklepu internetowego',
+    },
+    ('ui.label.supplier_information', 'ui'): {
+        'en': 'Supplier Information',
+        'pl': 'Informacje o dostawcy',
+    },
+    ('ui.label.none', 'ui'): {
+        'en': 'None',
+        'pl': 'Brak',
+    },
+    ('ui.label.parts', 'ui'): {
+        'en': 'Parts',
+        'pl': 'Części',
+    },
+    ('ui.label.stock', 'ui'): {
+        'en': 'Stock',
+        'pl': 'Zapas',
+    },
+    ('ui.label.activate', 'ui'): {
+        'en': 'Activate',
+        'pl': 'Aktywuj',
+    },
+    ('ui.label.deactivate', 'ui'): {
+        'en': 'Deactivate',
+        'pl': 'Dezaktywuj',
+    },
+    ('ui.button.new_supplier', 'ui'): {
+        'en': 'New Supplier',
+        'pl': 'Nowy dostawca',
+    },
+    ('ui.button.create_supplier', 'ui'): {
+        'en': 'Create Supplier',
+        'pl': 'Utwórz dostawcę',
+    },
+    ('ui.button.back_to_suppliers', 'ui'): {
+        'en': 'Back to Suppliers',
+        'pl': 'Powrót do dostawców',
+    },
+    ('ui.button.order_online', 'ui'): {
+        'en': 'Order Online',
+        'pl': 'Zamów online',
+    },
+    ('ui.text.search_suppliers_placeholder', 'ui'): {
+        'en': 'Search by name, contact, or email...',
+        'pl': 'Szukaj po nazwie, kontakcie lub emailu...',
+    },
+    ('ui.text.no_suppliers_found', 'ui'): {
+        'en': 'No suppliers found.',
+        'pl': 'Nie znaleziono dostawców.',
+    },
+    ('ui.text.no_parts_from_supplier', 'ui'): {
+        'en': 'No parts linked to this supplier yet.',
+        'pl': 'Brak części przypisanych do tego dostawcy.',
+    },
+    ('ui.text.parts_from_supplier', 'ui'): {
+        'en': 'Parts from this Supplier',
+        'pl': 'Części od tego dostawcy',
+    },
+    ('ui.text.shop_url_hint', 'ui'): {
+        'en': 'Link to supplier online shop or ordering system',
+        'pl': 'Link do sklepu internetowego lub systemu zamówień dostawcy',
+    },
+    ('ui.text.supplier_notes_placeholder', 'ui'): {
+        'en': 'e.g. Account number, payment terms, delivery notes...',
+        'pl': 'np. Numer konta, warunki płatności, uwagi do dostaw...',
+    },
+    ('ui.text.parts_below_minimum', 'ui'): {
+        'en': 'parts below minimum stock level',
+        'pl': 'części poniżej minimalnego poziomu zapasu',
+    },
+
+    # ───────────────────────────────────────────────────────────────────
     #  HELP PAGES  (ui.help.*)
     # ───────────────────────────────────────────────────────────────────
     ('ui.help.index', 'ui'): {

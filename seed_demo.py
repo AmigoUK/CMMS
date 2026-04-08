@@ -11,7 +11,7 @@ from app import create_app
 from extensions import db
 from models import (
     Site, Team, User, Location, Asset, Request, WorkOrder,
-    WorkOrderTask, Part, PartUsage, TimeLog,
+    WorkOrderTask, Part, PartUsage, TimeLog, Supplier,
 )
 
 app = create_app()
@@ -163,30 +163,62 @@ with app.app_context():
             db.session.add(a)
         db.session.commit()
 
+    # ── Suppliers ────────────────────────────────────────────────
+    if Supplier.query.count() == 0:
+        suppliers_data = [
+            ("Brammer Buck & Hickman", "Trade Desk", "orders@bbh-uk.com",
+             "0330 050 4444", "Unit 3, Meridian Trading Estate, Charlton, London SE7 7AG",
+             "https://uk.rs-online.com"),
+            ("Fridgetech Supplies", "Ian Mitchell", "sales@fridgetechsupplies.co.uk",
+             "01onal 234 5678", "14 Cooler Way, Barking, Essex IG11 0QR",
+             "https://www.fridgetechsupplies.co.uk"),
+            ("BakerParts Direct", "Sarah Thompson", "parts@bakerpartsdirect.co.uk",
+             "0121 456 7890", "Unit 8, Bakewell Business Park, Birmingham B11 2ER",
+             "https://www.bakerpartsdirect.co.uk"),
+            ("Cromwell Industrial Tools", "Trade Counter", "sales@cromwell.co.uk",
+             "0116 279 2828", "PO Box 2, Leicester LE0 1DW",
+             "https://www.cromwell.co.uk"),
+            ("LED Lighting Direct", "Online Orders", "info@ledlightingdirect.co.uk",
+             "0800 612 9304", "7 Luminar Park, Swindon SN3 4QG",
+             "https://www.ledlightingdirect.co.uk"),
+        ]
+        for name, contact, email, phone, address, url in suppliers_data:
+            s = Supplier(name=name, contact_person=contact, email=email,
+                         phone=phone, address=address, shop_url=url)
+            db.session.add(s)
+        db.session.commit()
+
+    bbh = Supplier.query.filter_by(name="Brammer Buck & Hickman").first()
+    fridgetech = Supplier.query.filter_by(name="Fridgetech Supplies").first()
+    bakerparts = Supplier.query.filter_by(name="BakerParts Direct").first()
+    cromwell = Supplier.query.filter_by(name="Cromwell Industrial Tools").first()
+    ledlighting = Supplier.query.filter_by(name="LED Lighting Direct").first()
+
     # ── Parts ────────────────────────────────────────────────────
     if Part.query.count() == 0:
-        # (site_id, name, part_number, category, unit, cost, qty, min, max)
+        # (site_id, name, part_number, category, unit, cost, qty, min, max, supplier)
         parts_data = [
-            (None, "Drive Belt V-Type A68", "BLT-A68", "Belts", "each", 12.50, 8, 3, 0),
-            (None, "Bearing 6205-2RS", "BRG-6205", "Bearings", "each", 8.75, 4, 5, 20),       # LOW: 4 < min 5
-            (None, "Compressor Oil PAG-46", "OIL-PAG46", "Lubricants", "liter", 22.00, 10, 4, 0),
-            (None, "Air Filter 20x25x4 MERV-11", "FLT-2025", "Filters", "each", 18.50, 6, 2, 0),
-            (None, "Refrigerant R404A", "REF-404A", "Refrigerants", "kg", 35.00, 5, 2, 0),
-            (None, "Contactor 3P 40A", "ELC-CT40", "Electrical", "each", 45.00, 4, 2, 0),
-            (None, "Thermal Overload 18-25A", "ELC-TO25", "Electrical", "each", 28.00, 2, 2, 0),  # LOW: 2 = min 2
-            (None, "Door Gasket 600x400mm", "GSK-6040", "Seals", "each", 35.00, 1, 2, 0),       # LOW: 1 < min 2
-            (None, "Mixer Bowl Seal Kit", "GSK-MBS1", "Seals", "each", 65.00, 0, 1, 0),          # OUT OF STOCK
-            (None, "Oven Element 3kW", "HTR-OV3K", "Heating", "each", 85.00, 1, 1, 0),           # LOW: 1 = min 1
-            (None, "LED Tube 4ft 18W", "LGT-LED4", "Lighting", "each", 6.50, 20, 10, 40),
-            (None, "Fuse 13A BS1362", "ELC-F13A", "Electrical", "each", 0.50, 50, 20, 100),
-            (None, "Cable Tie 300mm", "FIX-CT300", "Fixings", "each", 0.05, 200, 50, 0),
-            (None, "Silicone Sealant Clear", "ADH-SIL1", "Adhesives", "each", 5.50, 6, 2, 0),
-            (None, "Conveyor Belt 50mm PU", "BLT-CV50", "Belts", "meter", 28.00, 5, 2, 0),
+            (None, "Drive Belt V-Type A68", "BLT-A68", "Belts", "each", 12.50, 8, 3, 0, bakerparts),
+            (None, "Bearing 6205-2RS", "BRG-6205", "Bearings", "each", 8.75, 4, 5, 20, bakerparts),
+            (None, "Compressor Oil PAG-46", "OIL-PAG46", "Lubricants", "liter", 22.00, 10, 4, 0, fridgetech),
+            (None, "Air Filter 20x25x4 MERV-11", "FLT-2025", "Filters", "each", 18.50, 6, 2, 0, fridgetech),
+            (None, "Refrigerant R404A", "REF-404A", "Refrigerants", "kg", 35.00, 5, 2, 0, fridgetech),
+            (None, "Contactor 3P 40A", "ELC-CT40", "Electrical", "each", 45.00, 4, 2, 0, bbh),
+            (None, "Thermal Overload 18-25A", "ELC-TO25", "Electrical", "each", 28.00, 2, 2, 0, bbh),
+            (None, "Door Gasket 600x400mm", "GSK-6040", "Seals", "each", 35.00, 1, 2, 0, bakerparts),
+            (None, "Mixer Bowl Seal Kit", "GSK-MBS1", "Seals", "each", 65.00, 0, 1, 0, bakerparts),
+            (None, "Oven Element 3kW", "HTR-OV3K", "Heating", "each", 85.00, 1, 1, 0, bakerparts),
+            (None, "LED Tube 4ft 18W", "LGT-LED4", "Lighting", "each", 6.50, 20, 10, 40, ledlighting),
+            (None, "Fuse 13A BS1362", "ELC-F13A", "Electrical", "each", 0.50, 50, 20, 100, bbh),
+            (None, "Cable Tie 300mm", "FIX-CT300", "Fixings", "each", 0.05, 200, 50, 0, cromwell),
+            (None, "Silicone Sealant Clear", "ADH-SIL1", "Adhesives", "each", 5.50, 6, 2, 0, cromwell),
+            (None, "Conveyor Belt 50mm PU", "BLT-CV50", "Belts", "meter", 28.00, 5, 2, 0, bakerparts),
         ]
-        for sid, name, pn, cat, unit, cost, qty, minqty, maxqty in parts_data:
+        for sid, name, pn, cat, unit, cost, qty, minqty, maxqty, sup in parts_data:
             p = Part(site_id=sid, name=name, part_number=pn, category=cat,
                      unit=unit, unit_cost=cost, quantity_on_hand=qty,
-                     minimum_stock=minqty, maximum_stock=maxqty)
+                     minimum_stock=minqty, maximum_stock=maxqty,
+                     supplier_id=sup.id if sup else None)
             db.session.add(p)
         db.session.commit()
 
@@ -378,6 +410,7 @@ with app.app_context():
     print("Demo data seeded successfully!")
     print(f"  Sites: {Site.query.count()}")
     print(f"  Teams: {Team.query.count()}")
+    print(f"  Suppliers: {Supplier.query.count()}")
     print(f"  Users: {User.query.count()}")
     print(f"  Locations: {Location.query.count()}")
     print(f"  Assets: {Asset.query.count()}")
