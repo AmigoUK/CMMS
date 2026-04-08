@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.suppliers') }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-truck me-2"></i>{{ _('ui.page.suppliers') }}</h1>
+    <a href="{{ url_for('suppliers.new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_supplier') }}
+    </a>
+</div>
+
+{# Search #}
+<form method="GET" action="{{ url_for('suppliers.list_suppliers') }}" class="mb-3">
+    {% if show_filter %}<input type="hidden" name="show" value="{{ show_filter }}">{% endif %}
+    <div class="input-group">
+        <input type="text" name="q" class="form-control"
+               placeholder="{{ _('ui.text.search_suppliers_placeholder') }}"
+               value="{{ search_query }}">
+        <button type="submit" class="btn btn-outline-secondary">
+            <i class="bi bi-search"></i>
+        </button>
+        {% if search_query %}
+        <a href="{{ url_for('suppliers.list_suppliers', show=show_filter) }}"
+           class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+        {% endif %}
+    </div>
+</form>
+
+{# Filter tabs #}
+<div class="mb-3 d-flex gap-2">
+    <a href="{{ url_for('suppliers.list_suppliers', q=search_query) }}"
+       class="btn btn-sm {% if not show_filter %}btn-dark{% else %}btn-outline-dark{% endif %}">
+        {{ _('ui.label.active') }}
+    </a>
+    <a href="{{ url_for('suppliers.list_suppliers', q=search_query, show='inactive') }}"
+       class="btn btn-sm {% if show_filter == 'inactive' %}btn-dark{% else %}btn-outline-dark{% endif %}">
+        {{ _('ui.label.inactive') }}
+    </a>
+</div>
+
+{% if suppliers %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>{{ _('ui.label.name') }}</th>
+                <th>{{ _('ui.label.contact_person') }}</th>
+                <th>{{ _('ui.label.email') }}</th>
+                <th>{{ _('ui.label.phone') }}</th>
+                <th class="text-center">{{ _('ui.label.parts') }}</th>
+                <th class="text-end">{{ _('ui.label.actions') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in suppliers %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('suppliers.detail', id=s.id) }}" class="fw-semibold">
+                        {{ s.name }}
+                    </a>
+                    {% if s.shop_url %}
+                    <a href="{{ s.shop_url }}" target="_blank" class="ms-1 text-muted" title="{{ _('ui.label.shop_url') }}">
+                        <i class="bi bi-cart small"></i>
+                    </a>
+                    {% endif %}
+                </td>
+                <td>{{ s.contact_person or '—' }}</td>
+                <td>
+                    {% if s.email %}
+                    <a href="mailto:{{ s.email }}">{{ s.email }}</a>
+                    {% else %}—{% endif %}
+                </td>
+                <td>{{ s.phone or '—' }}</td>
+                <td class="text-center">
+                    <span class="badge bg-light text-dark border">{{ s.parts | selectattr('is_active') | list | length }}</span>
+                </td>
+                <td class="text-end">
+                    <a href="{{ url_for('suppliers.edit', id=s.id) }}"
+                       class="btn btn-sm btn-outline-secondary" title="{{ _('ui.button.edit') }}">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('suppliers.toggle', id=s.id) }}"
+                          class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if s.is_active else 'success' }}"
+                                title="{{ _('ui.label.deactivate') if s.is_active else _('ui.label.activate') }}">
+                            <i class="bi bi-{{ 'pause' if s.is_active else 'play' }}"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include "partials/_pagination.html" %}
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-truck display-4"></i>
+    <p class="mt-2">{{ _('ui.text.no_suppliers_found') }}</p>
+</div>
+{% endif %}
+{% endblock %}

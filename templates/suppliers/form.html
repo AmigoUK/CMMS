@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.edit_supplier') if supplier else _('ui.page.new_supplier') }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('suppliers.list_suppliers') }}" class="text-decoration-none small">
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.button.back_to_suppliers') }}
+    </a>
+</div>
+
+<h1 class="h3 mb-4">
+    <i class="bi bi-truck me-2"></i>
+    {{ _('ui.page.edit_supplier') if supplier else _('ui.page.new_supplier') }}
+</h1>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="POST"
+              action="{{ url_for('suppliers.update', id=supplier.id) if supplier else url_for('suppliers.create') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="card mb-3">
+                <div class="card-header"><h6 class="mb-0">{{ _('ui.label.supplier_information') }}</h6></div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">
+                                {{ _('ui.label.name') }} <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="name" name="name"
+                                   required maxlength="200"
+                                   value="{{ supplier.name if supplier else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="contact_person" class="form-label">{{ _('ui.label.contact_person') }}</label>
+                            <input type="text" class="form-control" id="contact_person" name="contact_person"
+                                   maxlength="200"
+                                   value="{{ supplier.contact_person if supplier else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">{{ _('ui.label.email') }}</label>
+                            <input type="email" class="form-control" id="email" name="email"
+                                   maxlength="200"
+                                   value="{{ supplier.email if supplier else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">{{ _('ui.label.phone') }}</label>
+                            <input type="tel" class="form-control" id="phone" name="phone"
+                                   maxlength="50"
+                                   value="{{ supplier.phone if supplier else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="address" class="form-label">{{ _('ui.label.address') }}</label>
+                        <textarea class="form-control" id="address" name="address"
+                                  rows="2" maxlength="500">{{ supplier.address if supplier else '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="shop_url" class="form-label">
+                            <i class="bi bi-cart me-1"></i>{{ _('ui.label.shop_url') }}
+                        </label>
+                        <input type="url" class="form-control" id="shop_url" name="shop_url"
+                               placeholder="https://"
+                               maxlength="500"
+                               value="{{ supplier.shop_url if supplier else '' }}">
+                        <div class="form-text">{{ _('ui.text.shop_url_hint') }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">{{ _('ui.label.notes') }}</label>
+                        <textarea class="form-control" id="notes" name="notes"
+                                  rows="3" placeholder="{{ _('ui.text.supplier_notes_placeholder') }}">{{ supplier.notes if supplier else '' }}</textarea>
+                    </div>
+
+                    {% if supplier %}
+                    <div class="form-check">
+                        <input type="hidden" name="is_active" value="0">
+                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
+                               {% if supplier.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">{{ _('ui.label.active') }}</label>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>
+                    {{ _('ui.button.save_changes') if supplier else _('ui.button.create_supplier') }}
+                </button>
+                <a href="{{ url_for('suppliers.list_suppliers') }}" class="btn btn-outline-secondary">
+                    {{ _('ui.button.cancel') }}
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

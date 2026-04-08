@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}{{ supplier.name }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <a href="{{ url_for('suppliers.list_suppliers') }}" class="text-decoration-none small">
+            <i class="bi bi-arrow-left me-1"></i>{{ _('ui.button.back_to_suppliers') }}
+        </a>
+        <h1 class="h3 mt-2 mb-0">
+            <i class="bi bi-truck me-2"></i>{{ supplier.name }}
+            {% if not supplier.is_active %}
+            <span class="badge bg-secondary ms-2">{{ _('ui.label.inactive') }}</span>
+            {% endif %}
+        </h1>
+    </div>
+    <div class="d-flex gap-2 no-print">
+        <a href="{{ url_for('suppliers.edit', id=supplier.id) }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil"></i> {{ _('ui.button.edit') }}
+        </a>
+    </div>
+</div>
+
+{# Supplier info card #}
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0">{{ _('ui.label.supplier_information') }}</h6></div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-0">
+                    <tr>
+                        <th class="text-muted" style="width:35%;">{{ _('ui.label.contact_person') }}</th>
+                        <td>{{ supplier.contact_person or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">{{ _('ui.label.email') }}</th>
+                        <td>
+                            {% if supplier.email %}
+                            <a href="mailto:{{ supplier.email }}"><i class="bi bi-envelope me-1"></i>{{ supplier.email }}</a>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">{{ _('ui.label.phone') }}</th>
+                        <td>
+                            {% if supplier.phone %}
+                            <a href="tel:{{ supplier.phone }}"><i class="bi bi-telephone me-1"></i>{{ supplier.phone }}</a>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">{{ _('ui.label.address') }}</th>
+                        <td>{{ supplier.address or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">{{ _('ui.label.shop_url') }}</th>
+                        <td>
+                            {% if supplier.shop_url %}
+                            <a href="{{ supplier.shop_url }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-cart me-1"></i>{{ _('ui.button.order_online') }}
+                            </a>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        {% if supplier.notes %}
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0">{{ _('ui.label.notes') }}</h6></div>
+            <div class="card-body">
+                <p class="mb-0">{{ supplier.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# Low-stock alert #}
+{% if low_stock_parts %}
+<div class="alert alert-danger d-flex align-items-center mb-3">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <span>{{ low_stock_parts|length }} {{ _('ui.text.parts_below_minimum') }}</span>
+</div>
+{% endif %}
+
+{# Parts from this supplier #}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-box-seam me-2"></i>{{ _('ui.text.parts_from_supplier') }}
+            <span class="badge bg-secondary ms-1">{{ parts|length }}</span>
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        {% if parts %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ _('ui.label.name') }}</th>
+                        <th>{{ _('ui.label.part_number') }}</th>
+                        <th>{{ _('ui.label.supplier_part_number') }}</th>
+                        <th class="text-center">{{ _('ui.label.stock') }}</th>
+                        <th class="text-end">{{ _('ui.label.unit_cost') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for part in parts %}
+                    <tr class="{{ 'row-low-stock' if part.is_low_stock }}">
+                        <td>
+                            <a href="{{ url_for('parts.detail', id=part.id) }}">{{ part.name }}</a>
+                        </td>
+                        <td>{{ part.part_number or '—' }}</td>
+                        <td>{{ part.supplier_part_number or '—' }}</td>
+                        <td class="text-center">
+                            {% if part.quantity_on_hand == 0 and part.minimum_stock > 0 %}
+                            <span class="text-danger fw-bold"><i class="bi bi-x-circle me-1"></i>0</span>
+                            {% elif part.is_low_stock %}
+                            <span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle me-1"></i>{{ part.quantity_on_hand }}</span>
+                            {% else %}
+                            {{ part.quantity_on_hand }}
+                            {% endif %}
+                            <div class="progress mt-1" style="height: 4px; max-width: 80px; margin: 0 auto;">
+                                <div class="progress-bar {% if part.is_low_stock %}bg-danger{% elif part.stock_level_percent < 50 %}bg-warning{% else %}bg-success{% endif %}"
+                                     style="width: {{ part.stock_level_percent }}%;"></div>
+                            </div>
+                        </td>
+                        <td class="text-end">&pound;{{ '%.2f' | format(part.unit_cost) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+            <p class="mb-0">{{ _('ui.text.no_parts_from_supplier') }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
