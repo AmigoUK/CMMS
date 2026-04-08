@@ -32,9 +32,21 @@ TRANSLATIONS = {
         'en': 'Requests',
         'pl': 'Zgłoszenia',
     },
+    ('ui.navbar.work', 'ui'): {
+        'en': 'Work',
+        'pl': 'Praca',
+    },
     ('ui.navbar.work_orders', 'ui'): {
         'en': 'Work Orders',
         'pl': 'Zlecenia pracy',
+    },
+    ('ui.navbar.inventory', 'ui'): {
+        'en': 'Inventory',
+        'pl': 'Magazyn',
+    },
+    ('ui.navbar.reorder_report', 'ui'): {
+        'en': 'Reorder Report',
+        'pl': 'Raport zamówień',
     },
     ('ui.navbar.property', 'ui'): {
         'en': 'Property',
