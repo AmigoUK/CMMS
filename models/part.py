@@ -31,9 +31,10 @@ class Part(db.Model):
     minimum_stock = db.Column(db.Integer, default=0)
     maximum_stock = db.Column(db.Integer, default=0)
     image = db.Column(db.String(300), default="")
-    supplier = db.Column(db.String(200), default="")
+    supplier_id = db.Column(
+        db.Integer, db.ForeignKey("suppliers.id"), nullable=True
+    )
     supplier_part_number = db.Column(db.String(100), default="")
-    supplier_email = db.Column(db.String(200), default="")
     storage_location = db.Column(db.String(200), default="")
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(

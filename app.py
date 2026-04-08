@@ -113,6 +113,7 @@ def create_app(config_class=None):
     from blueprints.assets import assets_bp
     from blueprints.locations import locations_bp
     from blueprints.parts import parts_bp
+    from blueprints.suppliers import suppliers_bp
     from blueprints.admin import admin_bp
     from blueprints.help import help_bp
 
@@ -123,6 +124,7 @@ def create_app(config_class=None):
     app.register_blueprint(assets_bp, url_prefix="/assets")
     app.register_blueprint(locations_bp, url_prefix="/locations")
     app.register_blueprint(parts_bp, url_prefix="/parts")
+    app.register_blueprint(suppliers_bp, url_prefix="/suppliers")
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(help_bp, url_prefix="/help")
 
