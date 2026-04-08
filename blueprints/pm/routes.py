@@ -3,7 +3,7 @@
 import json
 from datetime import date, timedelta
 
-from flask import abort, flash, g, redirect, render_template, request, url_for
+from flask import abort, flash, g, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from blueprints.pm import pm_bp
@@ -289,3 +289,68 @@ def task_toggle(id):
     state = "activated" if task.is_active else "deactivated"
     flash(f"PM task '{task.name}' {state}.", "success")
     return redirect(url_for("pm.task_list"))
+
+
+# ── planner ───────────────────────────────────────────────────────────
+
+@pm_bp.route("/")
+@technician_required
+def planner():
+    """PM planner main view with calendar/agenda/list tabs."""
+    site_id = g.current_site.id
+
+    # Get overdue count for the badge
+    overdue_count = PreventiveTask.query.filter(
+        PreventiveTask.site_id == site_id,
+        PreventiveTask.is_active == True,
+        PreventiveTask.next_due < date.today(),
+    ).count()
+
+    # Get tasks for list/agenda views
+    upcoming_tasks = PreventiveTask.query.filter(
+        PreventiveTask.site_id == site_id,
+        PreventiveTask.is_active == True,
+        PreventiveTask.next_due.isnot(None),
+    ).order_by(
+        db.case((PreventiveTask.next_due < date.today(), 0), else_=1),
+        PreventiveTask.next_due.asc(),
+    ).all()
+
+    # Week boundaries for agenda view
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())  # Monday
+    week_end = week_start + timedelta(days=6)  # Sunday
+
+    # Group tags for filter
+    group_tags = _existing_group_tags()
+
+    return render_template(
+        "pm/planner.html",
+        overdue_count=overdue_count,
+        upcoming_tasks=upcoming_tasks,
+        week_start=week_start,
+        week_end=week_end,
+        today=today,
+        group_tags=group_tags,
+    )
+
+
+@pm_bp.route("/calendar-data")
+@technician_required
+def calendar_data():
+    """JSON API for FullCalendar events."""
+    from utils.pm_scheduler import project_occurrences
+    from datetime import datetime
+
+    start_str = request.args.get("start", "")
+    end_str = request.args.get("end", "")
+
+    try:
+        start_date = datetime.fromisoformat(start_str.replace("Z", "")).date()
+        end_date = datetime.fromisoformat(end_str.replace("Z", "")).date()
+    except (ValueError, AttributeError):
+        start_date = date.today() - timedelta(days=30)
+        end_date = date.today() + timedelta(days=60)
+
+    events = project_occurrences(g.current_site.id, start_date, end_date)
+    return jsonify(events)

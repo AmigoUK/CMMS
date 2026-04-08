@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.pm_planner') }} — CMMS{% endblock %}
+
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+<style>
+.pm-calendar { min-height: 600px; }
+.fc .fc-event { cursor: pointer; font-size: 0.85rem; }
+.fc .fc-daygrid-event { padding: 2px 4px; }
+.agenda-card { border-left: 4px solid transparent; }
+.agenda-card.overdue { border-left-color: #dc3545; }
+.agenda-card.due-today { border-left-color: #fd7e14; }
+.agenda-card.in-lead { border-left-color: #0d6efd; }
+.agenda-card.upcoming { border-left-color: #198754; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <h1 class="h3 mb-0"><i class="bi bi-calendar-check me-2"></i>{{ _('ui.page.pm_planner') }}</h1>
+    <div class="d-flex gap-2">
+        {% if current_user.is_supervisor %}
+        <a href="{{ url_for('pm.task_new') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_pm_task') }}
+        </a>
+        <a href="{{ url_for('pm.task_list') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-list-ul me-1"></i>{{ _('ui.page.pm_tasks') }}
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if overdue_count > 0 %}
+<div class="alert alert-danger d-flex align-items-center mb-3">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <span><strong>{{ overdue_count }}</strong> {{ _('ui.text.overdue_pm_tasks') }}</span>
+</div>
+{% endif %}
+
+{# View toggle tabs #}
+<ul class="nav nav-tabs mb-3" id="plannerTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="calendar-tab" data-bs-toggle="tab"
+                data-bs-target="#calendarView" type="button" role="tab">
+            <i class="bi bi-calendar3 me-1"></i>{{ _('ui.label.calendar') }}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="agenda-tab" data-bs-toggle="tab"
+                data-bs-target="#agendaView" type="button" role="tab">
+            <i class="bi bi-calendar-week me-1"></i>{{ _('ui.label.agenda') }}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="list-tab" data-bs-toggle="tab"
+                data-bs-target="#listView" type="button" role="tab">
+            <i class="bi bi-list-ul me-1"></i>{{ _('ui.label.list') }}
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    {# ═══ Calendar View ═══ #}
+    <div class="tab-pane fade show active" id="calendarView" role="tabpanel">
+        <div class="card">
+            <div class="card-body pm-calendar" id="pmCalendar"></div>
+        </div>
+        <div class="mt-2 d-flex gap-3 small text-muted">
+            <span><span class="badge" style="background:#dc3545">&nbsp;</span> {{ _('ui.label.overdue') }}</span>
+            <span><span class="badge" style="background:#fd7e14">&nbsp;</span> {{ _('ui.label.due_today') }}</span>
+            <span><span class="badge" style="background:#0d6efd">&nbsp;</span> {{ _('ui.label.in_lead_window') }}</span>
+            <span><span class="badge" style="background:#198754">&nbsp;</span> {{ _('ui.label.upcoming') }}</span>
+        </div>
+    </div>
+
+    {# ═══ Agenda View (This Week) ═══ #}
+    <div class="tab-pane fade" id="agendaView" role="tabpanel">
+        <div class="card">
+            <div class="card-header">
+                <strong>{{ _('ui.label.this_week') }}:</strong>
+                {{ week_start.strftime('%d %b') }} — {{ week_end.strftime('%d %b %Y') }}
+            </div>
+            <div class="card-body">
+                {# Overdue section #}
+                {% set overdue_tasks = upcoming_tasks | selectattr('is_overdue') | list %}
+                {% if overdue_tasks %}
+                <h6 class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>{{ _('ui.label.overdue') }}</h6>
+                <div class="mb-3">
+                    {% for task in overdue_tasks %}
+                    <div class="card mb-2 agenda-card overdue">
+                        <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{{ url_for('pm.task_detail', id=task.id) }}" class="fw-semibold">{{ task.name }}</a>
+                                <small class="text-muted ms-2">{{ task.asset.name if task.asset else '' }}</small>
+                            </div>
+                            <div>
+                                <span class="badge bg-danger">{{ task.next_due.strftime('%d %b') }}</span>
+                                <span class="priority-{{ task.priority }} ms-1">{{ task.priority | title }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {# Days of the week #}
+                <div class="row g-3">
+                    {% for day_offset in range(7) %}
+                    {% set day = week_start + timedelta(days=day_offset) %}
+                    <div class="col-md">
+                        <h6 class="{% if day == today %}text-primary fw-bold{% endif %}">
+                            {{ day.strftime('%A') }}
+                            <small class="text-muted">{{ day.strftime('%d %b') }}</small>
+                        </h6>
+                        {% for task in upcoming_tasks if task.next_due == day %}
+                        <div class="card mb-2 agenda-card {% if task.is_in_lead_window() %}in-lead{% else %}upcoming{% endif %}">
+                            <div class="card-body py-2 px-3">
+                                <a href="{{ url_for('pm.task_detail', id=task.id) }}" class="small fw-semibold">{{ task.name }}</a>
+                                <br><small class="text-muted">{{ task.asset.name if task.asset else '' }}</small>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-muted small">—</p>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══ List View ═══ #}
+    <div class="tab-pane fade" id="listView" role="tabpanel">
+        {% if upcoming_tasks %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ _('ui.label.name') }}</th>
+                        <th>{{ _('ui.label.asset') }}</th>
+                        <th>{{ _('ui.label.frequency') }}</th>
+                        <th>{{ _('ui.label.next_due') }}</th>
+                        <th>{{ _('ui.label.priority') }}</th>
+                        <th>{{ _('ui.label.group_tag') }}</th>
+                        <th>{{ _('ui.label.assign_to') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in upcoming_tasks %}
+                    <tr class="{% if task.is_overdue %}pm-overdue{% elif task.is_in_lead_window() %}pm-in-lead{% endif %}">
+                        <td><a href="{{ url_for('pm.task_detail', id=task.id) }}" class="fw-semibold">{{ task.name }}</a></td>
+                        <td>{{ task.asset.name if task.asset else '—' }}</td>
+                        <td>{{ task.frequency_display }}</td>
+                        <td>
+                            {% if task.is_overdue %}
+                            <span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle me-1"></i>{{ task.next_due.strftime('%d %b %Y') }}</span>
+                            {% elif task.next_due %}
+                            {{ task.next_due.strftime('%d %b %Y') }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td><span class="priority-{{ task.priority }}">{{ task.priority | title }}</span></td>
+                        <td>{% if task.group_tag %}<span class="badge bg-light text-dark border">{{ task.group_tag }}</span>{% else %}—{% endif %}</td>
+                        <td>{{ task.assigned_to.display_name if task.assigned_to else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-calendar-check display-4"></i>
+            <p class="mt-2">{{ _('ui.text.no_pm_tasks') }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# Event detail modal #}
+<div class="modal fade" id="eventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="eventModalBody"></div>
+            <div class="modal-footer" id="eventModalFooter"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('pmCalendar');
+    if (!calendarEl) return;
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,dayGridWeek,listWeek'
+        },
+        events: {
+            url: '{{ url_for("pm.calendar_data") }}',
+            failure: function() {
+                console.error('Failed to load PM events');
+            }
+        },
+        eventClick: function(info) {
+            const props = info.event.extendedProps;
+            const modal = document.getElementById('eventModal');
+            document.getElementById('eventModalTitle').textContent = info.event.title;
+
+            const body = document.getElementById('eventModalBody');
+            // Clear existing content safely
+            while (body.firstChild) body.removeChild(body.firstChild);
+
+            const table = document.createElement('table');
+            table.className = 'table table-sm table-borderless mb-0';
+            const fields = [
+                ['Date', info.event.startStr],
+                ['Status', props.status.replace('_', ' ')],
+                ['Asset', props.asset_name || '—'],
+                ['Location', props.location || '—'],
+                ['Priority', props.priority],
+                ['Frequency', props.frequency],
+                ['Schedule', props.schedule_type],
+                ['Assigned To', props.assigned_to || '—'],
+                ['Group', props.group_tag || '—'],
+                ['Duration', (props.estimated_duration || 0) + ' min'],
+            ];
+            const tbody = document.createElement('tbody');
+            fields.forEach(function(f) {
+                const tr = document.createElement('tr');
+                const th = document.createElement('th');
+                th.className = 'text-muted';
+                th.style.width = '35%';
+                th.textContent = f[0];
+                const td = document.createElement('td');
+                td.textContent = f[1];
+                tr.appendChild(th);
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            body.appendChild(table);
+
+            const footer = document.getElementById('eventModalFooter');
+            while (footer.firstChild) footer.removeChild(footer.firstChild);
+
+            const viewLink = document.createElement('a');
+            viewLink.href = '/pm/tasks/' + props.task_id;
+            viewLink.className = 'btn btn-outline-primary btn-sm';
+            viewLink.textContent = 'View Task';
+            footer.appendChild(viewLink);
+
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        },
+        height: 'auto',
+        firstDay: 1,
+        eventDisplay: 'block',
+    });
+
+    // Initialize calendar when tab becomes visible
+    const calTab = document.getElementById('calendar-tab');
+    calTab.addEventListener('shown.bs.tab', function() {
+        calendar.render();
+    });
+    // Render immediately if calendar tab is active
+    calendar.render();
+});
+</script>
+{% endblock %}
