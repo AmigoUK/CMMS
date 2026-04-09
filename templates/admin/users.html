@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}User Management — CMMS{% endblock %}
+{% block title %}{{ _('ui.page.user_management') }} — CMMS{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0"><i class="bi bi-shield-lock me-2"></i>User Management</h1>
+    <h1 class="h3 mb-0"><i class="bi bi-shield-lock me-2"></i>{{ _('ui.page.user_management') }}</h1>
     <a href="{{ url_for('admin.new_user') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>New User
+        <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_user') }}
     </a>
 </div>
 
@@ -14,22 +14,22 @@
 <ul class="nav nav-tabs mb-4">
     <li class="nav-item">
         <a class="nav-link active" href="{{ url_for('admin.list_users') }}">
-            <i class="bi bi-people me-1"></i>Users
+            <i class="bi bi-people me-1"></i>{{ _('ui.text.admin_tab_users') }}
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('admin.list_teams') }}">
-            <i class="bi bi-person-badge me-1"></i>Teams
+            <i class="bi bi-person-badge me-1"></i>{{ _('ui.text.admin_tab_teams') }}
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('admin.list_sites') }}">
-            <i class="bi bi-building me-1"></i>Sites
+            <i class="bi bi-building me-1"></i>{{ _('ui.text.admin_tab_sites') }}
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('admin.settings') }}">
-            <i class="bi bi-gear me-1"></i>Settings
+            <i class="bi bi-gear me-1"></i>{{ _('ui.text.admin_tab_settings') }}
         </a>
     </li>
 </ul>
@@ -40,14 +40,14 @@
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
-                <th>Username</th>
-                <th>Display Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Team</th>
-                <th>Sites</th>
-                <th>Active</th>
-                <th>Actions</th>
+                <th>{{ _('ui.label.username') }}</th>
+                <th>{{ _('ui.label.display_name') }}</th>
+                <th>{{ _('ui.label.email') }}</th>
+                <th>{{ _('ui.label.role') }}</th>
+                <th>{{ _('ui.label.team') }}</th>
+                <th>{{ _('ui.label.sites') }}</th>
+                <th>{{ _('ui.label.active') }}</th>
+                <th>{{ _('ui.label.actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -58,15 +58,15 @@
                 <td>{{ user.email }}</td>
                 <td>
                     {% if user.role == 'admin' %}
-                    <span class="badge bg-danger">Admin</span>
+                    <span class="badge bg-danger">{{ _('label.role.admin') }}</span>
                     {% elif user.role == 'supervisor' %}
-                    <span class="badge bg-primary">Supervisor</span>
+                    <span class="badge bg-primary">{{ _('label.role.supervisor') }}</span>
                     {% elif user.role == 'technician' %}
-                    <span class="badge bg-success">Technician</span>
+                    <span class="badge bg-success">{{ _('label.role.technician') }}</span>
                     {% elif user.role == 'contractor' %}
-                    <span class="badge bg-warning text-dark">Contractor</span>
+                    <span class="badge bg-warning text-dark">{{ _('label.role.contractor') }}</span>
                     {% else %}
-                    <span class="badge bg-secondary">User</span>
+                    <span class="badge bg-secondary">{{ _('label.role.user') }}</span>
                     {% endif %}
                 </td>
                 <td>{{ user.team.name if user.team else '—' }}</td>
@@ -75,9 +75,9 @@
                 </td>
                 <td>
                     {% if user.is_active_user %}
-                    <span class="badge bg-success">Active</span>
+                    <span class="badge bg-success">{{ _('ui.label.active') }}</span>
                     {% else %}
-                    <span class="badge bg-secondary">Inactive</span>
+                    <span class="badge bg-secondary">{{ _('ui.label.inactive') }}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -90,8 +90,8 @@
                             class="btn btn-sm btn-outline-{{ 'warning' if user.is_active_user else 'success' }}"
                             data-bs-toggle="modal" data-bs-target="#confirmModal"
                             data-action="{{ url_for('admin.toggle_user', id=user.id) }}"
-                            data-message="{{ 'Deactivate' if user.is_active_user else 'Activate' }} user '{{ user.username }}'?"
-                            title="{{ 'Deactivate' if user.is_active_user else 'Activate' }}">
+                            data-message="{{ _('ui.button.deactivate') if user.is_active_user else _('ui.button.activate') }} user '{{ user.username }}'?"
+                            title="{{ _('ui.button.deactivate') if user.is_active_user else _('ui.button.activate') }}">
                         <i class="bi bi-{{ 'pause' if user.is_active_user else 'play' }}"></i>
                     </button>
                     {% endif %}
@@ -107,7 +107,7 @@
 {% else %}
 <div class="text-center text-muted py-5">
     <i class="bi bi-people display-4"></i>
-    <p class="mt-2">No users found.</p>
+    <p class="mt-2">{{ _('ui.text.no_users_found') }}</p>
 </div>
 {% endif %}
 {% endblock %}

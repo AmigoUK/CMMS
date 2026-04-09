@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}{{ 'Edit Location' if location else 'New Location' }} — CMMS{% endblock %}
+{% block title %}{{ _('ui.page.edit_location') if location else _('ui.button.new_location') }} — CMMS{% endblock %}
 
 {% block content %}
 <div class="mb-4">
     <a href="{{ url_for('locations.list_locations') }}" class="text-decoration-none">
-        <i class="bi bi-arrow-left me-1"></i>Back to Locations
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.nav.back_to_locations') }}
     </a>
 </div>
 
 <h1 class="h3 mb-4">
-    <i class="bi bi-geo-alt me-2"></i>{{ 'Edit Location' if location else 'New Location' }}
+    <i class="bi bi-geo-alt me-2"></i>{{ _('ui.page.edit_location') if location else _('ui.button.new_location') }}
 </h1>
 
 <div class="row justify-content-center">
@@ -22,13 +22,13 @@
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <div class="mb-3">
-                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <label for="name" class="form-label">{{ _('ui.label.name') }} <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="name" name="name" required
                                value="{{ location.name if location else '' }}">
                     </div>
 
                     <div class="mb-3">
-                        <label for="location_type" class="form-label">Type</label>
+                        <label for="location_type" class="form-label">{{ _('ui.label.type') }}</label>
                         <select class="form-select" id="location_type" name="location_type">
                             {% for lt in location_types %}
                             <option value="{{ lt }}"
@@ -41,7 +41,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
+                        <label for="description" class="form-label">{{ _('ui.label.description') }}</label>
                         <textarea class="form-control" id="description" name="description"
                                   rows="3">{{ location.description if location else '' }}</textarea>
                     </div>

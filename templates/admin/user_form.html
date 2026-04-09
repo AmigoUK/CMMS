@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}{{ 'Edit User' if user else 'New User' }} — CMMS{% endblock %}
+{% block title %}{{ _('ui.page.edit_user') if user else _('ui.page.new_user') }} — CMMS{% endblock %}
 
 {% block content %}
 <div class="mb-4">
     <a href="{{ url_for('admin.list_users') }}" class="text-decoration-none">
-        <i class="bi bi-arrow-left me-1"></i>Back to Users
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.button.back_to_users') }}
     </a>
 </div>
 
 <h1 class="h3 mb-4">
-    <i class="bi bi-person me-2"></i>{{ 'Edit User' if user else 'New User' }}
+    <i class="bi bi-person me-2"></i>{{ _('ui.page.edit_user') if user else _('ui.page.new_user') }}
 </h1>
 
 <div class="row">
@@ -21,20 +21,20 @@
 
             <div class="card mb-3">
                 <div class="card-header">
-                    <h6 class="mb-0">Account Details</h6>
+                    <h6 class="mb-0">{{ _('ui.label.account_details') }}</h6>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                                <label for="username" class="form-label">{{ _('ui.label.username') }} <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="username" name="username" required
                                        value="{{ user.username if user else '' }}">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                <label for="email" class="form-label">{{ _('ui.label.email') }} <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control" id="email" name="email" required
                                        value="{{ user.email if user else '' }}">
                             </div>
@@ -44,14 +44,14 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="display_name" class="form-label">Display Name <span class="text-danger">*</span></label>
+                                <label for="display_name" class="form-label">{{ _('ui.label.display_name') }} <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="display_name" name="display_name" required
                                        value="{{ user.display_name if user else '' }}">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="phone" class="form-label">Phone</label>
+                                <label for="phone" class="form-label">{{ _('ui.label.phone') }}</label>
                                 <input type="tel" class="form-control" id="phone" name="phone"
                                        value="{{ user.phone if user else '' }}">
                             </div>
@@ -60,9 +60,9 @@
 
                     <div class="mb-3">
                         <label for="password" class="form-label">
-                            Password
+                            {{ _('ui.label.password') }}
                             {% if user %}
-                            <small class="text-muted">(leave blank to keep current)</small>
+                            <small class="text-muted">({{ _('ui.text.password_keep_current') }})</small>
                             {% else %}
                             <span class="text-danger">*</span>
                             {% endif %}
@@ -77,7 +77,7 @@
                            data-bs-toggle="modal" data-bs-target="#confirmModal"
                            data-action="{{ url_for('admin.reset_password', id=user.id) }}"
                            data-message="Reset password for '{{ user.username }}'? A temporary password will be generated.">
-                            <i class="bi bi-key me-1"></i>Reset Password
+                            <i class="bi bi-key me-1"></i>{{ _('ui.button.reset_password') }}
                         </a>
                     </div>
                     {% endif %}
@@ -86,13 +86,13 @@
 
             <div class="card mb-3">
                 <div class="card-header">
-                    <h6 class="mb-0">Role &amp; Team</h6>
+                    <h6 class="mb-0">{{ _('ui.label.role_and_team') }}</h6>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="role" class="form-label">Role</label>
+                                <label for="role" class="form-label">{{ _('ui.label.role') }}</label>
                                 <select class="form-select" id="role" name="role">
                                     {% for r in roles %}
                                     <option value="{{ r }}"
@@ -106,14 +106,14 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="team_id" class="form-label">Team</label>
+                                <label for="team_id" class="form-label">{{ _('ui.label.team') }}</label>
                                 <select class="form-select" id="team_id" name="team_id">
-                                    <option value="">— None —</option>
+                                    <option value="">{{ _('ui.label.none') }}</option>
                                     {% for team in teams %}
                                     <option value="{{ team.id }}"
                                             {% if user and user.team_id == team.id %}selected{% endif %}>
                                         {{ team.name }}
-                                        {% if team.is_contractor %}(Contractor){% endif %}
+                                        {% if team.is_contractor %}({{ _('ui.label.is_contractor') }}){% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -125,7 +125,7 @@
                     <div class="form-check mb-3">
                         <input type="checkbox" class="form-check-input" id="is_active" name="is_active"
                                {% if user.is_active_user %}checked{% endif %}>
-                        <label class="form-check-label" for="is_active">Active</label>
+                        <label class="form-check-label" for="is_active">{{ _('ui.label.active') }}</label>
                     </div>
                     {% endif %}
                 </div>
@@ -133,10 +133,10 @@
 
             <div class="card mb-3">
                 <div class="card-header">
-                    <h6 class="mb-0">Site Access</h6>
+                    <h6 class="mb-0">{{ _('ui.label.site_access') }}</h6>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small">Select which sites this user can access.</p>
+                    <p class="text-muted small">{{ _('ui.text.select_sites_access') }}</p>
                     {% set user_site_ids = user.sites | map(attribute='id') | list if user else [] %}
                     {% for site in sites %}
                     <div class="form-check">
@@ -149,16 +149,16 @@
                     </div>
                     {% endfor %}
                     {% if not sites %}
-                    <p class="text-muted mb-0">No sites available. Create sites first.</p>
+                    <p class="text-muted mb-0">{{ _('ui.text.no_sites_available') }}</p>
                     {% endif %}
                 </div>
             </div>
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-lg me-1"></i>{{ 'Save Changes' if user else 'Create User' }}
+                    <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save_changes') if user else _('ui.button.create_user') }}
                 </button>
-                <a href="{{ url_for('admin.list_users') }}" class="btn btn-outline-secondary">Cancel</a>
+                <a href="{{ url_for('admin.list_users') }}" class="btn btn-outline-secondary">{{ _('ui.button.cancel') }}</a>
             </div>
         </form>
     </div>

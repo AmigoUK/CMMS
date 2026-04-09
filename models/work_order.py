@@ -37,6 +37,9 @@ class WorkOrder(db.Model):
     created_by_id = db.Column(
         db.Integer, db.ForeignKey("users.id"), nullable=False
     )
+    preventive_task_id = db.Column(
+        db.Integer, db.ForeignKey("preventive_tasks.id"), nullable=True
+    )
     due_date = db.Column(db.Date, nullable=True)
     started_at = db.Column(db.DateTime, nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
@@ -60,6 +63,11 @@ class WorkOrder(db.Model):
         "User", foreign_keys=[created_by_id], backref="created_work_orders"
     )
     location = db.relationship("Location", backref="work_orders")
+    preventive_task = db.relationship(
+        "PreventiveTask",
+        foreign_keys=[preventive_task_id],
+        backref="work_orders",
+    )
     tasks = db.relationship(
         "WorkOrderTask",
         backref="work_order",
