@@ -77,7 +77,7 @@
                     {% else %}
                     {# Still show name field but optional #}
                     <div class="mb-3">
-                        <label for="reporter_name" class="form-label">{{ _('ui.label.your_name') }} <small class="text-muted">(optional)</small></label>
+                        <label for="reporter_name" class="form-label">{{ _('ui.label.your_name') }} <small class="text-muted">({{ _('ui.label.optional') }})</small></label>
                         <input type="text" class="form-control" id="reporter_name" name="reporter_name"
                                placeholder="So we can follow up with you">
                     </div>
@@ -144,7 +144,7 @@
                     <div class="mb-4">
                         <label for="file" class="form-label">
                             <i class="bi bi-camera me-1"></i>{{ _('ui.label.add_photo') }}
-                            <small class="text-muted">(optional)</small>
+                            <small class="text-muted">({{ _('ui.label.optional') }})</small>
                         </label>
                         <input type="file" class="form-control" id="file" name="file" accept="image/*">
                     </div>

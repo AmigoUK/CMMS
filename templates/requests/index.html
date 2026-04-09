@@ -19,7 +19,7 @@
     <li class="nav-item">
         <a class="nav-link {% if current_status == s %}active{% endif %}"
            href="{{ url_for('requests.index', status=s) }}">
-            {{ s|replace('_', ' ')|title }}
+            {{ _('status.request.' ~ s) }}
         </a>
     </li>
     {% endfor %}
@@ -48,19 +48,19 @@
                 <td>
                     <span class="priority-{{ req.priority }}">
                         <i class="bi bi-circle-fill" style="font-size:.6rem"></i>
-                        {{ req.priority|title }}
+                        {{ _('status.priority.' ~ req.priority) }}
                     </span>
                 </td>
                 <td>
                     <span class="badge badge-{{ req.status }}">
-                        {{ req.status|replace('_', ' ')|title }}
+                        {{ _('status.request.' ~ req.status) }}
                     </span>
                 </td>
                 <td>{{ req.created_at.strftime('%d %b %Y') }}</td>
                 <td>
                     <a href="{{ url_for('requests.detail', id=req.id) }}"
                        class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-eye"></i> View
+                        <i class="bi bi-eye"></i> {{ _('ui.button.view') }}
                     </a>
                 </td>
             </tr>
@@ -94,11 +94,11 @@
                 </div>
                 <div class="text-end">
                     <span class="badge badge-{{ req.status }} mb-1">
-                        {{ req.status|replace('_', ' ')|title }}
+                        {{ _('status.request.' ~ req.status) }}
                     </span>
                     <br>
                     <small class="priority-{{ req.priority }}">
-                        {{ req.priority|title }}
+                        {{ _('status.priority.' ~ req.priority) }}
                     </small>
                 </div>
             </div>
