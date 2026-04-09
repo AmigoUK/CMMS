@@ -40,6 +40,35 @@ def _get_asset_or_404(asset_id):
     ).first_or_404()
 
 
+def _save_custom_fields(asset):
+    """Save custom field values from the form to the asset."""
+    for field_def in g.current_site.custom_field_definitions:
+        fn = field_def["field_name"]
+        if field_def["type"] == "image":
+            # Handle image upload
+            uploaded = request.files.get(fn)
+            if uploaded and uploaded.filename and is_allowed_image(uploaded):
+                stored = generate_stored_filename(uploaded.filename)
+                upload_dir = os.path.join(
+                    current_app.config["UPLOAD_FOLDER"], "custom"
+                )
+                os.makedirs(upload_dir, exist_ok=True)
+                uploaded.save(os.path.join(upload_dir, stored))
+                setattr(asset, fn, stored)
+            # Handle removal
+            if request.form.get(f"remove_{fn}") == "1":
+                old_val = getattr(asset, fn, "")
+                if old_val:
+                    old_path = os.path.join(
+                        current_app.config["UPLOAD_FOLDER"], "custom", old_val
+                    )
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                setattr(asset, fn, "")
+        else:
+            setattr(asset, fn, request.form.get(fn, "").strip())
+
+
 # ── list ───────────────────────────────────────────────────────────────
 
 @assets_bp.route("/")
@@ -154,6 +183,9 @@ def create():
         os.makedirs(upload_dir, exist_ok=True)
         image.save(os.path.join(upload_dir, stored))
         asset.image = stored
+
+    # Handle custom fields
+    _save_custom_fields(asset)
 
     db.session.add(asset)
     db.session.commit()
@@ -275,6 +307,9 @@ def update(id):
         if os.path.exists(old_path):
             os.remove(old_path)
         asset.image = ""
+
+    # Handle custom fields
+    _save_custom_fields(asset)
 
     db.session.commit()
     flash("Property updated successfully.", "success")

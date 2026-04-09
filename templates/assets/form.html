@@ -182,6 +182,52 @@
         </div>
     </div>
 
+    {# Custom Fields (site-specific) #}
+    {% set custom_defs = g.current_site.custom_field_definitions %}
+    {% if custom_defs %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0"><i class="bi bi-input-cursor-text me-2"></i>{{ _('ui.heading.custom_fields') }}</h6>
+        </div>
+        <div class="card-body">
+            {% for field in custom_defs %}
+            <div class="mb-3">
+                <label for="{{ field.field_name }}" class="form-label">
+                    {{ field.label }}
+                    {% if field.required %}<span class="text-danger">*</span>{% endif %}
+                </label>
+                {% if field.type == 'date' %}
+                <input type="date" class="form-control" id="{{ field.field_name }}" name="{{ field.field_name }}"
+                       value="{{ asset.get_custom_field(field.index) if asset else '' }}"
+                       {% if field.required %}required{% endif %}>
+                {% elif field.type == 'long_text' %}
+                <textarea class="form-control" id="{{ field.field_name }}" name="{{ field.field_name }}"
+                          rows="3" {% if field.required %}required{% endif %}>{{ asset.get_custom_field(field.index) if asset else '' }}</textarea>
+                {% elif field.type == 'image' %}
+                {% set existing_img = asset.get_custom_field(field.index) if asset else '' %}
+                {% if existing_img %}
+                <div class="mb-2">
+                    <img src="{{ url_for('uploaded_file', filename='custom/' + existing_img) }}"
+                         alt="{{ field.label }}" class="img-fluid rounded" style="max-height: 150px;">
+                    <div class="form-check mt-1">
+                        <input type="checkbox" class="form-check-input" name="remove_{{ field.field_name }}" value="1">
+                        <label class="form-check-label text-danger">{{ _('ui.label.remove_image') }}</label>
+                    </div>
+                </div>
+                {% endif %}
+                <input type="file" class="form-control" id="{{ field.field_name }}" name="{{ field.field_name }}"
+                       accept="image/jpeg,image/png,image/webp,image/gif">
+                {% else %}
+                <input type="text" class="form-control" id="{{ field.field_name }}" name="{{ field.field_name }}"
+                       value="{{ asset.get_custom_field(field.index) if asset else '' }}"
+                       {% if field.required %}required{% endif %}>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary">
             <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save_changes') if asset else _('ui.button.create_property') }}
