@@ -113,7 +113,31 @@
                             <input type="radio" class="btn-check" name="priority" value="critical" id="p_crit" autocomplete="off">
                             <label class="btn btn-outline-danger rounded-3" for="p_crit">{{ _('status.priority.critical') }}</label>
                         </div>
-                        <div class="form-text">{{ _('ui.text.priority_guidance') }}</div>
+                        <div class="mt-2">
+                            <a class="small text-muted text-decoration-none" data-bs-toggle="collapse" href="#priorityHelp">
+                                <i class="bi bi-question-circle me-1"></i>{{ _('ui.text.priority_help_link') }}
+                            </a>
+                            <div class="collapse mt-2" id="priorityHelp">
+                                <div class="card card-body small bg-light">
+                                    <div class="mb-2">
+                                        <span class="badge bg-success me-1">{{ _('status.priority.low') }}</span>
+                                        {{ _('ui.text.priority_low_desc') }}
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="badge bg-primary me-1">{{ _('status.priority.medium') }}</span>
+                                        {{ _('ui.text.priority_medium_desc') }}
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="badge bg-warning text-dark me-1">{{ _('status.priority.high') }}</span>
+                                        {{ _('ui.text.priority_high_desc') }}
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-danger me-1">{{ _('status.priority.critical') }}</span>
+                                        {{ _('ui.text.priority_critical_desc') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {# Photo #}

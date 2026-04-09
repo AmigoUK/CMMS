@@ -964,6 +964,26 @@ TRANSLATIONS = {
         'en': 'How urgent is this?',
         'pl': 'Jak pilne jest to?',
     },
+    ('ui.text.priority_help_link', 'ui'): {
+        'en': 'How to choose the right priority?',
+        'pl': 'Jak wybrac odpowiedni priorytet?',
+    },
+    ('ui.text.priority_low_desc', 'ui'): {
+        'en': 'Minor issue. No impact on production or safety. Can wait for a convenient time. E.g. cosmetic damage, non-urgent cleaning.',
+        'pl': 'Drobny problem. Bez wplywu na produkcje i bezpieczenstwo. Moze poczekac. Np. uszkodzenia kosmetyczne, niepiline sprzatanie.',
+    },
+    ('ui.text.priority_medium_desc', 'ui'): {
+        'en': 'Standard issue. Should be resolved within a few days. Equipment works but needs attention. E.g. unusual noise, minor leak.',
+        'pl': 'Standardowy problem. Powinien byc rozwiazany w ciagu kilku dni. Sprzet dziala ale wymaga uwagi. Np. nietypowy halas, drobny wyciek.',
+    },
+    ('ui.text.priority_high_desc', 'ui'): {
+        'en': 'Significant problem. Affects production or quality. Needs attention today or tomorrow. E.g. equipment malfunction, temperature issue.',
+        'pl': 'Powazny problem. Wplywa na produkcje lub jakosc. Wymaga uwagi dzis lub jutro. Np. awaria sprzetu, problem z temperatura.',
+    },
+    ('ui.text.priority_critical_desc', 'ui'): {
+        'en': 'Emergency! Safety hazard, total breakdown, or production stopped. Needs immediate action. E.g. gas leak, fire risk, complete equipment failure.',
+        'pl': 'Awaria! Zagrozenie bezpieczenstwa, calkowita awaria lub produkcja wstrzymana. Wymaga natychmiastowego dzialania. Np. wyciek gazu, ryzyko pozaru, calkowita awaria sprzetu.',
+    },
     ('ui.label.not_urgent', 'ui'): {
         'en': 'Not urgent',
         'pl': 'Niepilne',
