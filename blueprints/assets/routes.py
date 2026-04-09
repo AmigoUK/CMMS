@@ -401,3 +401,32 @@ def upload_attachment(id):
     db.session.commit()
     flash("File uploaded.", "success")
     return redirect(url_for("assets.detail", id=asset.id))
+
+
+# ── expiry report ─────────────────────────────────────────────────────
+
+@assets_bp.route("/expiry-report")
+@supervisor_required
+def expiry_report():
+    """Report of assets with expiring/expired custom date fields."""
+    from datetime import datetime
+    from utils.expiry import get_expiring_custom_fields, get_all_date_fields
+
+    filter_mode = request.args.get("filter", "expiring")
+
+    if filter_mode == "all":
+        items = get_all_date_fields(g.current_site.id)
+    elif filter_mode == "expired":
+        items = [
+            i for i in get_expiring_custom_fields(g.current_site.id, warn_days=9999)
+            if i["status"] == "expired"
+        ]
+    else:
+        items = get_expiring_custom_fields(g.current_site.id)
+
+    return render_template(
+        "assets/expiry_report.html",
+        items=items,
+        filter_mode=filter_mode,
+        now=datetime.now(),
+    )
