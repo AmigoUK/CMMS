@@ -160,6 +160,41 @@
 </div>
 {% endif %}
 
+{# Site-Specific Custom Fields #}
+{% set custom_defs = g.current_site.custom_field_definitions %}
+{% if custom_defs %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-input-cursor-text me-2"></i>{{ _('ui.heading.site_specific_details') }}</h6>
+    </div>
+    <div class="card-body">
+        <table class="table table-borderless table-sm mb-0">
+            {% for field in custom_defs %}
+            {% set val = asset.get_custom_field(field.index) %}
+            <tr>
+                <th class="text-muted" style="width: 40%;">{{ field.label }}</th>
+                <td>
+                    {% if field.type == 'date' and val %}
+                        {{ val }}
+                    {% elif field.type == 'image' and val %}
+                        <img src="{{ url_for('uploaded_file', filename='custom/' + val) }}"
+                             alt="{{ field.label }}" class="img-fluid rounded"
+                             style="max-height: 200px;">
+                    {% elif field.type == 'long_text' and val %}
+                        <div style="white-space: pre-wrap;">{{ val }}</div>
+                    {% elif val %}
+                        {{ val }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endif %}
+
 {# Compatible Parts #}
 {% if asset.compatible_parts %}
 <div class="card mb-4">
