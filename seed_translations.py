@@ -2281,6 +2281,19 @@ TRANSLATIONS = {
     ('ui.text.custom_fields_help', 'ui'): {'en': 'Define up to 5 custom fields for assets at this site. Leave label blank to disable a slot.', 'pl': 'Zdefiniuj do 5 wlasnych pol dla obiektow w tej lokalizacji. Zostaw etykiete pusta aby wylaczyc.'},
     ('ui.placeholder.field_label', 'ui'): {'en': 'e.g. MOT Date, Insurance...', 'pl': 'np. Data MOT, Ubezpieczenie...'},
     ('ui.button.save_custom_fields', 'ui'): {'en': 'Save Custom Fields', 'pl': 'Zapisz pola niestandardowe'},
+    ('ui.label.remind_days_before', 'ui'): {'en': 'Remind days before expiry', 'pl': 'Dni przypomnienia przed wygasnieciem'},
+    ('ui.text.remind_days_help', 'ui'): {'en': 'Days before date-type fields trigger a reminder. Set 0 to disable.', 'pl': 'Dni przed terminem pol daty, kiedy pojawi sie przypomnienie. 0 = wylaczone.'},
+    ('ui.label.expiring_documents', 'ui'): {'en': 'Expiring Documents', 'pl': 'Wygasajace dokumenty'},
+    ('ui.label.expiry_report', 'ui'): {'en': 'Expiry Report', 'pl': 'Raport wygasania'},
+    ('ui.page.expiry_report', 'ui'): {'en': 'Document Expiry Report', 'pl': 'Raport wygasania dokumentow'},
+    ('ui.label.expiry_date', 'ui'): {'en': 'Expiry Date', 'pl': 'Data wygasniecia'},
+    ('ui.label.days_remaining', 'ui'): {'en': 'Days Remaining', 'pl': 'Dni do wygasniecia'},
+    ('ui.label.expired', 'ui'): {'en': 'Expired', 'pl': 'Wygaslo'},
+    ('ui.label.expiring_soon', 'ui'): {'en': 'Expiring Soon', 'pl': 'Wkrotce wygasa'},
+    ('ui.label.document', 'ui'): {'en': 'Document', 'pl': 'Dokument'},
+    ('ui.label.all_documents', 'ui'): {'en': 'All Documents', 'pl': 'Wszystkie dokumenty'},
+    ('ui.text.all_documents_current', 'ui'): {'en': 'All documents are up to date.', 'pl': 'Wszystkie dokumenty sa aktualne.'},
+    ('ui.label.property', 'ui'): {'en': 'Property', 'pl': 'Obiekt'},
 
     # ───────────────────────────────────────────────────────────────────
     #  PREVENTIVE MAINTENANCE
