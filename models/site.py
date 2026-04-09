@@ -33,6 +33,9 @@ class Site(db.Model):
     custom_field_5_type = db.Column(db.String(20), default="")
     custom_field_5_required = db.Column(db.Boolean, default=False)
 
+    # Reminder setting for date-type custom fields
+    custom_remind_days = db.Column(db.Integer, default=0)
+
     # Relationships
     locations = db.relationship("Location", backref="site", lazy=True)
     assets = db.relationship("Asset", backref="site", lazy=True)
@@ -55,6 +58,11 @@ class Site(db.Model):
                     "field_name": f"custom_field_{i}",
                 })
         return defs
+
+    @property
+    def date_field_definitions(self):
+        """Return custom field definitions that are date type."""
+        return [d for d in self.custom_field_definitions if d["type"] == "date"]
 
     def __repr__(self):
         return f"<Site {self.code}: {self.name}>"
