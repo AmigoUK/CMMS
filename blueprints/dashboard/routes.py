@@ -32,6 +32,7 @@ def index():
     low_stock_parts = []
     overdue_pm_count = 0
     upcoming_pm_tasks = []
+    expiring_fields = []
 
     if site_id:
         open_requests = Request.query.filter(
@@ -95,6 +96,11 @@ def index():
                 PreventiveTask.next_due >= date.today(),
             ).order_by(PreventiveTask.next_due.asc()).limit(5).all()
 
+        # ── Expiring custom date fields (supervisor+) ─────────
+        if current_user.is_supervisor:
+            from utils.expiry import get_expiring_custom_fields
+            expiring_fields = get_expiring_custom_fields(site_id, limit=10)
+
         # ── Recent Work Orders (technician+) ────────────────────
         if current_user.is_technician:
             recent_wos = WorkOrder.query.filter(
@@ -113,6 +119,7 @@ def index():
         low_stock_parts=low_stock_parts,
         overdue_pm_count=overdue_pm_count,
         upcoming_pm_tasks=upcoming_pm_tasks,
+        expiring_fields=expiring_fields,
     )
 
 

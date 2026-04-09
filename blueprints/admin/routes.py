@@ -383,6 +383,8 @@ def update_site_custom_fields(id):
         setattr(site, f"custom_field_{i}_type", ftype if label else "")
         setattr(site, f"custom_field_{i}_required", required if label else False)
 
+    site.custom_remind_days = request.form.get("custom_remind_days", 0, type=int)
+
     db.session.commit()
     flash(f"Custom fields for '{site.name}' saved.", "success")
     return redirect(url_for("admin.edit_site", id=site.id))

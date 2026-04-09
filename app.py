@@ -197,6 +197,9 @@ def create_app(config_class=None):
                     PreventiveTask.is_active == True,
                     PreventiveTask.next_due < date.today(),
                 ).count()
+            if site and current_user.is_supervisor:
+                from utils.expiry import get_expiring_count
+                ctx["expiring_docs_count"] = get_expiring_count(site.id)
         return ctx
 
     # ── Error handlers ─────────────────────────────────────

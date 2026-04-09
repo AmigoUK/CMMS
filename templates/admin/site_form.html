@@ -105,6 +105,15 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <div class="mb-3 mt-3">
+                                <label for="custom_remind_days" class="form-label">
+                                    <i class="bi bi-bell me-1"></i>{{ _('ui.label.remind_days_before') }}
+                                </label>
+                                <input type="number" class="form-control" id="custom_remind_days"
+                                       name="custom_remind_days" min="0" max="365" style="width: 120px;"
+                                       value="{{ site.custom_remind_days or 0 }}">
+                                <div class="form-text">{{ _('ui.text.remind_days_help') }}</div>
+                            </div>
                             <button type="submit" class="btn btn-sm btn-primary">
                                 <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save_custom_fields') }}
                             </button>
