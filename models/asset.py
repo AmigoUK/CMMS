@@ -32,6 +32,11 @@ class Asset(db.Model):
     warranty_expiry = db.Column(db.Date, nullable=True)
     image = db.Column(db.String(300), default="")
     notes = db.Column(db.Text, default="")
+    custom_field_1 = db.Column(db.Text, default="")
+    custom_field_2 = db.Column(db.Text, default="")
+    custom_field_3 = db.Column(db.Text, default="")
+    custom_field_4 = db.Column(db.Text, default="")
+    custom_field_5 = db.Column(db.Text, default="")
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc)
@@ -45,6 +50,10 @@ class Asset(db.Model):
     # Relationships
     work_orders = db.relationship("WorkOrder", backref="asset", lazy=True)
     requests = db.relationship("Request", backref="asset", lazy=True)
+
+    def get_custom_field(self, index):
+        """Get custom field value by index (1-5)."""
+        return getattr(self, f"custom_field_{index}", "")
 
     def __repr__(self):
         return f"<Asset {self.name}>"
