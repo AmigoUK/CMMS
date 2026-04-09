@@ -12,7 +12,7 @@ from decorators import supervisor_required, technician_required
 from extensions import db
 from models import (
     Asset, Attachment, Location, WorkOrder,
-    ASSET_STATUSES, ASSET_CRITICALITIES, ASSET_CATEGORIES,
+    ASSET_STATUSES, ASSET_CRITICALITIES,
 )
 from utils.uploads import allowed_file, is_allowed_image, save_attachment, generate_stored_filename
 
@@ -24,6 +24,14 @@ from werkzeug.utils import secure_filename
 
 
 # ── helpers ────────────────────────────────────────────────────────────
+
+def _get_categories():
+    """Get distinct asset categories from the database."""
+    rows = db.session.query(Asset.category).filter(
+        Asset.category != "",
+    ).distinct().order_by(Asset.category).all()
+    return sorted(set(r[0] for r in rows if r[0]))
+
 
 def _get_asset_or_404(asset_id):
     """Load an asset in the current site or 404."""
@@ -89,7 +97,7 @@ def new():
         locations=locations,
         statuses=ASSET_STATUSES,
         criticalities=ASSET_CRITICALITIES,
-        categories=ASSET_CATEGORIES,
+        categories=_get_categories(),
     )
 
 
@@ -193,7 +201,7 @@ def edit(id):
         locations=locations,
         statuses=ASSET_STATUSES,
         criticalities=ASSET_CRITICALITIES,
-        categories=ASSET_CATEGORIES,
+        categories=_get_categories(),
     )
 
 
