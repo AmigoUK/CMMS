@@ -50,7 +50,7 @@ TRANSLATIONS = {
     },
     ('ui.navbar.property', 'ui'): {
         'en': 'Property',
-        'pl': 'Majątek',
+        'pl': 'Urządzenie',
     },
     ('ui.navbar.locations', 'ui'): {
         'en': 'Locations',
@@ -126,15 +126,15 @@ TRANSLATIONS = {
     },
     ('ui.page.property', 'ui'): {
         'en': 'Property',
-        'pl': 'Majątek',
+        'pl': 'Urządzenie',
     },
     ('ui.page.new_property', 'ui'): {
         'en': 'New Property',
-        'pl': 'Nowy majątek',
+        'pl': 'Nowe urządzenie',
     },
     ('ui.page.edit_property', 'ui'): {
         'en': 'Edit Property',
-        'pl': 'Edytuj majątek',
+        'pl': 'Edytuj urządzenie',
     },
     ('ui.page.locations', 'ui'): {
         'en': 'Locations',
@@ -286,7 +286,7 @@ TRANSLATIONS = {
     },
     ('ui.button.create_property', 'ui'): {
         'en': 'Create Property',
-        'pl': 'Utwórz majątek',
+        'pl': 'Utwórz urządzenie',
     },
     ('ui.button.create_location', 'ui'): {
         'en': 'Create Location',
@@ -318,7 +318,7 @@ TRANSLATIONS = {
     },
     ('ui.button.new_property', 'ui'): {
         'en': 'New Property',
-        'pl': 'Nowy majątek',
+        'pl': 'Nowe urządzenie',
     },
     ('ui.button.new_location', 'ui'): {
         'en': 'New Location',
@@ -362,7 +362,7 @@ TRANSLATIONS = {
     },
     ('ui.button.back_to_property', 'ui'): {
         'en': 'Back to Property',
-        'pl': 'Wróć do majątku',
+        'pl': 'Wróć do urządzeń',
     },
     ('ui.button.back_to_parts', 'ui'): {
         'en': 'Back to Parts',
@@ -522,7 +522,7 @@ TRANSLATIONS = {
     },
     ('ui.button.add_first_property', 'ui'): {
         'en': 'Add First Property',
-        'pl': 'Dodaj pierwszy majątek',
+        'pl': 'Dodaj pierwsze urządzenie',
     },
     ('ui.button.add_first_location', 'ui'): {
         'en': 'Add First Location',
@@ -598,7 +598,7 @@ TRANSLATIONS = {
     },
     ('ui.label.property', 'ui'): {
         'en': 'Property',
-        'pl': 'Majątek',
+        'pl': 'Urządzenie',
     },
     ('ui.label.asset', 'ui'): {
         'en': 'Asset',
@@ -1042,7 +1042,7 @@ TRANSLATIONS = {
     },
     ('ui.label.compatible_property', 'ui'): {
         'en': 'Compatible Property',
-        'pl': 'Kompatybilny majątek',
+        'pl': 'Kompatybilne urządzenia',
     },
     ('ui.label.compatible_parts', 'ui'): {
         'en': 'Compatible Parts',
@@ -1140,7 +1140,7 @@ TRANSLATIONS = {
     # ── Card headers / sections ──
     ('ui.label.property_information', 'ui'): {
         'en': 'Property Information',
-        'pl': 'Informacje o majątku',
+        'pl': 'Informacje o urządzeniu',
     },
     ('ui.label.classification_location', 'ui'): {
         'en': 'Classification & Location',
@@ -1148,7 +1148,7 @@ TRANSLATIONS = {
     },
     ('ui.label.property_details', 'ui'): {
         'en': 'Property Details',
-        'pl': 'Szczegóły majątku',
+        'pl': 'Szczegóły urządzenia',
     },
     ('ui.label.status_dates', 'ui'): {
         'en': 'Status & Dates',
@@ -1212,7 +1212,7 @@ TRANSLATIONS = {
     },
     ('ui.label.select_property_to_print', 'ui'): {
         'en': 'Select Property to Print',
-        'pl': 'Wybierz majątek do druku',
+        'pl': 'Wybierz urządzenie do druku',
     },
     ('ui.label.anonymous_qr_reporting', 'ui'): {
         'en': 'Anonymous QR Reporting',
@@ -1248,7 +1248,7 @@ TRANSLATIONS = {
     },
     ('ui.label.select_property', 'ui'): {
         'en': '— Select property (optional) —',
-        'pl': '— Wybierz majątek (opcjonalnie) —',
+        'pl': '— Wybierz urządzenie (opcjonalnie) —',
     },
     ('ui.label.select_asset', 'ui'): {
         'en': '— Select asset (optional) —',
@@ -1268,7 +1268,7 @@ TRANSLATIONS = {
     },
     ('ui.label.add_property', 'ui'): {
         'en': '— Add property —',
-        'pl': '— Dodaj majątek —',
+        'pl': '— Dodaj urządzenie —',
     },
 
     # ───────────────────────────────────────────────────────────────────
@@ -1324,7 +1324,7 @@ TRANSLATIONS = {
     },
     ('ui.text.no_property_found', 'ui'): {
         'en': 'No property found.',
-        'pl': 'Nie znaleziono majątku.',
+        'pl': 'Nie znaleziono urządzeń.',
     },
     ('ui.text.no_locations_defined', 'ui'): {
         'en': 'No locations defined yet.',
@@ -1356,7 +1356,7 @@ TRANSLATIONS = {
     },
     ('ui.text.no_property_at_site', 'ui'): {
         'en': 'No property found at this site.',
-        'pl': 'Nie znaleziono majątku w tym obiekcie.',
+        'pl': 'Nie znaleziono urządzeń w tym obiekcie.',
     },
     ('ui.text.no_attachments', 'ui'): {
         'en': 'No attachments.',
@@ -1384,11 +1384,11 @@ TRANSLATIONS = {
     },
     ('ui.text.no_work_orders_for_property', 'ui'): {
         'en': 'No work orders for this property.',
-        'pl': 'Brak zleceń pracy dla tego majątku.',
+        'pl': 'Brak zleceń pracy dla tego urządzenia.',
     },
     ('ui.text.no_property_linked', 'ui'): {
         'en': 'No property linked yet.',
-        'pl': 'Brak powiązanego majątku.',
+        'pl': 'Brak powiązanego urządzenia.',
     },
     ('ui.text.no_usage_recorded', 'ui'): {
         'en': 'No usage recorded.',
@@ -1448,7 +1448,7 @@ TRANSLATIONS = {
     },
     ('ui.text.anonymous_reporting_help', 'ui'): {
         'en': 'When enabled, anyone who scans a QR code on a piece of property can submit a maintenance request without logging in. Their name and contact details are captured on the form instead.',
-        'pl': 'Po włączeniu każdy, kto zeskanuje kod QR na majątku, może wysłać zgłoszenie konserwacji bez logowania. Imię i dane kontaktowe zostaną pobrane z formularza.',
+        'pl': 'Po włączeniu każdy, kto zeskanuje kod QR na urządzeniu, może wysłać zgłoszenie konserwacji bez logowania. Imię i dane kontaktowe zostaną pobrane z formularza.',
     },
     ('ui.text.report_received', 'ui'): {
         'en': 'Your report has been received and the maintenance team will review it shortly.',
@@ -1784,7 +1784,7 @@ TRANSLATIONS = {
     # assets
     ('flash.property_name_required', 'flash'): {
         'en': 'Property name is required.',
-        'pl': 'Nazwa majątku jest wymagana.',
+        'pl': 'Nazwa urządzenia jest wymagana.',
     },
     ('flash.property_created', 'flash'): {
         'en': 'Property created successfully.',
@@ -1800,7 +1800,7 @@ TRANSLATIONS = {
     },
     ('flash.no_property_selected', 'flash'): {
         'en': 'No property selected.',
-        'pl': 'Nie wybrano majątku.',
+        'pl': 'Nie wybrano urządzenia.',
     },
 
     # locations
