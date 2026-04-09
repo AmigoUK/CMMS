@@ -364,6 +364,30 @@ def update_site(id):
     return redirect(url_for("admin.list_sites"))
 
 
+@admin_bp.route("/sites/<int:id>/custom-fields", methods=["POST"])
+@admin_required
+def update_site_custom_fields(id):
+    """Save custom field definitions for a site."""
+    site = Site.query.get_or_404(id)
+
+    for i in range(1, 6):
+        label = request.form.get(f"custom_field_{i}_label", "").strip()
+        ftype = request.form.get(f"custom_field_{i}_type", "").strip()
+        required = f"custom_field_{i}_required" in request.form
+
+        # If label provided, require a type
+        if label and not ftype:
+            ftype = "text"
+
+        setattr(site, f"custom_field_{i}_label", label)
+        setattr(site, f"custom_field_{i}_type", ftype if label else "")
+        setattr(site, f"custom_field_{i}_required", required if label else False)
+
+    db.session.commit()
+    flash(f"Custom fields for '{site.name}' saved.", "success")
+    return redirect(url_for("admin.edit_site", id=site.id))
+
+
 # ═══════════════════════════════════════════════════════════════════════
 #  SETTINGS
 # ═══════════════════════════════════════════════════════════════════════

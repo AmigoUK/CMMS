@@ -54,6 +54,64 @@
                         <a href="{{ url_for('admin.list_sites') }}" class="btn btn-outline-secondary">{{ _('ui.button.cancel') }}</a>
                     </div>
                 </form>
+
+                {% if site %}
+                {# Custom Field Definitions #}
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-input-cursor-text me-2"></i>{{ _('ui.heading.custom_fields') }}</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">{{ _('ui.text.custom_fields_help') }}</p>
+                        <form method="POST" action="{{ url_for('admin.update_site_custom_fields', id=site.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-3">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 5%;">#</th>
+                                            <th style="width: 40%;">{{ _('ui.label.field_label') }}</th>
+                                            <th style="width: 35%;">{{ _('ui.label.field_type') }}</th>
+                                            <th style="width: 20%;">{{ _('ui.label.required') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for i in range(1, 6) %}
+                                        <tr>
+                                            <td class="text-muted">{{ i }}</td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm"
+                                                       name="custom_field_{{ i }}_label" maxlength="100"
+                                                       value="{{ site['custom_field_' ~ i ~ '_label'] or '' }}"
+                                                       placeholder="{{ _('ui.placeholder.field_label') }}">
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm" name="custom_field_{{ i }}_type">
+                                                    <option value="">--</option>
+                                                    {% set current_type = site['custom_field_' ~ i ~ '_type'] or '' %}
+                                                    <option value="text" {% if current_type == 'text' %}selected{% endif %}>Text</option>
+                                                    <option value="long_text" {% if current_type == 'long_text' %}selected{% endif %}>Long Text</option>
+                                                    <option value="date" {% if current_type == 'date' %}selected{% endif %}>Date</option>
+                                                    <option value="image" {% if current_type == 'image' %}selected{% endif %}>Image</option>
+                                                </select>
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="checkbox" class="form-check-input"
+                                                       name="custom_field_{{ i }}_required"
+                                                       {% if site['custom_field_' ~ i ~ '_required'] %}checked{% endif %}>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save_custom_fields') }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
