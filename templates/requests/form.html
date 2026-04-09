@@ -92,20 +92,17 @@
                 </div>
             </div>
 
-            {# Asset (required) — location auto-inherited #}
+            {# Asset (required) — searchable dropdown, location auto-inherited #}
             {% if not preselected_asset %}
             <div class="mb-3">
-                <label for="asset_id" class="form-label">{{ _('ui.label.property') }} <span class="text-danger">*</span></label>
-                <select class="form-select" id="asset_id" name="asset_id" required>
-                    <option value="">— {{ _('ui.label.select_property') }} —</option>
-                    {% for asset in assets %}
-                    <option value="{{ asset.id }}" data-location-id="{{ asset.location_id or '' }}">
-                        {{ asset.name }}{% if asset.asset_tag %} ({{ asset.asset_tag }}){% endif %}
-                    </option>
-                    {% endfor %}
-                </select>
+                <label for="asset_search" class="form-label">{{ _('ui.label.property') }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="asset_search"
+                       placeholder="{{ _('ui.text.asset_search_placeholder') }}"
+                       autocomplete="off">
+                <input type="hidden" id="asset_id" name="asset_id" required>
+                <input type="hidden" id="location_id" name="location_id">
+                <div id="asset_dropdown" class="list-group mt-1 shadow-sm" style="display:none; max-height:250px; overflow-y:auto; position:absolute; z-index:1050; width:calc(100% - 2rem);"></div>
             </div>
-            <input type="hidden" id="location_id" name="location_id" value="">
             {% else %}
             {# Hidden fields for pre-selected asset #}
             <input type="hidden" name="asset_id" value="{{ preselected_asset.id }}">
@@ -134,10 +131,68 @@
 </div>
 
 <script>
-document.getElementById('asset_id')?.addEventListener('change', function() {
-    const selected = this.options[this.selectedIndex];
-    const locId = selected.getAttribute('data-location-id') || '';
-    document.getElementById('location_id').value = locId;
-});
+(function() {
+    const assets = [
+        {% for asset in assets %}
+        {id: {{ asset.id }}, name: "{{ asset.name|e }}", tag: "{{ asset.asset_tag|default('', true)|e }}", locId: "{{ asset.location_id or '' }}"},
+        {% endfor %}
+    ];
+
+    const searchInput = document.getElementById('asset_search');
+    const hiddenId = document.getElementById('asset_id');
+    const hiddenLoc = document.getElementById('location_id');
+    const dropdown = document.getElementById('asset_dropdown');
+    if (!searchInput || !dropdown) return;
+
+    function renderList(filtered) {
+        while (dropdown.firstChild) dropdown.removeChild(dropdown.firstChild);
+        if (filtered.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        filtered.forEach(function(a) {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'list-group-item list-group-item-action py-2 px-3';
+            const label = a.tag ? a.name + ' (' + a.tag + ')' : a.name;
+            item.textContent = label;
+            item.addEventListener('click', function() {
+                searchInput.value = label;
+                hiddenId.value = a.id;
+                hiddenLoc.value = a.locId;
+                dropdown.style.display = 'none';
+            });
+            dropdown.appendChild(item);
+        });
+        dropdown.style.display = 'block';
+    }
+
+    searchInput.addEventListener('input', function() {
+        const q = this.value.trim().toLowerCase();
+        hiddenId.value = '';
+        hiddenLoc.value = '';
+        if (q.length < 3) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        const filtered = assets.filter(function(a) {
+            return a.name.toLowerCase().indexOf(q) !== -1 ||
+                   a.tag.toLowerCase().indexOf(q) !== -1;
+        });
+        renderList(filtered);
+    });
+
+    searchInput.addEventListener('focus', function() {
+        if (this.value.trim().length >= 3) {
+            this.dispatchEvent(new Event('input'));
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target) && e.target !== searchInput) {
+            dropdown.style.display = 'none';
+        }
+    });
+})();
 </script>
 {% endblock %}
