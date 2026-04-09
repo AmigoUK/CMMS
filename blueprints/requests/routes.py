@@ -111,8 +111,18 @@ def create():
         flash("Title and description are required.", "danger")
         return redirect(url_for("requests.new"))
 
+    if not asset_id:
+        flash("Please select a device.", "danger")
+        return redirect(url_for("requests.new"))
+
     if priority not in REQUEST_PRIORITIES:
         priority = "medium"
+
+    # Auto-inherit location from asset if not provided
+    if not location_id and asset_id:
+        asset = Asset.query.get(asset_id)
+        if asset:
+            location_id = asset.location_id
 
     req = Request(
         title=title,

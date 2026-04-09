@@ -92,30 +92,20 @@
                 </div>
             </div>
 
-            {# Location — hidden when QR scanned (auto-filled from asset) #}
+            {# Asset (required) — location auto-inherited #}
             {% if not preselected_asset %}
             <div class="mb-3">
-                <label for="location_id" class="form-label">{{ _('ui.label.location') }}</label>
-                <select class="form-select" id="location_id" name="location_id">
-                    <option value="">— Select location (optional) —</option>
-                    {% for loc in locations %}
-                    <option value="{{ loc.id }}">{{ loc.full_path }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            {# Asset #}
-            <div class="mb-3">
-                <label for="asset_id" class="form-label">{{ _('ui.label.property') }}</label>
-                <select class="form-select" id="asset_id" name="asset_id">
-                    <option value="">— Select property (optional) —</option>
+                <label for="asset_id" class="form-label">{{ _('ui.label.property') }} <span class="text-danger">*</span></label>
+                <select class="form-select" id="asset_id" name="asset_id" required>
+                    <option value="">— {{ _('ui.label.select_property') }} —</option>
                     {% for asset in assets %}
-                    <option value="{{ asset.id }}">
+                    <option value="{{ asset.id }}" data-location-id="{{ asset.location_id or '' }}">
                         {{ asset.name }}{% if asset.asset_tag %} ({{ asset.asset_tag }}){% endif %}
                     </option>
                     {% endfor %}
                 </select>
             </div>
+            <input type="hidden" id="location_id" name="location_id" value="">
             {% else %}
             {# Hidden fields for pre-selected asset #}
             <input type="hidden" name="asset_id" value="{{ preselected_asset.id }}">
@@ -142,4 +132,12 @@
         </form>
     </div>
 </div>
+
+<script>
+document.getElementById('asset_id')?.addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    const locId = selected.getAttribute('data-location-id') || '';
+    document.getElementById('location_id').value = locId;
+});
+</script>
 {% endblock %}
