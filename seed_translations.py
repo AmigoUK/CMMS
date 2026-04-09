@@ -2268,6 +2268,21 @@ TRANSLATIONS = {
     },
 
     # ───────────────────────────────────────────────────────────────────
+    #  CUSTOM FIELDS
+    # ───────────────────────────────────────────────────────────────────
+    ('ui.heading.custom_fields', 'ui'): {'en': 'Custom Fields', 'pl': 'Pola niestandardowe'},
+    ('ui.heading.site_specific_details', 'ui'): {'en': 'Site-Specific Details', 'pl': 'Dane specyficzne dla obiektu'},
+    ('ui.label.field_label', 'ui'): {'en': 'Label', 'pl': 'Etykieta'},
+    ('ui.label.field_type', 'ui'): {'en': 'Type', 'pl': 'Typ'},
+    ('ui.label.field_type_text', 'ui'): {'en': 'Text', 'pl': 'Tekst'},
+    ('ui.label.field_type_long_text', 'ui'): {'en': 'Long Text', 'pl': 'Tekst dlugi'},
+    ('ui.label.field_type_date', 'ui'): {'en': 'Date', 'pl': 'Data'},
+    ('ui.label.field_type_image', 'ui'): {'en': 'Image', 'pl': 'Obraz'},
+    ('ui.text.custom_fields_help', 'ui'): {'en': 'Define up to 5 custom fields for assets at this site. Leave label blank to disable a slot.', 'pl': 'Zdefiniuj do 5 wlasnych pol dla obiektow w tej lokalizacji. Zostaw etykiete pusta aby wylaczyc.'},
+    ('ui.placeholder.field_label', 'ui'): {'en': 'e.g. MOT Date, Insurance...', 'pl': 'np. Data MOT, Ubezpieczenie...'},
+    ('ui.button.save_custom_fields', 'ui'): {'en': 'Save Custom Fields', 'pl': 'Zapisz pola niestandardowe'},
+
+    # ───────────────────────────────────────────────────────────────────
     #  PREVENTIVE MAINTENANCE
     # ───────────────────────────────────────────────────────────────────
     ('ui.navbar.pm_planner', 'ui'): {'en': 'PM Planner', 'pl': 'Planowanie PM'},
