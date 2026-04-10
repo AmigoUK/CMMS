@@ -231,6 +231,12 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
+                            <a class="dropdown-item" href="#" onclick="toggleTheme(); return false;">
+                                <i class="bi bi-moon-stars me-2" id="themeIcon"></i>
+                                <span id="themeLabel">{{ _('ui.label.dark_mode') }}</span>
+                            </a>
+                        </li>
+                        <li>
                             <a class="dropdown-item" href="{{ url_for('help.index') }}">
                                 <i class="bi bi-question-circle me-2"></i>{{ _('ui.navbar.help') }}
                             </a>
