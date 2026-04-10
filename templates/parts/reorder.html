@@ -1,6 +1,22 @@
 {% extends "base.html" %}
 {% block title %}{{ _('ui.page.reorder_report') }} — CMMS{% endblock %}
 
+{% block extra_head %}
+<style>
+@media print {
+    .reorder-table th, .reorder-table td { font-size: 8pt; padding: 2px 4px !important; white-space: nowrap; }
+    .reorder-table .col-wrap { white-space: normal; max-width: 140px; }
+    .print-hide { display: none !important; }
+    .supplier-group { break-inside: avoid; margin-bottom: 0.5rem !important; }
+    .supplier-group .card-header { padding: 0.25rem 0.5rem !important; font-size: 9pt; }
+    .supplier-contact-print { display: inline !important; font-size: 8pt; }
+}
+@media screen {
+    .supplier-contact-print { display: none; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <div>
@@ -20,21 +36,19 @@
 </div>
 
 {% if parts %}
+{# ═══ Main summary table (8 columns — fits A4 portrait) ═══ #}
 <div class="card mb-4">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-bordered align-middle mb-0">
+            <table class="table table-bordered align-middle mb-0 reorder-table">
                 <thead class="table-dark">
                     <tr>
-                        <th>{{ _('ui.label.name') }}</th>
+                        <th class="col-wrap">{{ _('ui.label.name') }}</th>
                         <th>{{ _('ui.label.part_number') }}</th>
-                        <th>{{ _('ui.label.supplier') }}</th>
-                        <th>{{ _('ui.label.supplier_part_number') }}</th>
-                        <th class="text-center">{{ _('ui.label.on_hand') | capitalize }}</th>
+                        <th class="col-wrap">{{ _('ui.label.supplier') }}</th>
+                        <th class="text-center">{{ _('ui.label.on_hand') }}</th>
                         <th class="text-center">{{ _('ui.label.min') }}</th>
-                        <th class="text-center">{{ _('ui.label.max') }}</th>
-                        <th class="text-center">{{ _('ui.label.order_qty') }}</th>
-                        <th>{{ _('ui.label.unit') }}</th>
+                        <th class="text-center fw-bold">{{ _('ui.label.order_qty') }}</th>
                         <th class="text-end">{{ _('ui.label.unit_cost') }}</th>
                         <th class="text-end">{{ _('ui.label.line_total') }}</th>
                     </tr>
@@ -42,29 +56,27 @@
                 <tbody>
                     {% for part in parts %}
                     <tr>
-                        <td>
-                            <a href="{{ url_for('parts.detail', id=part.id) }}" class="no-print-link">
-                                {{ part.name }}
-                            </a>
-                            <span class="print-only">{{ part.name }}</span>
+                        <td class="col-wrap">
+                            <span class="no-print">
+                                <a href="{{ url_for('parts.detail', id=part.id) }}">{{ part.name }}</a>
+                            </span>
+                            <span class="d-none d-print-inline">{{ part.name }}</span>
+                            {% if part.supplier_part_number %}
+                            <br><small class="text-muted">{{ _('ui.label.supplier_part_number') }}: {{ part.supplier_part_number }}</small>
+                            {% endif %}
                         </td>
                         <td>{{ part.part_number or '—' }}</td>
-                        <td>
+                        <td class="col-wrap">
                             {% if part.supplier_rel %}
-                            <a href="{{ url_for('suppliers.detail', id=part.supplier_rel.id) }}" class="no-print-link">
-                                {{ part.supplier_rel.name }}
-                            </a>
-                            {% if part.supplier_rel.email %}
-                            <br><small class="text-muted">{{ part.supplier_rel.email }}</small>
-                            {% endif %}
+                            <span class="no-print">
+                                <a href="{{ url_for('suppliers.detail', id=part.supplier_rel.id) }}">{{ part.supplier_rel.name }}</a>
+                            </span>
+                            <span class="d-none d-print-inline">{{ part.supplier_rel.name }}</span>
                             {% else %}—{% endif %}
                         </td>
-                        <td>{{ part.supplier_part_number or '—' }}</td>
                         <td class="text-center text-danger fw-bold">{{ part.quantity_on_hand }}</td>
                         <td class="text-center">{{ part.minimum_stock }}</td>
-                        <td class="text-center">{{ part.maximum_stock or '—' }}</td>
-                        <td class="text-center fw-bold fs-5">{{ part.reorder_quantity }}</td>
-                        <td>{{ part.unit }}</td>
+                        <td class="text-center fw-bold fs-5">{{ part.reorder_quantity }} <small>{{ part.unit }}</small></td>
                         <td class="text-end">&pound;{{ '%.2f' | format(part.unit_cost) }}</td>
                         <td class="text-end fw-bold">&pound;{{ '%.2f' | format(part.reorder_cost) }}</td>
                     </tr>
@@ -72,7 +84,7 @@
                 </tbody>
                 <tfoot class="table-light">
                     <tr>
-                        <td colspan="10" class="text-end fw-bold">{{ _('ui.label.estimated_total') }}:</td>
+                        <td colspan="7" class="text-end fw-bold">{{ _('ui.label.estimated_total') }}:</td>
                         <td class="text-end fw-bold fs-5">&pound;{{ '%.2f' | format(total_cost) }}</td>
                     </tr>
                 </tfoot>
@@ -81,21 +93,29 @@
     </div>
 </div>
 
-{# Grouped by supplier for easy ordering #}
+{# ═══ Grouped by supplier ═══ #}
 <h5 class="mt-4 mb-3"><i class="bi bi-truck me-2"></i>{{ _('ui.label.grouped_by_supplier') }}</h5>
 {% set supplier_groups = parts | groupby('supplier_id') %}
 {% for supplier_id, supplier_parts in supplier_groups %}
 {% set sp_list = supplier_parts | list %}
 {% set supplier = sp_list[0].supplier_rel %}
-<div class="card mb-3">
+<div class="card mb-3 supplier-group">
     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
         <div>
             {% if supplier %}
             <strong>
-                <a href="{{ url_for('suppliers.detail', id=supplier.id) }}">{{ supplier.name }}</a>
+                <span class="no-print"><a href="{{ url_for('suppliers.detail', id=supplier.id) }}">{{ supplier.name }}</a></span>
+                <span class="d-none d-print-inline">{{ supplier.name }}</span>
             </strong>
             {% if supplier.contact_person %}
             <small class="text-muted ms-2"><i class="bi bi-person"></i> {{ supplier.contact_person }}</small>
+            {% endif %}
+            {# Print-only contact info #}
+            {% if supplier.email or supplier.phone %}
+            <span class="supplier-contact-print">
+                {% if supplier.email %} | {{ supplier.email }}{% endif %}
+                {% if supplier.phone %} | {{ supplier.phone }}{% endif %}
+            </span>
             {% endif %}
             {% else %}
             <strong>{{ _('ui.label.no_supplier_specified') }}</strong>
@@ -122,7 +142,7 @@
         {% endif %}
     </div>
     <div class="card-body p-0">
-        <table class="table table-sm mb-0">
+        <table class="table table-sm mb-0 reorder-table">
             <thead class="table-light">
                 <tr>
                     <th>{{ _('ui.label.part') }}</th>
