@@ -2288,6 +2288,12 @@ TRANSLATIONS = {
     },
 
     # ───────────────────────────────────────────────────────────────────
+    #  DARK MODE
+    # ───────────────────────────────────────────────────────────────────
+    ('ui.label.dark_mode', 'ui'): {'en': 'Dark Mode', 'pl': 'Tryb ciemny'},
+    ('ui.label.light_mode', 'ui'): {'en': 'Light Mode', 'pl': 'Tryb jasny'},
+
+    # ───────────────────────────────────────────────────────────────────
     #  CUSTOM FIELDS
     # ───────────────────────────────────────────────────────────────────
     ('ui.heading.custom_fields', 'ui'): {'en': 'Custom Fields', 'pl': 'Pola niestandardowe'},
