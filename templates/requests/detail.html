@@ -4,16 +4,16 @@
 {% block extra_head %}
 <style>
     .timeline { position: relative; padding-left: 2rem; }
-    .timeline::before { content: ''; position: absolute; left: 0.75rem; top: 0; bottom: 0; width: 2px; background: #dee2e6; }
+    .timeline::before { content: ''; position: absolute; left: 0.75rem; top: 0; bottom: 0; width: 2px; background: var(--bs-border-color); }
     .timeline-item { position: relative; margin-bottom: 1rem; }
     .timeline-item .timeline-icon {
         position: absolute; left: -2rem; width: 1.5rem; height: 1.5rem;
         display: flex; align-items: center; justify-content: center;
-        background: #fff; font-size: 1rem; z-index: 1;
+        background: var(--bs-body-bg); font-size: 1rem; z-index: 1;
     }
     .timeline-item .timeline-body { padding-left: 0.5rem; }
-    .timeline-item .timeline-meta { font-size: 0.8rem; color: #6c757d; }
-    .comment-text { background: #f8f9fa; border-radius: 0.5rem; padding: 0.75rem; margin-top: 0.25rem; }
+    .timeline-item .timeline-meta { font-size: 0.8rem; color: var(--bs-secondary-color); }
+    .comment-text { background: var(--bs-tertiary-bg); border-radius: 0.5rem; padding: 0.75rem; margin-top: 0.25rem; }
 </style>
 {% endblock %}
 

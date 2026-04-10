@@ -40,7 +40,7 @@
     <div class="col-md-3 mb-3 mb-md-0">
         <img src="{{ url_for('uploaded_file', filename='parts/' + part.image) }}"
              alt="{{ part.name }}" class="img-fluid rounded shadow-sm"
-             style="max-height: 220px; object-fit: contain; background: #f8f9fa; padding: 0.5rem; width: 100%;">
+             style="max-height: 220px; object-fit: contain; background: var(--bs-tertiary-bg); padding: 0.5rem; width: 100%;">
     </div>
     <div class="col-md-4">
     {% else %}
@@ -222,7 +222,7 @@
                     {% endif %}
                     <a href="{{ url_for('assets.detail', id=asset.id) }}">{{ asset.name }}</a>
                     {% if asset.asset_tag %}<small class="text-muted ms-1">({{ asset.asset_tag }})</small>{% endif %}
-                    {% if asset.category %}<span class="badge bg-light text-dark ms-1">{{ asset.category }}</span>{% endif %}
+                    {% if asset.category %}<span class="badge bg-body-secondary text-body ms-1">{{ asset.category }}</span>{% endif %}
                 </div>
                 <form method="POST" action="{{ url_for('parts.remove_compatibility', id=part.id, asset_id=asset.id) }}"
                       class="no-print">

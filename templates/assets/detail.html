@@ -56,7 +56,7 @@
         <div class="card h-100">
             <img src="{{ url_for('uploaded_file', filename='property/' + asset.image) }}"
                  alt="{{ asset.name }}" class="card-img-top"
-                 style="max-height: 300px; object-fit: contain; background: #f8f9fa; padding: 0.5rem;">
+                 style="max-height: 300px; object-fit: contain; background: var(--bs-tertiary-bg); padding: 0.5rem;">
         </div>
     </div>
     <div class="col-md-4">
@@ -73,7 +73,7 @@
                         <th class="text-muted" style="width: 40%;">{{ _('ui.label.category') }}</th>
                         <td>
                             {% if asset.category %}
-                            <span class="badge bg-light text-dark">{{ asset.category }}</span>
+                            <span class="badge bg-body-secondary text-body">{{ asset.category }}</span>
                             {% else %}—{% endif %}
                         </td>
                     </tr>
@@ -274,7 +274,7 @@
                         </td>
                         <td>{{ wo.title }}</td>
                         <td>
-                            <span class="badge bg-light text-dark">
+                            <span class="badge bg-body-secondary text-body">
                                 {{ wo.wo_type | replace('_', ' ') | title }}
                             </span>
                         </td>

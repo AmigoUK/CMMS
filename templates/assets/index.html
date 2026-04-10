@@ -90,7 +90,7 @@
                 <td>{{ asset.asset_tag or '—' }}</td>
                 <td>
                     {% if asset.category %}
-                    <span class="badge bg-light text-dark">{{ asset.category }}</span>
+                    <span class="badge bg-body-secondary text-body">{{ asset.category }}</span>
                     {% else %}—{% endif %}
                 </td>
                 <td>{{ asset.location.name if asset.location else '—' }}</td>

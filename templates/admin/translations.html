@@ -93,7 +93,7 @@
             {% for t in translations %}
             <tr class="{% if not t.target_value %}table-warning{% endif %}">
                 <td><code class="small">{{ t.key }}</code></td>
-                <td><span class="badge bg-light text-dark">{{ t.category }}</span></td>
+                <td><span class="badge bg-body-secondary text-body">{{ t.category }}</span></td>
                 <td class="small">{{ t.en_value[:80] }}{% if t.en_value|length > 80 %}...{% endif %}</td>
                 <td class="small">
                     {% if t.target_value %}

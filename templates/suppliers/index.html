@@ -72,7 +72,7 @@
                 </td>
                 <td>{{ s.phone or '—' }}</td>
                 <td class="text-center">
-                    <span class="badge bg-light text-dark border">{{ s.parts | selectattr('is_active') | list | length }}</span>
+                    <span class="badge bg-body-secondary text-body border">{{ s.parts | selectattr('is_active') | list | length }}</span>
                 </td>
                 <td class="text-end">
                     <a href="{{ url_for('suppliers.edit', id=s.id) }}"
