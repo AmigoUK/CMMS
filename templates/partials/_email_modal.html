@@ -1,11 +1,11 @@
 {# Reusable email report modal. Pass: email_action (URL), default_subject (str), contacts (list) #}
-<div class="modal fade" id="emailReportModal" tabindex="-1">
+<div class="modal fade" id="emailReportModal" tabindex="-1" aria-labelledby="emailReportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <form method="POST" action="{{ email_action }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-envelope me-2"></i>{{ _('ui.label.email_report') }}</h5>
+                    <h5 class="modal-title" id="emailReportModalLabel"><i class="bi bi-envelope me-2"></i>{{ _('ui.label.email_report') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -66,5 +66,9 @@ document.querySelectorAll('.email-cat-filter').forEach(function(btn) {
             row.style.display = (cat === 'all' || row.getAttribute('data-category') === cat) ? '' : 'none';
         });
     });
+});
+// Fix aria-hidden focus warning: blur active element when modal hides
+document.getElementById('emailReportModal')?.addEventListener('hide.bs.modal', function() {
+    if (document.activeElement) document.activeElement.blur();
 });
 </script>
