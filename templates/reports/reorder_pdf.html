@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #000; margin: 10mm; }
+    h1 { font-size: 14pt; margin-bottom: 2mm; }
+    .meta { font-size: 8pt; color: #333; margin-bottom: 5mm; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; }
+    th, td { border: 1px solid #999; padding: 3px 5px; font-size: 8pt; text-align: left; }
+    th { background-color: #333; color: #fff; }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .bold { font-weight: bold; }
+    .footer-row td { background-color: #eee; }
+    .supplier-header { background-color: #f5f5f5; padding: 3px 5px; font-weight: bold; margin-top: 5mm; margin-bottom: 2mm; border: 1px solid #ccc; }
+    .supplier-contact { font-size: 7pt; color: #555; font-weight: normal; }
+</style>
+</head>
+<body>
+<h1>{{ title }}</h1>
+<div class="meta">{{ site_name }} — {{ generated }} — {{ generated_by }}</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Part No.</th>
+            <th>Supplier</th>
+            <th class="text-center">On Hand</th>
+            <th class="text-center">Min</th>
+            <th class="text-center">Order Qty</th>
+            <th class="text-right">Unit Cost</th>
+            <th class="text-right">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for part in parts %}
+        <tr>
+            <td>{{ part.name }}{% if part.supplier_part_number %}<br><span style="font-size:7pt;color:#555;">{{ part.supplier_part_number }}</span>{% endif %}</td>
+            <td>{{ part.part_number or '—' }}</td>
+            <td>{{ part.supplier_rel.name if part.supplier_rel else '—' }}</td>
+            <td class="text-center">{{ part.quantity_on_hand }}</td>
+            <td class="text-center">{{ part.minimum_stock }}</td>
+            <td class="text-center bold">{{ part.reorder_quantity }} {{ part.unit }}</td>
+            <td class="text-right">&pound;{{ '%.2f' | format(part.unit_cost) }}</td>
+            <td class="text-right bold">&pound;{{ '%.2f' | format(part.reorder_cost) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr class="footer-row">
+            <td colspan="7" class="text-right bold">Estimated Total:</td>
+            <td class="text-right bold">&pound;{{ '%.2f' | format(total_cost) }}</td>
+        </tr>
+    </tfoot>
+</table>
+
+{% for supplier_id, supplier_parts in grouped %}
+{% set sp_list = supplier_parts | list %}
+{% set supplier = sp_list[0].supplier_rel %}
+<div class="supplier-header">
+    {{ supplier.name if supplier else 'No Supplier' }}
+    {% if supplier and supplier.email %}
+    <span class="supplier-contact">| {{ supplier.email }}{% if supplier.phone %} | {{ supplier.phone }}{% endif %}</span>
+    {% endif %}
+</div>
+<table>
+    <thead>
+        <tr>
+            <th>Part</th>
+            <th>Supplier Part No.</th>
+            <th class="text-center">Order Qty</th>
+            <th>Unit</th>
+            <th class="text-right">Cost</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in sp_list %}
+        <tr>
+            <td>{{ p.name }}{% if p.part_number %} ({{ p.part_number }}){% endif %}</td>
+            <td>{{ p.supplier_part_number or '—' }}</td>
+            <td class="text-center bold">{{ p.reorder_quantity }}</td>
+            <td>{{ p.unit }}</td>
+            <td class="text-right">&pound;{{ '%.2f' | format(p.reorder_cost) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr class="footer-row">
+            <td colspan="4" class="text-right">Subtotal:</td>
+            <td class="text-right bold">&pound;{{ '%.2f' | format(sp_list | sum(attribute='reorder_cost')) }}</td>
+        </tr>
+    </tfoot>
+</table>
+{% endfor %}
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #000; margin: 10mm; }
+    h1 { font-size: 14pt; margin-bottom: 2mm; }
+    .meta { font-size: 8pt; color: #333; margin-bottom: 5mm; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #999; padding: 3px 5px; font-size: 8pt; text-align: left; }
+    th { background-color: #333; color: #fff; }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .bold { font-weight: bold; }
+    .expired { background-color: #ffe0e0; }
+    .expiring { background-color: #fff3cd; }
+</style>
+</head>
+<body>
+<h1>{{ title }}</h1>
+<div class="meta">{{ site_name }} — {{ generated }} — {{ generated_by }}</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Property</th>
+            <th>Asset Tag</th>
+            <th>Location</th>
+            <th>Document</th>
+            <th>Expiry Date</th>
+            <th class="text-center">Days</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr class="{{ 'expired' if item.status == 'expired' else 'expiring' if item.status == 'expiring' else '' }}">
+            <td>{{ item.asset.name }}</td>
+            <td>{{ item.asset.asset_tag or '—' }}</td>
+            <td>{{ item.asset.location.name if item.asset.location else '—' }}</td>
+            <td>{{ item.field_label }}</td>
+            <td>{{ item.expiry_date.strftime('%d %b %Y') }}</td>
+            <td class="text-center">
+                {% if item.days_remaining < 0 %}{{ item.days_remaining|abs }}d overdue
+                {% elif item.days_remaining == 0 %}Today
+                {% else %}{{ item.days_remaining }}d{% endif %}
+            </td>
+            <td>{{ 'EXPIRED' if item.status == 'expired' else 'EXPIRING' if item.status == 'expiring' else 'OK' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>
