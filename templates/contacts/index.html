@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.address_book') }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <h1 class="h3 mb-0"><i class="bi bi-person-lines-fill me-2"></i>{{ _('ui.page.address_book') }}</h1>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('contacts.new') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_contact') }}
+        </a>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-download me-1"></i>{{ _('ui.button.import') }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <form method="POST" action="{{ url_for('contacts.import_suppliers') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="dropdown-item">
+                            <i class="bi bi-truck me-2"></i>{{ _('ui.button.import_suppliers') }}
+                        </button>
+                    </form>
+                </li>
+                <li>
+                    <form method="POST" action="{{ url_for('contacts.import_users') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="dropdown-item">
+                            <i class="bi bi-people me-2"></i>{{ _('ui.button.import_users') }}
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<form method="GET" action="{{ url_for('contacts.list_contacts') }}" class="mb-3">
+    {% if category_filter %}<input type="hidden" name="cat" value="{{ category_filter }}">{% endif %}
+    <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="{{ _('ui.text.search_contacts_placeholder') }}" value="{{ search_query }}">
+        <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+        {% if search_query %}
+        <a href="{{ url_for('contacts.list_contacts', cat=category_filter) }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+        {% endif %}
+    </div>
+</form>
+
+<div class="mb-3 d-flex gap-2">
+    <a href="{{ url_for('contacts.list_contacts', q=search_query) }}"
+       class="btn btn-sm {% if not category_filter %}btn-dark{% else %}btn-outline-dark{% endif %}">
+        {{ _('ui.label.all') }}
+    </a>
+    {% for cat in categories %}
+    <a href="{{ url_for('contacts.list_contacts', q=search_query, cat=cat) }}"
+       class="btn btn-sm {% if category_filter == cat %}btn-dark{% else %}btn-outline-dark{% endif %}">
+        {{ cat | title }}
+    </a>
+    {% endfor %}
+</div>
+
+{% if contacts %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>{{ _('ui.label.name') }}</th>
+                <th>{{ _('ui.label.email') }}</th>
+                <th>{{ _('ui.label.phone') }}</th>
+                <th>{{ _('ui.label.company') }}</th>
+                <th>{{ _('ui.label.category') }}</th>
+                <th class="text-end">{{ _('ui.label.actions') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in contacts %}
+            <tr>
+                <td class="fw-semibold">{{ c.name }}</td>
+                <td><a href="mailto:{{ c.email }}">{{ c.email }}</a></td>
+                <td>{{ c.phone or '—' }}</td>
+                <td>{{ c.company or '—' }}</td>
+                <td><span class="badge bg-body-secondary text-body border">{{ c.category | title }}</span></td>
+                <td class="text-end">
+                    <a href="{{ url_for('contacts.edit', id=c.id) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('contacts.toggle', id=c.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if c.is_active else 'success' }}">
+                            <i class="bi bi-{{ 'pause' if c.is_active else 'play' }}"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include "partials/_pagination.html" %}
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-person-lines-fill display-4"></i>
+    <p class="mt-2">{{ _('ui.text.no_contacts') }}</p>
+</div>
+{% endif %}
+{% endblock %}

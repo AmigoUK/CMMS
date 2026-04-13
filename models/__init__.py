@@ -1,3 +1,4 @@
+from models.contact import Contact, CONTACT_CATEGORIES
 from models.site import Site
 from models.team import Team
 from models.user import User, ROLES, user_sites
@@ -22,6 +23,7 @@ from models.translation import Translation
 from models.help_content import HelpContent
 
 __all__ = [
+    "Contact", "CONTACT_CATEGORIES",
     "Site", "Team", "User", "ROLES", "user_sites",
     "Location", "LOCATION_TYPES",
     "Asset", "ASSET_STATUSES", "ASSET_CRITICALITIES", "ASSET_CATEGORIES",
