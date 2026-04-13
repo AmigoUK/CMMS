@@ -100,9 +100,11 @@
     .badge { border: 1px solid #999; color: #000 !important;
              background: #eee !important; font-size: 8pt; }
 
-    /* Tables: compact for A4 */
+    /* Tables: compact for A4, uniform text */
     .table { font-size: 8pt; }
-    .table th, .table td { padding: 0.2rem 0.3rem !important; }
+    .table th, .table td { padding: 0.2rem 0.3rem !important; color: #000 !important; font-size: 8pt !important; }
+    .table .text-danger, .table .text-muted, .table .fw-bold, .table small { color: #000 !important; font-size: 8pt !important; }
+    .table .fs-5 { font-size: 8pt !important; }
     .table-responsive { overflow: visible !important; }
 
     /* QR block floats to top-right corner on print */
