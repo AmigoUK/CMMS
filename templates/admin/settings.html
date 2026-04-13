@@ -152,12 +152,15 @@
                         <div class="col-6">
                             <label for="smtp_username" class="form-label">{{ _('ui.label.smtp_username') }}</label>
                             <input type="text" class="form-control" id="smtp_username" name="smtp_username"
+                                   autocomplete="off"
                                    value="{{ app_settings.smtp_username }}">
                         </div>
                         <div class="col-6">
                             <label for="smtp_password" class="form-label">{{ _('ui.label.smtp_password') }}</label>
                             <input type="password" class="form-control" id="smtp_password" name="smtp_password"
-                                   value="{{ app_settings.smtp_password }}">
+                                   autocomplete="new-password"
+                                   value="{{ app_settings.smtp_password }}"
+                                   placeholder="{{ '••••••••' if app_settings.smtp_password else '' }}">
                         </div>
                     </div>
                     <div class="mb-3">
