@@ -420,9 +420,36 @@ def update_settings():
     settings.pm_auto_group_suggest = "pm_auto_group_suggest" in request.form
     settings.pm_wo_prefix = request.form.get("pm_wo_prefix", "PM").strip()
 
+    # SMTP settings
+    settings.smtp_enabled = "smtp_enabled" in request.form
+    settings.smtp_host = request.form.get("smtp_host", "").strip()
+    settings.smtp_port = request.form.get("smtp_port", 587, type=int)
+    settings.smtp_username = request.form.get("smtp_username", "").strip()
+    settings.smtp_password = request.form.get("smtp_password", "").strip()
+    settings.smtp_from_address = request.form.get("smtp_from_address", "").strip()
+    settings.smtp_use_tls = "smtp_use_tls" in request.form
+
     db.session.commit()
     flash("Settings saved.", "success")
     return redirect(url_for("admin.settings"))
+
+
+@admin_bp.route("/settings/test-smtp", methods=["POST"])
+@admin_required
+def test_smtp():
+    """AJAX endpoint to test SMTP connection."""
+    from flask import jsonify
+    from utils.email import test_smtp_connection
+
+    config = {
+        "host": request.form.get("smtp_host", "").strip(),
+        "port": int(request.form.get("smtp_port", 587)),
+        "username": request.form.get("smtp_username", "").strip(),
+        "password": request.form.get("smtp_password", "").strip(),
+        "use_tls": request.form.get("smtp_use_tls") == "1",
+    }
+    success, message = test_smtp_connection(config)
+    return jsonify({"success": success, "message": message})
 
 
 # ═══════════════════════════════════════════════════════════════════════

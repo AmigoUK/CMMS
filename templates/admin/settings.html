@@ -123,12 +123,104 @@
                 </div>
             </div>
 
+            {# Email / SMTP #}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-envelope me-2"></i>{{ _('ui.label.smtp_settings') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input type="checkbox" class="form-check-input" id="smtp_enabled"
+                               name="smtp_enabled"
+                               {% if app_settings.smtp_enabled %}checked{% endif %}>
+                        <label class="form-check-label fw-semibold" for="smtp_enabled">{{ _('ui.label.smtp_enabled') }}</label>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-8">
+                            <label for="smtp_host" class="form-label">{{ _('ui.label.smtp_host') }}</label>
+                            <input type="text" class="form-control" id="smtp_host" name="smtp_host"
+                                   placeholder="smtp.gmail.com"
+                                   value="{{ app_settings.smtp_host }}">
+                        </div>
+                        <div class="col-4">
+                            <label for="smtp_port" class="form-label">{{ _('ui.label.smtp_port') }}</label>
+                            <input type="number" class="form-control" id="smtp_port" name="smtp_port"
+                                   value="{{ app_settings.smtp_port }}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label for="smtp_username" class="form-label">{{ _('ui.label.smtp_username') }}</label>
+                            <input type="text" class="form-control" id="smtp_username" name="smtp_username"
+                                   value="{{ app_settings.smtp_username }}">
+                        </div>
+                        <div class="col-6">
+                            <label for="smtp_password" class="form-label">{{ _('ui.label.smtp_password') }}</label>
+                            <input type="password" class="form-control" id="smtp_password" name="smtp_password"
+                                   value="{{ app_settings.smtp_password }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="smtp_from_address" class="form-label">{{ _('ui.label.smtp_from') }}</label>
+                        <input type="email" class="form-control" id="smtp_from_address" name="smtp_from_address"
+                               placeholder="cmms@example.com"
+                               value="{{ app_settings.smtp_from_address }}">
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input type="checkbox" class="form-check-input" id="smtp_use_tls"
+                               name="smtp_use_tls"
+                               {% if app_settings.smtp_use_tls %}checked{% endif %}>
+                        <label class="form-check-label" for="smtp_use_tls">{{ _('ui.label.smtp_tls') }}</label>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="testSmtpBtn">
+                        <i class="bi bi-plug me-1"></i>{{ _('ui.button.test_connection') }}
+                    </button>
+                    <span id="smtpTestResult" class="ms-2 small"></span>
+                </div>
+            </div>
+
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save_settings') }}
                 </button>
             </div>
         </form>
+
+        <script>
+        document.getElementById('testSmtpBtn')?.addEventListener('click', function() {
+            var btn = this;
+            var result = document.getElementById('smtpTestResult');
+            btn.disabled = true;
+            result.textContent = 'Testing...';
+            result.className = 'ms-2 small text-muted';
+
+            var formData = new FormData();
+            formData.append('smtp_host', document.getElementById('smtp_host').value);
+            formData.append('smtp_port', document.getElementById('smtp_port').value);
+            formData.append('smtp_username', document.getElementById('smtp_username').value);
+            formData.append('smtp_password', document.getElementById('smtp_password').value);
+            formData.append('smtp_use_tls', document.getElementById('smtp_use_tls').checked ? '1' : '0');
+
+            var csrfToken = document.querySelector('[name="csrf_token"]').value;
+
+            fetch('{{ url_for("admin.test_smtp") }}', {
+                method: 'POST',
+                headers: {'X-CSRFToken': csrfToken},
+                body: formData
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                result.textContent = data.message;
+                result.className = 'ms-2 small ' + (data.success ? 'text-success' : 'text-danger');
+                btn.disabled = false;
+            })
+            .catch(function() {
+                result.textContent = 'Request failed';
+                result.className = 'ms-2 small text-danger';
+                btn.disabled = false;
+            });
+        });
+        </script>
     </div>
 </div>
 {% endblock %}

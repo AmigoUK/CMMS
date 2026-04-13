@@ -20,6 +20,15 @@ class AppSettings(db.Model):
     pm_auto_group_suggest = db.Column(db.Boolean, default=True)
     pm_wo_prefix = db.Column(db.String(10), default="PM")
 
+    # Email / SMTP settings
+    smtp_enabled = db.Column(db.Boolean, default=False)
+    smtp_host = db.Column(db.String(200), default="")
+    smtp_port = db.Column(db.Integer, default=587)
+    smtp_username = db.Column(db.String(200), default="")
+    smtp_password = db.Column(db.String(200), default="")
+    smtp_from_address = db.Column(db.String(200), default="")
+    smtp_use_tls = db.Column(db.Boolean, default=True)
+
     @property
     def available_languages_list(self):
         return [l.strip() for l in (self.available_languages or "en").split(",") if l.strip()]
