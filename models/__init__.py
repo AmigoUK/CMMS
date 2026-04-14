@@ -1,4 +1,6 @@
+from models.certification import Certification, CertificationLog, CERT_TYPES, CERT_STATUSES
 from models.contact import Contact, CONTACT_CATEGORIES
+from models.email_template import EmailTemplate
 from models.permission import (
     RolePermission, UserPermissionOverride, MODULES as PERM_MODULES,
     ROLES as PERM_ROLES, seed_default_permissions,
@@ -27,7 +29,9 @@ from models.translation import Translation
 from models.help_content import HelpContent
 
 __all__ = [
+    "Certification", "CertificationLog", "CERT_TYPES", "CERT_STATUSES",
     "Contact", "CONTACT_CATEGORIES",
+    "EmailTemplate",
     "RolePermission", "UserPermissionOverride", "PERM_MODULES", "PERM_ROLES",
     "Site", "Team", "User", "ROLES", "user_sites",
     "Location", "LOCATION_TYPES",

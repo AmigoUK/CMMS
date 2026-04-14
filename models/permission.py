@@ -13,6 +13,7 @@ MODULES = [
     {"key": "suppliers",  "icon": "truck",                 "label": "Suppliers",     "ops": ["c", "r", "u", "d"]},
     {"key": "contacts",   "icon": "person-lines-fill",     "label": "Contacts",     "ops": ["c", "r", "u", "d"]},
     {"key": "pm",         "icon": "calendar-check",        "label": "PM Planner",   "ops": ["c", "r", "u", "d"]},
+    {"key": "certifications", "icon": "award",             "label": "Certifications", "ops": ["c", "r", "u", "d"]},
     {"key": "reports",    "icon": "graph-up",              "label": "Reports",       "ops": ["r"]},
     {"key": "admin",      "icon": "shield-lock",           "label": "Admin",        "ops": ["c", "r", "u", "d"]},
     {"key": "help",       "icon": "question-circle",       "label": "Help",         "ops": ["r", "u"]},
@@ -30,13 +31,13 @@ DEFAULT_ROLE_PERMISSIONS = {
     },
     "technician": {
         "dashboard": "r", "requests": "crud", "workorders": "ru",
-        "assets": "r", "pm": "ru", "reports": "r", "help": "r",
+        "assets": "r", "certifications": "r", "pm": "ru", "reports": "r", "help": "r",
     },
     "supervisor": {
         "dashboard": "crud", "requests": "crud", "workorders": "crud",
         "assets": "cru", "locations": "crud", "parts": "cru",
         "suppliers": "crud", "contacts": "crud", "pm": "crud",
-        "reports": "r", "help": "ru",
+        "certifications": "crud", "reports": "r", "help": "ru",
     },
     # admin gets everything via hardcoded check — no rows needed
 }
