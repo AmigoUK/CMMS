@@ -207,8 +207,9 @@ def detail(id):
         abort(403)
 
     attachments = Attachment.get_for_entity("work_order", wo.id)
-    parts = Part.query.filter_by(
-        site_id=g.current_site.id, is_active=True,
+    parts = Part.query.filter(
+        db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
+        Part.is_active == True,
     ).order_by(Part.name).all()
     assignable = _assignable_users()
 
