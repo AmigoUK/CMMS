@@ -129,15 +129,17 @@ class Certification(db.Model):
         days = self.days_until_expiry
         if days is None:
             return []
-        due = []
+        # Find the highest unsent level that is due (send one at a time)
+        highest = None
         for level, days_cfg, sent in [
-            (1, self.reminder_1_days, self.reminder_1_sent),
-            (2, self.reminder_2_days, self.reminder_2_sent),
             (3, self.reminder_3_days, self.reminder_3_sent),
+            (2, self.reminder_2_days, self.reminder_2_sent),
+            (1, self.reminder_1_days, self.reminder_1_sent),
         ]:
             if not sent and days <= days_cfg:
-                due.append((level, days_cfg))
-        return due
+                highest = (level, days_cfg)
+                break
+        return [highest] if highest else []
 
     def __repr__(self):
         return f"<Certification {self.name} expires={self.expiry_date}>"

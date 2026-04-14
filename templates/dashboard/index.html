@@ -324,7 +324,15 @@
                 <tbody>
                     {% for item in expiring_fields %}
                     <tr class="{% if item.status == 'expired' %}table-danger{% endif %}">
-                        <td><a href="{{ url_for('assets.detail', id=item.asset.id) }}">{{ item.asset.name }}</a></td>
+                        <td>
+                            {% if item.asset %}
+                            <a href="{{ url_for('assets.detail', id=item.asset.id) }}">{{ item.asset.name }}</a>
+                            {% elif item.get('location') %}
+                            {{ item.location.name }}
+                            {% elif item.get('cert') %}
+                            <a href="{{ url_for('certs.detail', id=item.cert.id) }}">{{ item.field_label }}</a>
+                            {% else %}—{% endif %}
+                        </td>
                         <td>{{ item.field_label }}</td>
                         <td>{{ item.expiry_date.strftime('%d %b %Y') }}</td>
                         <td>

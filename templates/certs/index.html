@@ -4,7 +4,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0"><i class="bi bi-award me-2"></i>{{ _('ui.page.certifications') }}</h1>
-    {% if has_perm('assets', 'create') %}
+    {% if has_perm('certifications', 'create') %}
     <a href="{{ url_for('certs.new') }}" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_certification') }}
     </a>
@@ -150,7 +150,7 @@
                     <a href="{{ url_for('certs.detail', id=cert.id) }}" class="btn btn-sm btn-outline-primary">
                         <i class="bi bi-eye"></i>
                     </a>
-                    {% if has_perm('assets', 'update') %}
+                    {% if has_perm('certifications', 'update') %}
                     <a href="{{ url_for('certs.edit', id=cert.id) }}" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-pencil"></i>
                     </a>
@@ -193,7 +193,7 @@
 <div class="text-center text-muted py-5">
     <i class="bi bi-award fs-1 d-block mb-3"></i>
     <p>{{ _('ui.text.no_certifications_found') }}</p>
-    {% if has_perm('assets', 'create') %}
+    {% if has_perm('certifications', 'create') %}
     <a href="{{ url_for('certs.new') }}" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_certification') }}
     </a>

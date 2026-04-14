@@ -45,6 +45,13 @@
 .pm-overdue { border-left: 4px solid #dc3545; }
 .pm-in-lead { border-left: 4px solid #0d6efd; }
 
+/* Dark mode: brighten priority/status colors for visibility */
+[data-bs-theme="dark"] .priority-low,
+[data-bs-theme="dark"] .status-operational { color: #5dd39e; }
+[data-bs-theme="dark"] .priority-medium,
+[data-bs-theme="dark"] .status-needs_repair { color: #ffb347; }
+[data-bs-theme="dark"] .status-decommissioned { color: #adb5bd; }
+
 /* Site switcher in navbar */
 .site-switcher .dropdown-item.active {
     background-color: var(--bs-primary);

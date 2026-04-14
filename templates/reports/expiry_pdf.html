@@ -35,8 +35,8 @@
     <tbody>
         {% for item in items %}
         <tr class="{{ 'expired' if item.status == 'expired' else 'expiring' if item.status == 'expiring' else '' }}">
-            <td>{{ item.asset.name }}</td>
-            <td>{{ item.asset.asset_tag or '—' }}</td>
+            <td>{{ item.asset.name if item.asset else (item.location.full_path if item.get('location') else '—') }}</td>
+            <td>{{ item.asset.asset_tag if item.asset else '—' }}</td>
             <td>{{ item.asset.location.name if item.asset.location else '—' }}</td>
             <td>{{ item.field_label }}</td>
             <td>{{ item.expiry_date.strftime('%d %b %Y') }}</td>

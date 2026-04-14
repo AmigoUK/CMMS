@@ -60,10 +60,14 @@
                     {% for item in items %}
                     <tr class="{% if item.status == 'expired' %}table-danger{% elif item.status == 'expiring' %}table-warning{% endif %}">
                         <td>
+                            {% if item.asset %}
                             <a href="{{ url_for('assets.detail', id=item.asset.id) }}">{{ item.asset.name }}</a>
+                            {% elif item.get('location') %}
+                            {{ item.location.full_path }}
+                            {% else %}—{% endif %}
                         </td>
-                        <td>{{ item.asset.asset_tag or '—' }}</td>
-                        <td>{{ item.asset.location.name if item.asset.location else '—' }}</td>
+                        <td>{{ item.asset.asset_tag if item.asset else '—' }}</td>
+                        <td>{{ item.asset.location.name if item.asset and item.asset.location else (item.location.name if item.get('location') else '—') }}</td>
                         <td>{{ item.field_label }}</td>
                         <td>{{ item.expiry_date.strftime('%d %b %Y') }}</td>
                         <td class="text-center">

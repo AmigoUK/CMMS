@@ -84,11 +84,14 @@ def get_expiring_certs(site_id, limit=10):
     today = date.today()
     cutoff = today + timedelta(days=30)
 
+    lower_bound = today - timedelta(days=90)
+
     return Certification.query.filter(
         Certification.site_id == site_id,
         Certification.is_active == True,
         Certification.expiry_date.isnot(None),
         Certification.expiry_date <= cutoff,
+        Certification.expiry_date >= lower_bound,
     ).order_by(
         Certification.expiry_date.asc(),
     ).limit(limit).all()
