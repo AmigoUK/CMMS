@@ -31,6 +31,19 @@
     {% include "partials/_navbar.html" %}
     {% endif %}
 
+    {% if session.get('impersonating_from') %}
+    <div class="bg-warning text-dark text-center py-2 small fw-bold no-print">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        {{ _('ui.text.impersonating_as') }} <strong>{{ current_user.display_name }}</strong> ({{ current_user.role }})
+        <form method="POST" action="{{ url_for('admin.stop_impersonating') }}" class="d-inline ms-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm btn-dark">
+                <i class="bi bi-arrow-return-left me-1"></i>{{ _('ui.button.return_to_admin') }}
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
     <main class="container py-4">
         {% include "partials/_flash_messages.html" %}
         {% block content %}{% endblock %}

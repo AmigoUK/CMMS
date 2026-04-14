@@ -3,9 +3,9 @@
 import secrets
 
 from flask import (
-    abort, flash, g, redirect, render_template, request, url_for,
+    abort, flash, g, redirect, render_template, request, session, url_for,
 )
-from flask_login import current_user, login_required
+from flask_login import current_user, login_required, login_user
 
 from blueprints.admin import admin_bp
 from decorators import admin_required
@@ -235,6 +235,47 @@ def reset_password(id):
         "warning",
     )
     return redirect(url_for("admin.edit_user", id=user.id))
+
+
+@admin_bp.route("/users/<int:id>/impersonate", methods=["POST"])
+@admin_required
+def impersonate(id):
+    """Log in as another user to test their permissions."""
+    user = User.query.get_or_404(id)
+
+    if user.id == current_user.id:
+        flash("Cannot impersonate yourself.", "warning")
+        return redirect(url_for("admin.list_users"))
+
+    if not user.is_active_user:
+        flash("Cannot impersonate an inactive user.", "danger")
+        return redirect(url_for("admin.list_users"))
+
+    # Save the real admin's ID so we can return later
+    session["impersonating_from"] = current_user.id
+
+    login_user(user)
+    flash(f"Now logged in as {user.display_name} ({user.role}). Use the banner to return.", "info")
+    return redirect(url_for("dashboard.index"))
+
+
+@admin_bp.route("/stop-impersonating", methods=["POST"])
+@login_required
+def stop_impersonating():
+    """Return to the original admin account."""
+    admin_id = session.pop("impersonating_from", None)
+    if not admin_id:
+        flash("Not impersonating anyone.", "warning")
+        return redirect(url_for("dashboard.index"))
+
+    admin_user = User.query.get(admin_id)
+    if not admin_user or not admin_user.is_admin:
+        flash("Original admin account not found.", "danger")
+        return redirect(url_for("dashboard.index"))
+
+    login_user(admin_user)
+    flash("Returned to your admin account.", "success")
+    return redirect(url_for("admin.list_users"))
 
 
 # ═══════════════════════════════════════════════════════════════════════

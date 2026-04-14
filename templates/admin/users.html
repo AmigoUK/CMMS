@@ -90,6 +90,16 @@
                        title="Edit">
                         <i class="bi bi-pencil"></i>
                     </a>
+                    {% if user.id != current_user.id and user.is_active_user %}
+                    <form method="POST" action="{{ url_for('admin.impersonate', id=user.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-info"
+                                title="{{ _('ui.button.login_as') }}"
+                                onclick="return confirm('{{ _('ui.confirm.login_as') }}')">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                        </button>
+                    </form>
+                    {% endif %}
                     {% if user.id != current_user.id %}
                     <button type="button"
                             class="btn btn-sm btn-outline-{{ 'warning' if user.is_active_user else 'success' }}"
