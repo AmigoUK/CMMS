@@ -4,6 +4,82 @@ A full-featured, multi-site maintenance management system built with Flask. Desi
 
 **Version:** 0.1.0 | **License:** Private | **Languages:** English, Polish
 
+## Screenshots
+
+### Dashboard
+![Dashboard](docs/screenshots/Dashboard.png)
+The main dashboard provides an at-a-glance overview of your maintenance operation. Stat cards show open requests, active work orders, overdue items, low-stock parts, overdue PM tasks, and expiring certifications. Below are role-specific sections including triage queue for supervisors, upcoming PM tasks, and assigned work orders for technicians.
+
+### Maintenance Requests
+![Maintenance Requests List](docs/screenshots/reactive-maintenance-requests.png)
+All maintenance requests in one place with status filter pills (New, Acknowledged, In Progress, Resolved, Closed). Each request shows priority, status badge, location, and submission date. Colour-coded for quick identification of urgent items.
+
+![Request Detail — Acknowledged](docs/screenshots/job-req-acknowledged.png)
+Detailed view of an acknowledged request showing the full description, assigned technician, priority, location, and the activity timeline tracking every status change and comment.
+
+![Work Order Detail](docs/screenshots/reactive-maintenace-dv.png)
+Work order execution view with action buttons at the top (Start Work, Hold, Complete, Close), task checklist with completion tracking, parts used with stock deduction, time logging, and file attachments.
+
+### Preventive Maintenance
+![PM Planner — Calendar View](docs/screenshots/pm-planener-cal-month.png)
+FullCalendar-powered monthly calendar view showing all scheduled PM tasks colour-coded by status: green for upcoming, blue for in lead window (eligible for early completion), orange for due today, and red for overdue.
+
+![PM Planner — List View](docs/screenshots/pm-planner-lv.png)
+List view of the PM planner showing all scheduled tasks with due dates, priorities, group tags, and assigned technicians. Overdue tasks are highlighted with a red left border.
+
+![PM Task List](docs/screenshots/pm-lv.png)
+PM task definitions with schedule type (Fixed/Floating), frequency, next due date, and status. Counter-based tasks show a speedometer icon indicating they are triggered by equipment meter readings.
+
+![PM Task Detail](docs/screenshots/pm-dv.png)
+Detailed view of a preventive maintenance task showing schedule information, assigned technician, checklist template, and completion history with on-time tracking.
+
+![PM-Generated Work Order](docs/screenshots/pm-work-order.png)
+A work order automatically generated from a PM task. The checklist is pre-populated from the PM template, parts are planned, and the due date is set from the PM schedule.
+
+### Asset Management
+![Property List](docs/screenshots/property-lv.png)
+Full asset register showing all equipment with category, stock level indicators, criticality badges, and location. Searchable with filters for active/inactive status.
+
+![Property Detail with Attachments](docs/screenshots/property-dv-with-pdf-manual-attached.png)
+Asset detail page showing equipment information, status, custom fields, compatible parts list, work order history, and attached documents including PDF manuals.
+
+### Parts & Inventory
+![Parts Inventory](docs/screenshots/parts-inv-lv.png)
+Parts inventory with real-time stock levels, mini progress bars, supplier links, and low-stock highlighting. The "Needs Reorder" filter shows only parts below minimum stock.
+
+![Part Detail with Compatibility](docs/screenshots/part-inv-dv-and-compability-list.png)
+Part detail page showing stock gauge with reorder alert, supplier information with "Order Online" link, stock adjustment form with audit trail, and the list of compatible assets.
+
+![Reorder Report](docs/screenshots/inv-reorder-rep-dv.png)
+Printable reorder report grouped by supplier with contact details, email, phone, and "Order Online" buttons. Each supplier section shows parts to order with quantities, costs, and subtotals. Can be emailed as PDF directly from the page.
+
+### Certifications & Audits
+![Certifications List](docs/screenshots/certifications-and-assesments-lv.png)
+All certifications and compliance documents tracked in one place — inspections, audits, licences, insurance. Colour-coded by expiry status with filter tabs for Active, Expiring Soon, Expired, and All.
+
+![Certification Detail with Reminders](docs/screenshots/certifications-dv-with-reminders.png)
+Certification detail showing three-tier reminder system (30, 14, and 3 days before expiry). Each reminder level tracks sent status and date. Includes renewal form and manual send buttons.
+
+![Certification & Audit Report](docs/screenshots/cert-audit-report.png)
+Compliance report showing all certifications with expiry dates, days remaining, and status badges. Printable with clean A4 layout and emailable as PDF attachment.
+
+### Administration
+![User Management](docs/screenshots/admin-users.png)
+Admin panel for managing users with role badges, team assignments, site access, and active status. Includes "Login as" impersonation button for testing user permissions.
+
+![User Roles & Permissions](docs/screenshots/admin-users-dv-roles-and-privil.png)
+Per-user permission overrides with three-state toggles: inherited from role (grey), explicitly granted (green ring), or explicitly denied (red ring). Allows fine-grained access control beyond the default role template.
+
+![Permission Matrix](docs/screenshots/permission-matrix-customisable.png)
+Visual permissions matrix showing all five roles across 13 modules with CRUD toggles. Click any toggle to grant or revoke — changes save automatically via AJAX. Admin role is locked (always full access).
+
+![Teams Management](docs/screenshots/teams-management-lv.png)
+Team management showing internal maintenance teams and external contractor companies with member counts and active status.
+
+### Address Book
+![Address Book](docs/screenshots/address-book.png)
+Contact directory for email recipients with category filters (Staff, Supplier, External). Used as the recipient picker when emailing reports or sending certification reminders. Supports bulk import from existing suppliers or system users.
+
 ## Tech Stack
 
 | Layer | Technology |
