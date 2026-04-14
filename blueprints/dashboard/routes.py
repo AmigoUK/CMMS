@@ -97,10 +97,10 @@ def index():
                 PreventiveTask.next_due >= date.today(),
             ).order_by(PreventiveTask.next_due.asc()).limit(5).all()
 
-        # ── Expiring custom date fields (supervisor+) ─────────
+        # ── Expiring custom date fields only (supervisor+) ────
         if current_user.is_supervisor:
-            from utils.expiry import get_expiring_custom_fields
-            expiring_fields = get_expiring_custom_fields(site_id, limit=10)
+            from utils.expiry import get_expiring_custom_fields_only
+            expiring_fields = get_expiring_custom_fields_only(site_id, limit=10)
 
         # ── Expiring certifications (technician+) ────────────────
         if current_user.has_role_at_least("technician"):

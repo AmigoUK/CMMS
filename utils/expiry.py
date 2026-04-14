@@ -69,11 +69,8 @@ def _get_certification_items(site_id, warn_days, today):
     return results
 
 
-def get_expiring_custom_fields(site_id, warn_days=None, limit=None):
-    """Return items with expiring dates from both custom fields AND certifications.
-
-    Returns list of dicts sorted by days_remaining (expired first).
-    """
+def get_expiring_custom_fields_only(site_id, warn_days=None, limit=None):
+    """Return ONLY custom date field items (no certifications). For dashboard."""
     site = Site.query.get(site_id)
     if not site:
         return []
@@ -84,11 +81,30 @@ def get_expiring_custom_fields(site_id, warn_days=None, limit=None):
     today = date.today()
     results = []
 
-    # Custom date fields on assets
     if site.date_field_definitions and warn_days > 0:
         results.extend(_get_custom_field_items(site, warn_days, today))
 
-    # Certifications
+    results.sort(key=lambda x: x["days_remaining"])
+    if limit:
+        results = results[:limit]
+    return results
+
+
+def get_expiring_custom_fields(site_id, warn_days=None, limit=None):
+    """Return items from both custom fields AND certifications. For reports."""
+    site = Site.query.get(site_id)
+    if not site:
+        return []
+
+    if warn_days is None:
+        warn_days = site.custom_remind_days or 30
+
+    today = date.today()
+    results = []
+
+    if site.date_field_definitions and warn_days > 0:
+        results.extend(_get_custom_field_items(site, warn_days, today))
+
     results.extend(_get_certification_items(site_id, warn_days, today))
 
     results.sort(key=lambda x: x["days_remaining"])

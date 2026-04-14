@@ -202,8 +202,8 @@ def create_app(config_class=None):
                     PreventiveTask.next_due < date.today(),
                 ).count()
             if site and current_user.is_supervisor:
-                from utils.expiry import get_expiring_count
-                ctx["expiring_docs_count"] = get_expiring_count(site.id)
+                from utils.expiry import get_expiring_custom_fields_only
+                ctx["expiring_docs_count"] = len(get_expiring_custom_fields_only(site.id))
             if site and current_user.has_role_at_least("technician"):
                 from utils.cert_reminders import get_cert_stats
                 cert_stats = get_cert_stats(site.id)
