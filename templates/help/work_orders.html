@@ -26,6 +26,8 @@
         <div class="text-center mb-4">
             <span class="text-muted small">Side branch from In Progress:</span>
             <span class="badge bg-warning text-dark fs-6 ms-2">On Hold</span>
+            <span class="text-muted small ms-3">Can be cancelled at any stage:</span>
+            <span class="badge bg-danger fs-6 ms-2">Cancelled</span>
         </div>
 
         <div class="table-responsive">
@@ -60,6 +62,10 @@
                     <tr>
                         <td><span class="badge bg-dark">Closed</span></td>
                         <td>A supervisor has reviewed and closed the work order. No further changes.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-danger">Cancelled</span></td>
+                        <td>The work order has been cancelled and will not be completed. Can be applied at any stage.</td>
                     </tr>
                 </tbody>
             </table>
@@ -194,6 +200,11 @@
             <li>Multiple time entries can be logged against a single work order.</li>
             <li>Time logs help track labour costs and identify jobs that take longer than expected.</li>
         </ul>
+
+        <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle me-1"></i>
+            <strong>Stock validation:</strong> The system prevents adding parts when there is insufficient stock. If you attempt to use more than the available quantity, the entry will be rejected. Check stock levels or ask a supervisor to restock before trying again.
+        </div>
 
         <h6>Part Usage Reversal</h6>
         <p class="mb-0">If parts were logged incorrectly, a <strong>Supervisor</strong> can reverse the usage entry from the work order detail page. Click the <i class="bi bi-arrow-counterclockwise"></i> reverse icon next to the part entry. The stock quantity will be restored to inventory automatically.</p>

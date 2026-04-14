@@ -160,7 +160,7 @@ document.getElementById('btnPreview').addEventListener('click', function() {
         modal.show();
     })
     .catch(function(err) {
-        alert('Preview failed: ' + err);
+        alert('{{ _("ui.text.preview_failed") }}: ' + err);
     });
 });
 </script>

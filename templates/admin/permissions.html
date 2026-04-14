@@ -68,16 +68,16 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <p class="text-muted small mb-0">
         <span class="crud-legend">
-            <strong>C</strong>=Create
-            <strong>R</strong>=Read
-            <strong>U</strong>=Update
-            <strong>D</strong>=Delete
+            <strong>C</strong>={{ _('ui.label.create_op') }}
+            <strong>R</strong>={{ _('ui.label.read_op') }}
+            <strong>U</strong>={{ _('ui.label.update_op') }}
+            <strong>D</strong>={{ _('ui.label.delete_op') }}
         </span>
     </p>
     <form method="POST" action="{{ url_for('admin.reset_permissions') }}" class="d-inline">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn btn-sm btn-outline-secondary"
-                onclick="return confirm('Reset all role permissions to defaults?')">
+                onclick="return confirm('{{ _('ui.confirm.reset_permissions') }}')">
             <i class="bi bi-arrow-counterclockwise me-1"></i>{{ _('ui.button.reset_defaults') }}
         </button>
     </form>

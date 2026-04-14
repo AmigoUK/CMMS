@@ -294,7 +294,7 @@
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="level" value="{{ level }}">
                         <button type="submit" class="btn btn-sm btn-outline-{{ ['primary', 'warning', 'danger'][level-1] }}"
-                                onclick="return confirm('Send level {{ level }} reminder to {{ cert.contact.email }}?');">
+                                onclick="return confirm('{{ _("ui.confirm.send_reminder") }}');">
                             <i class="bi bi-send me-1"></i>L{{ level }}
                         </button>
                     </form>

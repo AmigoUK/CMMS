@@ -151,7 +151,7 @@
                             <select class="form-select" id="frequency_unit" name="frequency_unit">
                                 {% for u in ['days', 'weeks', 'months', 'years'] %}
                                 <option value="{{ u }}" {% if cert and cert.frequency_unit == u %}selected{% elif not cert and u == 'months' %}selected{% endif %}>
-                                    {{ u|title }}
+                                    {{ _('ui.label.' ~ u) }}
                                 </option>
                                 {% endfor %}
                             </select>

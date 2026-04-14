@@ -41,7 +41,11 @@
                         <td>Can view and execute assigned work orders, log parts and time.</td>
                     </tr>
                     <tr>
-                        <td><strong>Reporter</strong></td>
+                        <td><strong>Contractor</strong></td>
+                        <td>Can view and execute assigned work orders, log time, notes, and parts.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>User</strong></td>
                         <td>Can submit maintenance requests and track their progress.</td>
                     </tr>
                 </tbody>
@@ -175,6 +179,51 @@
     </div>
 </div>
 
+{# ── Email Templates ─────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-envelope-paper me-2"></i>Email Templates</h5>
+        <p class="text-muted small mb-3">Customise the email notifications sent by the system for different events.</p>
+
+        <ul class="mb-0">
+            <li><strong>Template types</strong> &mdash; Templates exist for key events such as new request notifications, work order assignments, completion notices, and report emails.</li>
+            <li><strong>Customise content</strong> &mdash; Go to <strong>Admin &rarr; Email Templates</strong> to edit the subject line and body of each template.</li>
+            <li><strong>Placeholders</strong> &mdash; Use placeholders (e.g. <code>{{work_order_number}}</code>, <code>{{asset_name}}</code>, <code>{{assigned_to}}</code>) to insert dynamic data into the email body.</li>
+            <li><strong>Per-site</strong> &mdash; Templates can be configured per site so different locations can have tailored messaging.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Certifications ──────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-award me-2"></i>Certifications</h5>
+        <p class="text-muted small mb-3">Manage compliance certificates and warranty documents linked to property items.</p>
+
+        <ul class="mb-0">
+            <li><strong>Create certifications</strong> &mdash; From a property item's detail page, add certifications with a type, issue date, expiry date, and optional document attachment.</li>
+            <li><strong>Expiry monitoring</strong> &mdash; Certifications approaching or past their expiry date are surfaced in the <strong>Expiry Report</strong> under <strong>Reports</strong>.</li>
+            <li><strong>Document storage</strong> &mdash; Upload scanned certificates (PDF, images) directly to each certification record for easy retrieval.</li>
+            <li><strong>Audit trail</strong> &mdash; The system records when certifications are created, updated, or renewed, maintaining a full compliance history per asset.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Contacts / Address Book ────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-person-rolodex me-2"></i>Contacts / Address Book</h5>
+        <p class="text-muted small mb-3">Maintain a central address book of contacts used for emailing reports and notifications.</p>
+
+        <ul class="mb-0">
+            <li><strong>Add contacts</strong> &mdash; Go to <strong>Admin &rarr; Address Book</strong> to add contact names and email addresses.</li>
+            <li><strong>Used for email reports</strong> &mdash; When emailing a report, recipients are selected from the address book rather than typed manually.</li>
+            <li><strong>Categorise contacts</strong> &mdash; Organise contacts by type (e.g. internal staff, suppliers, contractors, regulators) for easier selection.</li>
+            <li><strong>Per-site contacts</strong> &mdash; Contacts can be associated with specific sites so only relevant recipients appear when emailing site-specific reports.</li>
+        </ul>
+    </div>
+</div>
+
 {# ── Permissions Matrix ──────────────────────────────────── #}
 <div class="card shadow-sm mb-4">
     <div class="card-body">
@@ -183,7 +232,7 @@
 
         <ul>
             <li><strong>Role-based defaults</strong> &mdash; Each role (Admin, Supervisor, Technician, etc.) comes with a default set of CRUD permissions (Create, Read, Update, Delete) for each module.</li>
-            <li><strong>Per-user overrides</strong> &mdash; You can grant or revoke individual permissions for specific users, overriding their role defaults. Go to <strong>Admin &rarr; Permissions</strong> to manage overrides.</li>
+            <li><strong>Per-user overrides</strong> &mdash; You can grant or revoke individual permissions for specific users, overriding their role defaults. Manage overrides from the user's edit page under <strong>Admin &rarr; Users &rarr; (select user) &rarr; Permissions</strong>.</li>
             <li><strong>Module-level control</strong> &mdash; Permissions are organised by module: Requests, Work Orders, Property, Parts, Reports, etc.</li>
         </ul>
 

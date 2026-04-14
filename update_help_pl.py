@@ -70,7 +70,7 @@ UPDATES = {
                     </tr>
                     <tr>
                         <td><span class="badge bg-warning text-dark">Wykonawca</span></td>
-                        <td>Przeglądaj i realizuj przydzielone zlecenia pracy. Rejestruj czas i notatki.</td>
+                        <td>Przeglądaj i realizuj przydzielone zlecenia pracy. Rejestruj czas, notatki i części.</td>
                     </tr>
                     <tr>
                         <td><span class="badge bg-success">Technik</span></td>
@@ -110,6 +110,26 @@ UPDATES = {
                             <li>Kliknij <strong>&bdquo;Zgłoś problem&rdquo;</strong>.</li>
                             <li>Opisz, co się dzieje &mdash; opisz usterkę, wybierz lokalizację i dołącz zdjęcie, jeśli możesz.</li>
                             <li>Śledź postępy w sekcji <strong>&bdquo;Moje zgłoszenia&rdquo;</strong>.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#stepsContractor">
+                        <span class="badge bg-warning text-dark me-2">Wykonawca</span> Jestem Wykonawcą
+                    </button>
+                </h2>
+                <div id="stepsContractor" class="accordion-collapse collapse" data-bs-parent="#firstSteps">
+                    <div class="accordion-body">
+                        <ol class="mb-0">
+                            <li>Sprawdź <strong>Pulpit</strong>, aby zobaczyć przydzielone zlecenia pracy.</li>
+                            <li>Otwórz zlecenie, aby sprawdzić, co trzeba zrobić.</li>
+                            <li>Kliknij <strong>Rozpocznij pracę</strong>, gdy zaczynasz.</li>
+                            <li>Rejestruj czas, notatki i zużyte części.</li>
+                            <li>Kliknij <strong>Oznacz jako ukończone</strong>, gdy skończysz.</li>
                         </ol>
                     </div>
                 </div>
@@ -357,6 +377,8 @@ UPDATES = {
         <div class="text-center mb-4">
             <span class="text-muted small">Odgałęzienie od W realizacji:</span>
             <span class="badge bg-warning text-dark fs-6 ms-2">Wstrzymane</span>
+            <span class="text-muted small ms-3">Można anulować na każdym etapie:</span>
+            <span class="badge bg-danger fs-6 ms-2">Anulowane</span>
         </div>
 
         <div class="table-responsive">
@@ -391,6 +413,10 @@ UPDATES = {
                     <tr>
                         <td><span class="badge bg-dark">Zamknięte</span></td>
                         <td>Kierownik sprawdził i zamknął zlecenie pracy. Brak dalszych zmian.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-danger">Anulowane</span></td>
+                        <td>Zlecenie pracy zostało anulowane i nie będzie realizowane. Można zastosować na każdym etapie.</td>
                     </tr>
                 </tbody>
             </table>
@@ -521,6 +547,11 @@ UPDATES = {
             <li>Rejestry czasu pomagają śledzić koszty pracy i identyfikować zadania trwające dłużej niż oczekiwano.</li>
         </ul>
 
+        <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle me-1"></i>
+            <strong>Walidacja stanów magazynowych:</strong> System uniemożliwia dodanie części, gdy stan magazynowy jest niewystarczający. Jeśli spróbujesz użyć więcej niż dostępna ilość, wpis zostanie odrzucony. Sprawdź stany magazynowe lub poproś kierownika o uzupełnienie zapasów.
+        </div>
+
         <h6>Wycofanie zużycia części</h6>
         <p class="mb-0">Jeśli zarejestrowano nieprawidłowe zużycie części, <strong>Kierownik</strong> może wycofać wpis ze strony szczegółów zlecenia pracy. Kliknij ikonę <i class="bi bi-arrow-counterclockwise"></i> obok wpisu zużycia. Stan magazynowy zostanie automatycznie przywrócony.</p>
     </div>
@@ -543,7 +574,6 @@ UPDATES = {
         <ul>
             <li><strong>Czym jest element majątku?</strong> Każdy zasób wymagający konserwacji &mdash; urządzenia, maszyny, pojazdy, narzędzia lub elementy budynku (drzwi, klimatyzatory, windy itp.).</li>
             <li><strong>Kategorie</strong> &mdash; Grupuj elementy według typu (np. Elektryczne, Mechaniczne, Hydrauliczne) dla łatwiejszego filtrowania i raportowania.</li>
-            <li><strong>Tagi</strong> &mdash; Stosuj dowolne tagi do elementów w celu elastycznego grupowania między kategoriami.</li>
             <li><strong>Zdjęcia</strong> &mdash; Przesyłaj zdjęcia, aby pomóc technikom szybko zidentyfikować sprzęt w terenie.</li>
         </ul>
 
@@ -651,6 +681,20 @@ UPDATES = {
 
 <div class="card shadow-sm mb-4">
     <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-award me-2"></i>Certyfikaty</h5>
+        <p class="text-muted small mb-3">Śledź certyfikaty, gwarancje i dokumenty zgodności powiązane z poszczególnymi zasobami.</p>
+
+        <ul class="mb-0">
+            <li><strong>Powiązane z zasobami</strong> &mdash; Każdy certyfikat jest przypisany do konkretnego elementu majątku. Wszystkie certyfikaty można przeglądać na stronie szczegółów zasobu.</li>
+            <li><strong>Śledzenie dat ważności</strong> &mdash; Certyfikaty mają daty ważności. Wygasłe lub zbliżające się do wygaśnięcia certyfikaty są oznaczane w Raporcie wygasania.</li>
+            <li><strong>Przesyłanie dokumentów</strong> &mdash; Dołączaj zeskanowane certyfikaty lub dokumenty potwierdzające bezpośrednio do rekordu certyfikatu.</li>
+            <li><strong>Rodzaje</strong> &mdash; Typowe przykłady to świadectwa bezpieczeństwa elektrycznego, certyfikaty gazowe, protokoły PAT, dokumenty ubezpieczeniowe i karty gwarancyjne.</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
         <h5 class="card-title"><i class="bi bi-cart-check me-2"></i>Raport zamówień</h5>
         <p class="text-muted small mb-3">Raport zamówień pomaga kontrolować uzupełnianie zapasów, zanim skończą się krytyczne części.</p>
 
@@ -707,7 +751,11 @@ UPDATES = {
                         <td>Może przeglądać i realizować przydzielone zlecenia pracy, rejestrować części i czas.</td>
                     </tr>
                     <tr>
-                        <td><strong>Zgłaszający</strong></td>
+                        <td><strong>Wykonawca</strong></td>
+                        <td>Może przeglądać i realizować przydzielone zlecenia pracy, rejestrować czas, notatki i części.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Użytkownik</strong></td>
                         <td>Może wysyłać zgłoszenia konserwacyjne i śledzić ich postęp.</td>
                     </tr>
                 </tbody>
@@ -837,12 +885,54 @@ UPDATES = {
 
 <div class="card shadow-sm mb-4">
     <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-envelope-paper me-2"></i>Szablony e-mail</h5>
+        <p class="text-muted small mb-3">Dostosuj powiadomienia e-mail wysyłane przez system dla różnych zdarzeń.</p>
+
+        <ul class="mb-0">
+            <li><strong>Typy szablonów</strong> &mdash; Szablony istnieją dla kluczowych zdarzeń, takich jak powiadomienia o nowych zgłoszeniach, przydzielenie zleceń pracy, powiadomienia o ukończeniu i wysyłanie raportów.</li>
+            <li><strong>Dostosowanie treści</strong> &mdash; Przejdź do <strong>Admin &rarr; Szablony e-mail</strong>, aby edytować temat i treść każdego szablonu.</li>
+            <li><strong>Zmienne</strong> &mdash; Używaj zmiennych (np. <code>{{work_order_number}}</code>, <code>{{asset_name}}</code>, <code>{{assigned_to}}</code>) do wstawiania dynamicznych danych do treści wiadomości.</li>
+            <li><strong>Per obiekt</strong> &mdash; Szablony mogą być konfigurowane per obiekt, dzięki czemu różne lokalizacje mogą mieć dostosowane wiadomości.</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-award me-2"></i>Certyfikaty</h5>
+        <p class="text-muted small mb-3">Zarządzaj certyfikatami zgodności i dokumentami gwarancyjnymi powiązanymi z elementami majątku.</p>
+
+        <ul class="mb-0">
+            <li><strong>Tworzenie certyfikatów</strong> &mdash; Na stronie szczegółów elementu majątku dodaj certyfikaty z typem, datą wystawienia, datą ważności i opcjonalnym załącznikiem dokumentu.</li>
+            <li><strong>Monitorowanie ważności</strong> &mdash; Certyfikaty zbliżające się do lub po dacie ważności są wyświetlane w <strong>Raporcie wygasania</strong> w sekcji <strong>Raporty</strong>.</li>
+            <li><strong>Przechowywanie dokumentów</strong> &mdash; Przesyłaj zeskanowane certyfikaty (PDF, obrazy) bezpośrednio do każdego rekordu certyfikatu w celu łatwego dostępu.</li>
+            <li><strong>Ścieżka audytu</strong> &mdash; System rejestruje, kiedy certyfikaty zostały utworzone, zaktualizowane lub odnowione, utrzymując pełną historię zgodności per zasób.</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-person-rolodex me-2"></i>Kontakty / Książka adresowa</h5>
+        <p class="text-muted small mb-3">Prowadź centralną książkę adresową kontaktów używanych do wysyłania raportów i powiadomień e-mailem.</p>
+
+        <ul class="mb-0">
+            <li><strong>Dodawanie kontaktów</strong> &mdash; Przejdź do <strong>Admin &rarr; Książka adresowa</strong>, aby dodać nazwy kontaktów i adresy e-mail.</li>
+            <li><strong>Używane do wysyłania raportów</strong> &mdash; Przy wysyłaniu raportu e-mailem odbiorcy są wybierani z książki adresowej zamiast ręcznego wpisywania.</li>
+            <li><strong>Kategoryzacja kontaktów</strong> &mdash; Organizuj kontakty według typu (np. personel wewnętrzny, dostawcy, wykonawcy, organy kontrolne) dla łatwiejszego wyboru.</li>
+            <li><strong>Kontakty per obiekt</strong> &mdash; Kontakty mogą być przypisane do konkretnych obiektów, dzięki czemu przy wysyłaniu raportów dla danego obiektu wyświetlani są tylko odpowiedni odbiorcy.</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
         <h5 class="card-title"><i class="bi bi-shield-check me-2"></i>Matryca uprawnień</h5>
         <p class="text-muted small mb-3">Szczegółowa kontrola dostępu wykraczająca poza standardowy system ról.</p>
 
         <ul>
             <li><strong>Domyślne uprawnienia ról</strong> &mdash; Każda rola (Administrator, Kierownik, Technik itp.) ma domyślny zestaw uprawnień CRUD (Tworzenie, Odczyt, Aktualizacja, Usuwanie) dla każdego modułu.</li>
-            <li><strong>Nadpisania per użytkownik</strong> &mdash; Możesz nadać lub cofnąć indywidualne uprawnienia dla konkretnych użytkowników, nadpisując domyślne ustawienia ich roli. Przejdź do <strong>Admin &rarr; Uprawnienia</strong> do zarządzania nadpisaniami.</li>
+            <li><strong>Nadpisania per użytkownik</strong> &mdash; Możesz nadać lub cofnąć indywidualne uprawnienia dla konkretnych użytkowników, nadpisując domyślne ustawienia ich roli. Zarządzaj nadpisaniami ze strony edycji użytkownika: <strong>Admin &rarr; Użytkownicy &rarr; (wybierz użytkownika) &rarr; Uprawnienia</strong>.</li>
             <li><strong>Kontrola na poziomie modułu</strong> &mdash; Uprawnienia są zorganizowane według modułu: Zgłoszenia, Zlecenia pracy, Majątek, Części, Raporty itp.</li>
         </ul>
 
@@ -979,7 +1069,7 @@ UPDATES = {
         </h2>
         <div id="faqGeneralC2" class="accordion-collapse collapse" aria-labelledby="faqGeneralH2" data-bs-parent="#faqGeneral">
             <div class="accordion-body">
-                Najszybszym sposobem jest zeskanowanie etykiety z kodem QR na urządzeniu. Możesz również zalogować się i wysłać zgłoszenie przez stronę Zgłoszenia. Szczegóły znajdziesz w przewodniku <a href="/help/reporting">Zgłaszanie problemu</a>.
+                Najszybszym sposobem jest zeskanowanie etykiety z kodem QR na urządzeniu. Możesz również zalogować się i użyć przycisku <strong>Zgłoś problem</strong> na Pulpicie. Szczegóły znajdziesz w przewodniku <a href="/help/reporting">Zgłaszanie problemu</a>.
             </div>
         </div>
     </div>
@@ -1180,7 +1270,7 @@ UPDATES = {
         </h2>
         <div id="faqAdminC1" class="accordion-collapse collapse" aria-labelledby="faqAdminH1" data-bs-parent="#faqAdmin">
             <div class="accordion-body">
-                Przejdź do <strong>Admin &rarr; Użytkownicy &rarr; Nowy użytkownik</strong>. Podaj imię i nazwisko, adres e-mail i ustaw tymczasowe hasło. Przypisz rolę (Administrator, Kierownik, Technik lub Zgłaszający) i wybierz obiekty, do których użytkownik powinien mieć dostęp.
+                Przejdź do <strong>Admin &rarr; Użytkownicy &rarr; Nowy użytkownik</strong>. Podaj imię i nazwisko, adres e-mail i ustaw tymczasowe hasło. Przypisz rolę (Administrator, Kierownik, Technik lub Użytkownik) i wybierz obiekty, do których użytkownik powinien mieć dostęp.
             </div>
         </div>
     </div>
@@ -1228,7 +1318,7 @@ UPDATES = {
         </h2>
         <div id="faqAdminC5" class="accordion-collapse collapse" aria-labelledby="faqAdminH5" data-bs-parent="#faqAdmin">
             <div class="accordion-body">
-                Najpierw upewnij się, że ustawienia SMTP e-mail są skonfigurowane (zobacz <strong>Admin &rarr; Ustawienia &rarr; E-mail</strong>). Następnie, podczas przeglądania dowolnego raportu, kliknij przycisk <strong>Wyślij raport e-mailem</strong>. Podaj adres e-mail odbiorcy i kliknij Wyślij. Raport zostanie dostarczony jako sformatowana wiadomość e-mail.
+                Najpierw upewnij się, że ustawienia SMTP e-mail są skonfigurowane (zobacz <strong>Admin &rarr; Ustawienia &rarr; E-mail</strong>). Następnie, podczas przeglądania dowolnego raportu, kliknij przycisk <strong>Wyślij raport e-mailem</strong>. Wybierz jednego lub więcej odbiorców z książki adresowej i kliknij Wyślij. Raport zostanie dostarczony jako sformatowana wiadomość e-mail.
             </div>
         </div>
     </div>
@@ -1269,7 +1359,7 @@ UPDATES = {
         </h2>
         <div id="faqAdminC8" class="accordion-collapse collapse" aria-labelledby="faqAdminH8" data-bs-parent="#faqAdmin">
             <div class="accordion-body">
-                Każda rola ma domyślne uprawnienia. Aby dostosować uprawnienia dla konkretnego użytkownika, przejdź do <strong>Admin &rarr; Uprawnienia</strong>. Wybierz użytkownika i przełącz poszczególne uprawnienia Tworzenie, Odczyt, Aktualizacja lub Usuwanie dla każdego modułu. Nadpisania per użytkownik mają pierwszeństwo przed domyślnymi ustawieniami roli.
+                Każda rola ma domyślne uprawnienia. Aby dostosować uprawnienia dla konkretnego użytkownika, przejdź do <strong>Admin &rarr; Użytkownicy &rarr; (wybierz użytkownika) &rarr; Uprawnienia</strong>. Przełącz poszczególne uprawnienia Tworzenie, Odczyt, Aktualizacja lub Usuwanie dla każdego modułu. Nadpisania per użytkownik mają pierwszeństwo przed domyślnymi ustawieniami roli.
             </div>
         </div>
     </div>

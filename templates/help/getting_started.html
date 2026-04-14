@@ -45,7 +45,7 @@
                     </tr>
                     <tr>
                         <td><span class="badge bg-warning text-dark">Contractor</span></td>
-                        <td>View and execute work orders assigned to you. Log time and notes.</td>
+                        <td>View and execute work orders assigned to you. Log time, notes, and parts.</td>
                     </tr>
                     <tr>
                         <td><span class="badge bg-success">Technician</span></td>
@@ -87,6 +87,27 @@
                             <li>Click <strong>"Report a Problem"</strong>.</li>
                             <li>Fill in what's wrong -- describe the issue, pick a location, and attach a photo if you can.</li>
                             <li>Track progress from <strong>"My Requests"</strong>.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            {# Contractor #}
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#stepsContractor">
+                        <span class="badge bg-warning text-dark me-2">Contractor</span> I'm a Contractor
+                    </button>
+                </h2>
+                <div id="stepsContractor" class="accordion-collapse collapse" data-bs-parent="#firstSteps">
+                    <div class="accordion-body">
+                        <ol class="mb-0">
+                            <li>Check the <strong>Dashboard</strong> for work orders assigned to you.</li>
+                            <li>Open the work order to see what needs doing.</li>
+                            <li>Click <strong>Start Work</strong> when you begin.</li>
+                            <li>Log time, notes, and any parts used.</li>
+                            <li>Click <strong>Mark Complete</strong> when finished.</li>
                         </ol>
                     </div>
                 </div>
