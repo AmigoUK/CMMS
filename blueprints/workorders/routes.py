@@ -454,6 +454,20 @@ def add_part(id):
         db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
     ).first_or_404()
 
+    if part.quantity_on_hand <= 0:
+        flash(
+            f'Cannot add "{part.name}" — OUT OF STOCK (0 on hand).',
+            "danger",
+        )
+        return redirect(url_for("workorders.detail", id=wo.id))
+
+    if quantity > part.quantity_on_hand:
+        flash(
+            f'Cannot use {quantity} x "{part.name}" — only {part.quantity_on_hand} on hand.',
+            "warning",
+        )
+        return redirect(url_for("workorders.detail", id=wo.id))
+
     usage = PartUsage(
         work_order_id=wo.id,
         part_id=part.id,

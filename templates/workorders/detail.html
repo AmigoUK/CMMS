@@ -497,13 +497,20 @@
         filtered.forEach(function(p) {
             var item = document.createElement('button');
             item.type = 'button';
-            item.className = 'list-group-item list-group-item-action py-1 px-2 small';
-            item.textContent = p.name + ' (' + p.stock + ' in stock)';
-            item.addEventListener('click', function() {
-                searchInput.value = p.name;
-                hiddenId.value = p.id;
-                dropdown.style.display = 'none';
-            });
+            var outOfStock = p.stock <= 0;
+            item.className = 'list-group-item list-group-item-action py-1 px-2 small' + (outOfStock ? ' text-danger' : '');
+            item.textContent = p.name + ' (' + p.stock + ')' + (outOfStock ? ' — OUT OF STOCK' : '');
+            if (outOfStock) {
+                item.disabled = true;
+                item.style.opacity = '0.5';
+                item.style.cursor = 'not-allowed';
+            } else {
+                item.addEventListener('click', function() {
+                    searchInput.value = p.name;
+                    hiddenId.value = p.id;
+                    dropdown.style.display = 'none';
+                });
+            }
             dropdown.appendChild(item);
         });
         dropdown.style.display = 'block';
