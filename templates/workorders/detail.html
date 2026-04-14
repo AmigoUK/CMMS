@@ -226,14 +226,13 @@
         <form method="POST" action="{{ url_for('workorders.add_part', id=wo.id) }}"
               class="row g-2 align-items-end">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="col-sm-6">
+            <div class="col-sm-6" style="position:relative;">
                 <label class="form-label mb-1 small">{{ _('ui.label.part') }}</label>
-                <select class="form-select form-select-sm" name="part_id" required>
-                    <option value="">{{ _('ui.label.select') }}</option>
-                    {% for p in parts %}
-                    <option value="{{ p.id }}">{{ p.name }} ({{ p.quantity_on_hand }} {{ _('ui.label.in_stock') }})</option>
-                    {% endfor %}
-                </select>
+                <input type="text" class="form-control form-control-sm" id="part_search"
+                       placeholder="{{ _('ui.text.asset_search_placeholder') }}" autocomplete="off">
+                <input type="hidden" id="part_id_hidden" name="part_id" required>
+                <div id="part_dropdown" class="list-group mt-1 shadow-sm"
+                     style="display:none; max-height:200px; overflow-y:auto; position:absolute; z-index:1050; width:100%;"></div>
             </div>
             <div class="col-sm-3">
                 <label class="form-label mb-1 small">{{ _('ui.label.qty') }}</label>
@@ -474,4 +473,49 @@
     </div>
 </div>
 {% endif %}
+
+<script>
+(function() {
+    var partsData = [
+        {% for p in parts %}
+        {id: {{ p.id }}, name: "{{ p.name|e }}", stock: {{ p.quantity_on_hand }}},
+        {% endfor %}
+    ];
+    var searchInput = document.getElementById('part_search');
+    var hiddenId = document.getElementById('part_id_hidden');
+    var dropdown = document.getElementById('part_dropdown');
+    if (!searchInput || !dropdown) return;
+
+    function render(filtered) {
+        while (dropdown.firstChild) dropdown.removeChild(dropdown.firstChild);
+        if (!filtered.length) { dropdown.style.display = 'none'; return; }
+        filtered.forEach(function(p) {
+            var item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'list-group-item list-group-item-action py-1 px-2 small';
+            item.textContent = p.name + ' (' + p.stock + ' in stock)';
+            item.addEventListener('click', function() {
+                searchInput.value = p.name;
+                hiddenId.value = p.id;
+                dropdown.style.display = 'none';
+            });
+            dropdown.appendChild(item);
+        });
+        dropdown.style.display = 'block';
+    }
+
+    searchInput.addEventListener('input', function() {
+        var q = this.value.trim().toLowerCase();
+        hiddenId.value = '';
+        if (q.length < 3) { dropdown.style.display = 'none'; return; }
+        render(partsData.filter(function(p) { return p.name.toLowerCase().indexOf(q) !== -1; }));
+    });
+    searchInput.addEventListener('focus', function() {
+        if (this.value.trim().length >= 3) this.dispatchEvent(new Event('input'));
+    });
+    document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target) && e.target !== searchInput) dropdown.style.display = 'none';
+    });
+})();
+</script>
 {% endblock %}
