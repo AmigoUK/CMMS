@@ -64,6 +64,7 @@
         <thead class="table-light">
             <tr>
                 <th>{{ _('ui.label.name') }}</th>
+                <th>{{ _('ui.label.team') }}</th>
                 <th>{{ _('ui.label.email') }}</th>
                 <th>{{ _('ui.label.phone') }}</th>
                 <th>{{ _('ui.label.company') }}</th>
@@ -75,6 +76,7 @@
             {% for c in contacts %}
             <tr>
                 <td class="fw-semibold">{{ c.name }}</td>
+                <td>{% if c.team %}<span class="badge bg-body-secondary text-body border">{{ c.team.name }}</span>{% else %}—{% endif %}</td>
                 <td><a href="mailto:{{ c.email }}">{{ c.email }}</a></td>
                 <td>{{ c.phone or '—' }}</td>
                 <td>{{ c.company or '—' }}</td>

@@ -159,12 +159,24 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="team_id" class="form-label">{{ _('ui.label.team') }}</label>
+                        <select class="form-select" id="team_id" name="team_id">
+                            <option value="">-- {{ _('ui.label.all') }} --</option>
+                            {% for t in teams %}
+                            <option value="{{ t.id }}" {% if cert and cert.team_id == t.id %}selected{% endif %}>
+                                {{ t.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label for="contact_id" class="form-label">{{ _('ui.label.contact_person') }}</label>
                         <select class="form-select" id="contact_id" name="contact_id">
                             <option value="">-- {{ _('ui.label.select') }} --</option>
                             {% for c in contacts %}
-                            <option value="{{ c.id }}" {% if cert and cert.contact_id == c.id %}selected{% endif %}>
-                                {{ c.name }} ({{ c.email }})
+                            <option value="{{ c.id }}" data-team="{{ c.team_id or '' }}"
+                                    {% if cert and cert.contact_id == c.id %}selected{% endif %}>
+                                {{ c.name }} ({{ c.email }}){% if c.team %} — {{ c.team.name }}{% endif %}
                             </option>
                             {% endfor %}
                         </select>
@@ -234,5 +246,28 @@ function toggleTarget() {
     document.getElementById('locationSelect').style.display = val === 'location' ? 'block' : 'none';
 }
 document.addEventListener('DOMContentLoaded', toggleTarget);
+
+// Filter contacts by selected team
+var teamSelect = document.getElementById('team_id');
+var contactSelect = document.getElementById('contact_id');
+if (teamSelect && contactSelect) {
+    var allOptions = Array.from(contactSelect.options);
+    teamSelect.addEventListener('change', function() {
+        var teamId = this.value;
+        var currentVal = contactSelect.value;
+        while (contactSelect.options.length > 1) contactSelect.remove(1);
+        allOptions.forEach(function(opt) {
+            if (opt.value === '') return;
+            var optTeam = opt.getAttribute('data-team') || '';
+            if (!teamId || optTeam === teamId) {
+                contactSelect.add(opt.cloneNode(true));
+            }
+        });
+        // Try to restore previous selection
+        contactSelect.value = currentVal;
+    });
+    // Apply filter on load if team is pre-selected
+    if (teamSelect.value) teamSelect.dispatchEvent(new Event('change'));
+}
 </script>
 {% endblock %}

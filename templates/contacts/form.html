@@ -38,6 +38,17 @@
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label for="team_id" class="form-label">{{ _('ui.label.team') }}</label>
+                        <select class="form-select" id="team_id" name="team_id">
+                            <option value="">— {{ _('ui.label.none') }} —</option>
+                            {% for t in teams %}
+                            <option value="{{ t.id }}" {% if contact and contact.team_id == t.id %}selected{% endif %}>
+                                {{ t.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label for="email" class="form-label">{{ _('ui.label.email') }} <span class="text-danger">*</span></label>
                         <input type="email" class="form-control" id="email" name="email" required
                                value="{{ contact.email if contact else '' }}">

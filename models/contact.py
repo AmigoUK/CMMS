@@ -9,6 +9,7 @@ class Contact(db.Model):
     __tablename__ = "contacts"
 
     id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey("teams.id"), nullable=True)
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(200), nullable=False)
     phone = db.Column(db.String(50), default="")
@@ -19,6 +20,8 @@ class Contact(db.Model):
     created_at = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc)
     )
+
+    team = db.relationship("Team", backref="contacts")
 
     def __repr__(self):
         return f"<Contact {self.name} <{self.email}>>"

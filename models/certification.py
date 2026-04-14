@@ -28,7 +28,8 @@ class Certification(db.Model):
     frequency_value = db.Column(db.Integer, default=12)
     frequency_unit = db.Column(db.String(20), default="months")
 
-    # Contractor contact
+    # Contractor team & contact
+    team_id = db.Column(db.Integer, db.ForeignKey("teams.id"), nullable=True)
     contact_id = db.Column(db.Integer, db.ForeignKey("contacts.id"), nullable=True)
 
     # Reminder configuration (days before expiry)
@@ -63,6 +64,7 @@ class Certification(db.Model):
     site = db.relationship("Site")
     asset = db.relationship("Asset", backref="certifications")
     location = db.relationship("Location", backref="certifications")
+    team = db.relationship("Team")
     contact = db.relationship("Contact")
     last_renewed_by = db.relationship("User")
 

@@ -11,7 +11,7 @@ from blueprints.certifications import certs_bp
 from decorators import supervisor_required, technician_required
 from extensions import db
 from models import (
-    Asset, Contact, Location, Site,
+    Asset, Contact, Location, Site, Team,
 )
 from models.certification import Certification, CertificationLog, CERT_TYPES, CERT_STATUSES
 
@@ -111,6 +111,7 @@ def new():
         site_id=g.current_site.id, is_active=True,
     ).order_by(Location.name).all()
     contacts = Contact.query.filter_by(is_active=True).order_by(Contact.name).all()
+    teams = Team.query.filter_by(is_active=True).order_by(Team.name).all()
 
     return render_template(
         "certs/form.html",
@@ -118,6 +119,7 @@ def new():
         assets=assets,
         locations=locations,
         contacts=contacts,
+        teams=teams,
         cert_types=CERT_TYPES,
     )
 
@@ -137,6 +139,7 @@ def create():
         cert_type=request.form.get("cert_type", "inspection"),
         certificate_number=request.form.get("certificate_number", "").strip(),
         issuing_body=request.form.get("issuing_body", "").strip(),
+        team_id=request.form.get("team_id", type=int) or None,
         contact_id=request.form.get("contact_id", type=int) or None,
         frequency_value=request.form.get("frequency_value", 12, type=int),
         frequency_unit=request.form.get("frequency_unit", "months"),
@@ -227,6 +230,7 @@ def edit(id):
         site_id=g.current_site.id, is_active=True,
     ).order_by(Location.name).all()
     contacts = Contact.query.filter_by(is_active=True).order_by(Contact.name).all()
+    teams = Team.query.filter_by(is_active=True).order_by(Team.name).all()
 
     return render_template(
         "certs/form.html",
@@ -234,6 +238,7 @@ def edit(id):
         assets=assets,
         locations=locations,
         contacts=contacts,
+        teams=teams,
         cert_types=CERT_TYPES,
     )
 
@@ -255,6 +260,7 @@ def update(id):
     cert.cert_type = request.form.get("cert_type", "inspection")
     cert.certificate_number = request.form.get("certificate_number", "").strip()
     cert.issuing_body = request.form.get("issuing_body", "").strip()
+    cert.team_id = request.form.get("team_id", type=int) or None
     cert.contact_id = request.form.get("contact_id", type=int) or None
     cert.frequency_value = request.form.get("frequency_value", 12, type=int)
     cert.frequency_unit = request.form.get("frequency_unit", "months")

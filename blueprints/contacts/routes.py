@@ -6,7 +6,7 @@ from flask_login import current_user
 from blueprints.contacts import contacts_bp
 from decorators import supervisor_required
 from extensions import db
-from models import Contact, Supplier, User, CONTACT_CATEGORIES
+from models import Contact, Supplier, Team, User, CONTACT_CATEGORIES
 
 
 @contacts_bp.route("/")
@@ -48,7 +48,7 @@ def list_contacts():
 @contacts_bp.route("/new", methods=["GET"])
 @supervisor_required
 def new():
-    return render_template("contacts/form.html", contact=None, categories=CONTACT_CATEGORIES)
+    return render_template("contacts/form.html", contact=None, categories=CONTACT_CATEGORIES, teams=Team.query.filter_by(is_active=True).order_by(Team.name).all())
 
 
 @contacts_bp.route("/new", methods=["POST"])
@@ -63,6 +63,7 @@ def create():
     contact = Contact(
         name=name,
         email=email,
+        team_id=request.form.get("team_id", type=int) or None,
         phone=request.form.get("phone", "").strip(),
         company=request.form.get("company", "").strip(),
         category=request.form.get("category", "other"),
@@ -78,7 +79,7 @@ def create():
 @supervisor_required
 def edit(id):
     contact = Contact.query.get_or_404(id)
-    return render_template("contacts/form.html", contact=contact, categories=CONTACT_CATEGORIES)
+    return render_template("contacts/form.html", contact=contact, categories=CONTACT_CATEGORIES, teams=Team.query.filter_by(is_active=True).order_by(Team.name).all())
 
 
 @contacts_bp.route("/<int:id>/edit", methods=["POST"])
@@ -93,6 +94,7 @@ def update(id):
 
     contact.name = name
     contact.email = email
+    contact.team_id = request.form.get("team_id", type=int) or None
     contact.phone = request.form.get("phone", "").strip()
     contact.company = request.form.get("company", "").strip()
     contact.category = request.form.get("category", "other")

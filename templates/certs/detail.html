@@ -79,6 +79,12 @@
                                     {% endif %}
                                 </td>
                             </tr>
+                            {% if cert.team %}
+                            <tr>
+                                <th class="text-muted">{{ _('ui.label.team') }}</th>
+                                <td><span class="badge bg-body-secondary text-body border">{{ cert.team.name }}</span></td>
+                            </tr>
+                            {% endif %}
                             <tr>
                                 <th class="text-muted">{{ _('ui.label.contact_person') }}</th>
                                 <td>
