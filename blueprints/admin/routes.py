@@ -108,12 +108,35 @@ def edit_user(id):
     teams = Team.query.filter_by(is_active=True).order_by(Team.name).all()
     sites = Site.query.filter_by(is_active=True).order_by(Site.name).all()
 
+    # Build permission override data for the user
+    from models.permission import RolePermission, UserPermissionOverride, MODULES as PERM_MODULES
+
+    role_perms = {}
+    for rp in RolePermission.query.filter_by(role=user.role).all():
+        role_perms[rp.module] = {
+            "c": rp.can_create, "r": rp.can_read,
+            "u": rp.can_update, "d": rp.can_delete,
+        }
+
+    user_overrides = {}
+    for ov in UserPermissionOverride.query.filter_by(user_id=user.id).all():
+        overrides = {}
+        for op, col in [("c", "can_create"), ("r", "can_read"), ("u", "can_update"), ("d", "can_delete")]:
+            val = getattr(ov, col)
+            if val is not None:
+                overrides[op] = val
+        if overrides:
+            user_overrides[ov.module] = overrides
+
     return render_template(
         "admin/user_form.html",
         user=user,
         teams=teams,
         sites=sites,
         roles=ROLES,
+        perm_modules=PERM_MODULES,
+        role_perms=role_perms,
+        user_overrides=user_overrides,
     )
 
 
@@ -536,6 +559,53 @@ def reset_permissions():
     count = seed_default_permissions()
     flash(f"Permissions reset to defaults ({count} entries).", "success")
     return redirect(url_for("admin.permissions"))
+
+
+@admin_bp.route("/users/<int:id>/permissions/update", methods=["POST"])
+@admin_required
+def update_user_permission(id):
+    """AJAX: update a single user permission override."""
+    from flask import jsonify
+    from models.permission import UserPermissionOverride
+
+    user = User.query.get_or_404(id)
+    data = request.get_json()
+    module = data.get("module")
+    op = data.get("op")
+    granted = data.get("granted")  # True, False, or None (inherit)
+
+    op_map = {"c": "can_create", "r": "can_read", "u": "can_update", "d": "can_delete"}
+    col = op_map.get(op)
+    if not col:
+        return jsonify({"ok": False}), 400
+
+    ov = UserPermissionOverride.query.filter_by(user_id=user.id, module=module).first()
+    if not ov:
+        if granted is None:
+            return jsonify({"ok": True})  # Nothing to clear
+        ov = UserPermissionOverride(user_id=user.id, module=module)
+        db.session.add(ov)
+
+    setattr(ov, col, granted)
+
+    # If all ops are None (inherited), remove the row
+    if all(getattr(ov, c) is None for c in op_map.values()):
+        db.session.delete(ov)
+
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
+@admin_bp.route("/users/<int:id>/permissions/clear", methods=["POST"])
+@admin_required
+def clear_user_permissions(id):
+    """Clear all permission overrides for a user."""
+    from models.permission import UserPermissionOverride
+    user = User.query.get_or_404(id)
+    UserPermissionOverride.query.filter_by(user_id=user.id).delete()
+    db.session.commit()
+    flash(f"Permission overrides cleared for {user.display_name}.", "success")
+    return redirect(url_for("admin.edit_user", id=user.id))
 
 
 # ═══════════════════════════════════════════════════════════════════════

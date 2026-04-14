@@ -161,6 +161,128 @@
                 <a href="{{ url_for('admin.list_users') }}" class="btn btn-outline-secondary">{{ _('ui.button.cancel') }}</a>
             </div>
         </form>
+
+        {% if user %}
+        {# Permission Overrides #}
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-shield-exclamation me-2"></i>{{ _('ui.label.permission_overrides') }}</h6>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('admin.permissions') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-shield-check me-1"></i>{{ _('ui.text.admin_tab_permissions') }}
+                    </a>
+                    {% if user_overrides %}
+                    <form method="POST" action="{{ url_for('admin.clear_user_permissions', id=user.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Clear all permission overrides for this user?')">
+                            <i class="bi bi-x-lg me-1"></i>{{ _('ui.button.clear_overrides') }}
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    {{ _('ui.text.override_help') }}
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>{{ _('ui.label.module') }}</th>
+                                <th class="text-center" style="width:180px">C R U D</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mod in perm_modules %}
+                            <tr>
+                                <td class="small">
+                                    <i class="bi bi-{{ mod.icon }} me-1"></i>{{ mod.label }}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        {% for op in ['c', 'r', 'u', 'd'] %}
+                                        {% set applicable = op in mod.ops %}
+                                        {% set role_has = role_perms.get(mod.key, {}).get(op, False) %}
+                                        {% set override_val = user_overrides.get(mod.key, {}).get(op) %}
+                                        {% set effective = override_val if override_val is not none else role_has %}
+                                        <button type="button"
+                                                class="perm-toggle
+                                                    {% if not applicable %}na
+                                                    {% elif override_val == true %}active override-grant
+                                                    {% elif override_val == false %}override-deny
+                                                    {% elif role_has %}active inherited
+                                                    {% else %}inherited{% endif %}"
+                                                {% if not applicable %}disabled{% endif %}
+                                                data-user="{{ user.id }}"
+                                                data-module="{{ mod.key }}"
+                                                data-op="{{ op }}"
+                                                data-role-default="{{ 'true' if role_has else 'false' }}"
+                                                style="width:28px; height:28px; border-radius:4px; border:1px solid var(--bs-border-color);
+                                                       font-size:0.7rem; font-weight:700; cursor:pointer; padding:0;
+                                                       display:flex; align-items:center; justify-content:center;">
+                                            {{ op | upper }}
+                                        </button>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <style>
+        .perm-toggle.active { background: var(--bs-success-bg-subtle); border-color: var(--bs-success); color: var(--bs-success); }
+        .perm-toggle.inherited { opacity: 0.5; }
+        .perm-toggle.override-grant { background: var(--bs-success-bg-subtle); border-color: var(--bs-success); color: var(--bs-success); opacity: 1; box-shadow: 0 0 0 2px var(--bs-success); }
+        .perm-toggle.override-deny { background: var(--bs-danger-bg-subtle); border-color: var(--bs-danger); color: var(--bs-danger); opacity: 1; box-shadow: 0 0 0 2px var(--bs-danger); }
+        .perm-toggle.na { background: var(--bs-tertiary-bg); cursor: not-allowed; opacity: 0.3; }
+        </style>
+
+        <script>
+        document.querySelectorAll('.perm-toggle:not(.na):not([disabled])').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var roleDefault = this.dataset.roleDefault === 'true';
+                // Cycle: inherited -> grant override -> deny override -> inherited
+                var classes = this.classList;
+                var newState;
+                if (classes.contains('override-grant')) {
+                    // grant -> deny
+                    classes.remove('override-grant', 'active');
+                    classes.add('override-deny');
+                    classes.remove('inherited');
+                    newState = false;
+                } else if (classes.contains('override-deny')) {
+                    // deny -> inherited
+                    classes.remove('override-deny');
+                    classes.add('inherited');
+                    if (roleDefault) classes.add('active'); else classes.remove('active');
+                    newState = null;
+                } else {
+                    // inherited -> grant override
+                    classes.remove('inherited');
+                    classes.add('override-grant', 'active');
+                    newState = true;
+                }
+
+                var csrfToken = document.querySelector('[name="csrf_token"]').value;
+                fetch('{{ url_for("admin.update_user_permission", id=user.id) }}', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+                    body: JSON.stringify({
+                        module: this.dataset.module,
+                        op: this.dataset.op,
+                        granted: newState
+                    })
+                });
+            });
+        });
+        </script>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
