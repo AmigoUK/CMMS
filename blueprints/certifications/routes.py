@@ -80,7 +80,8 @@ def index():
         )
 
     pagination = query.order_by(
-        Certification.expiry_date.asc().nullslast(),
+        db.case((Certification.expiry_date.is_(None), 1), else_=0),
+        Certification.expiry_date.asc(),
         Certification.name.asc(),
     ).paginate(page=page, per_page=25, error_out=False)
 
