@@ -28,8 +28,8 @@
             {% endif %}
         </div>
     </div>
-    <div class="d-flex gap-2 no-print">
-        {# Primary action buttons #}
+    <div class="d-flex flex-wrap gap-2 no-print">
+        {# Start Work #}
         {% if wo.status in ('open', 'assigned') %}
             {% if current_user.is_supervisor or wo.assigned_to_id == current_user.id %}
             <form method="POST" action="{{ url_for('workorders.start', id=wo.id) }}" class="d-inline">
@@ -40,6 +40,7 @@
             </form>
             {% endif %}
         {% endif %}
+        {# Resume #}
         {% if wo.status == 'on_hold' %}
             {% if current_user.is_supervisor or wo.assigned_to_id == current_user.id %}
             <form method="POST" action="{{ url_for('workorders.start', id=wo.id) }}" class="d-inline">
@@ -49,6 +50,36 @@
                 </button>
             </form>
             {% endif %}
+        {% endif %}
+        {# Hold #}
+        {% if wo.status == 'in_progress' %}
+            {% if current_user.is_supervisor or wo.assigned_to_id == current_user.id %}
+            <form method="POST" action="{{ url_for('workorders.hold', id=wo.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-warning btn-sm">
+                    <i class="bi bi-pause-fill"></i> {{ _('ui.button.put_on_hold') }}
+                </button>
+            </form>
+            {% endif %}
+        {% endif %}
+        {# Complete #}
+        {% if wo.status == 'in_progress' %}
+            {% if current_user.is_supervisor or wo.assigned_to_id == current_user.id %}
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="collapse"
+                    data-bs-target="#completeForm">
+                <i class="bi bi-check-circle"></i> {{ _('ui.button.complete') }}
+            </button>
+            {% endif %}
+        {% endif %}
+        {# Close #}
+        {% if wo.status == 'completed' and current_user.is_supervisor %}
+        <form method="POST" action="{{ url_for('workorders.close', id=wo.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-dark btn-sm"
+                    onclick="return confirm('{{ _('ui.text.close_this_wo') }}')">
+                <i class="bi bi-lock"></i> {{ _('ui.button.close') }}
+            </button>
+        </form>
         {% endif %}
 
         <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
@@ -400,47 +431,11 @@
 </div>
 {% endif %}
 
-{# ═══ 8. Action buttons ═══ #}
-<div class="card mb-4 wo-detail-section">
-    <div class="card-body">
-        <div class="d-flex flex-wrap gap-2">
-            {# Put on Hold #}
-            {% if wo.status == 'in_progress' %}
-                {% if current_user.is_supervisor or wo.assigned_to_id == current_user.id %}
-                <form method="POST" action="{{ url_for('workorders.hold', id=wo.id) }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-warning">
-                        <i class="bi bi-pause-fill"></i> {{ _('ui.button.put_on_hold') }}
-                    </button>
-                </form>
-                {% endif %}
-            {% endif %}
-
-            {# Complete — shows modal / inline form #}
-            {% if wo.status == 'in_progress' %}
-                {% if current_user.is_supervisor or wo.assigned_to_id == current_user.id %}
-                <button type="button" class="btn btn-primary" data-bs-toggle="collapse"
-                        data-bs-target="#completeForm">
-                    <i class="bi bi-check-circle"></i> {{ _('ui.button.complete') }}
-                </button>
-                {% endif %}
-            {% endif %}
-
-            {# Close (supervisor only, if completed) #}
-            {% if wo.status == 'completed' and current_user.is_supervisor %}
-            <form method="POST" action="{{ url_for('workorders.close', id=wo.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-dark"
-                        onclick="return confirm('{{ _('ui.text.close_this_wo') }}')">
-                    <i class="bi bi-lock"></i> {{ _('ui.button.close') }}
-                </button>
-            </form>
-            {% endif %}
-        </div>
-
-        {# Completion form (collapsible) #}
-        {% if wo.status == 'in_progress' %}
-        <div class="collapse mt-3" id="completeForm">
+{# ═══ Completion form (collapsible, triggered by Complete button in header) ═══ #}
+{% if wo.status == 'in_progress' %}
+<div class="collapse mb-4" id="completeForm">
+    <div class="card wo-detail-section">
+        <div class="card-body">
             <form method="POST" action="{{ url_for('workorders.complete', id=wo.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3">
@@ -458,9 +453,9 @@
                 </button>
             </form>
         </div>
-        {% endif %}
     </div>
 </div>
+{% endif %}
 
 {# ── Linked request ── #}
 {% if wo.request %}
