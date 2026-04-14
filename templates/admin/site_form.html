@@ -89,10 +89,10 @@
                                                 <select class="form-select form-select-sm" name="custom_field_{{ i }}_type">
                                                     <option value="">--</option>
                                                     {% set current_type = site['custom_field_' ~ i ~ '_type'] or '' %}
-                                                    <option value="text" {% if current_type == 'text' %}selected{% endif %}>Text</option>
-                                                    <option value="long_text" {% if current_type == 'long_text' %}selected{% endif %}>Long Text</option>
-                                                    <option value="date" {% if current_type == 'date' %}selected{% endif %}>Date</option>
-                                                    <option value="image" {% if current_type == 'image' %}selected{% endif %}>Image</option>
+                                                    <option value="text" {% if current_type == 'text' %}selected{% endif %}>{{ _('ui.label.field_type_text') }}</option>
+                                                    <option value="long_text" {% if current_type == 'long_text' %}selected{% endif %}>{{ _('ui.label.field_type_long_text') }}</option>
+                                                    <option value="date" {% if current_type == 'date' %}selected{% endif %}>{{ _('ui.label.field_type_date') }}</option>
+                                                    <option value="image" {% if current_type == 'image' %}selected{% endif %}>{{ _('ui.label.field_type_image') }}</option>
                                                 </select>
                                             </td>
                                             <td class="text-center">

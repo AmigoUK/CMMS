@@ -49,7 +49,7 @@
                     <div class="mb-3">
                         <label for="parent_id" class="form-label">Parent Location</label>
                         <select class="form-select" id="parent_id" name="parent_id">
-                            <option value="">— None (top level) —</option>
+                            <option value="">— {{ _('ui.label.none_top_level') }} —</option>
                             {% for ploc in parent_locations %}
                             <option value="{{ ploc.id }}"
                                     {% if location and location.parent_id == ploc.id %}selected{% endif %}>

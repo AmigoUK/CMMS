@@ -16,14 +16,14 @@
                 <label for="title" class="form-label">{{ _('ui.label.title') }} <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="title" name="title"
                        value="{{ wo.title if wo else '' }}"
-                       placeholder="Work order title" required maxlength="200">
+                       placeholder="{{ _('ui.text.wo_title_placeholder') }}" required maxlength="200">
             </div>
 
             {# Description #}
             <div class="mb-3">
                 <label for="description" class="form-label">{{ _('ui.label.description') }}</label>
                 <textarea class="form-control" id="description" name="description"
-                          rows="4" placeholder="Detailed description...">{{ wo.description if wo else '' }}</textarea>
+                          rows="4" placeholder="{{ _('ui.text.wo_description_placeholder') }}">{{ wo.description if wo else '' }}</textarea>
             </div>
 
             {# Type + Priority row #}
@@ -57,7 +57,7 @@
             <div class="mb-3">
                 <label for="asset_id" class="form-label">{{ _('ui.label.property') }}</label>
                 <select class="form-select" id="asset_id" name="asset_id">
-                    <option value="">— Select asset (optional) —</option>
+                    <option value="">— {{ _('ui.label.select_property') }} —</option>
                     {% for asset in assets %}
                     <option value="{{ asset.id }}"
                             {% if wo and wo.asset_id == asset.id %}selected{% endif %}>
@@ -71,7 +71,7 @@
             <div class="mb-3">
                 <label for="location_id" class="form-label">{{ _('ui.label.location') }}</label>
                 <select class="form-select" id="location_id" name="location_id">
-                    <option value="">— Select location (optional) —</option>
+                    <option value="">— {{ _('ui.label.select_location') }} —</option>
                     {% for loc in locations %}
                     <option value="{{ loc.id }}"
                             {% if wo and wo.location_id == loc.id %}selected{% endif %}>
@@ -85,7 +85,7 @@
             <div class="mb-3">
                 <label for="assigned_to_id" class="form-label">{{ _('ui.label.assign_to') }}</label>
                 <select class="form-select" id="assigned_to_id" name="assigned_to_id">
-                    <option value="">— Unassigned —</option>
+                    <option value="">— {{ _('ui.label.unassigned') }} —</option>
                     {% for u in users %}
                     <option value="{{ u.id }}"
                             {% if wo and wo.assigned_to_id == u.id %}selected{% endif %}>

@@ -61,7 +61,7 @@
                                 {{ _('ui.label.your_name') }} {% if settings.anonymous_require_name %}<span class="text-danger">*</span>{% endif %}
                             </label>
                             <input type="text" class="form-control" id="reporter_name" name="reporter_name"
-                                   placeholder="e.g. John Smith" {% if settings.anonymous_require_name %}required{% endif %}>
+                                   placeholder="{{ _('ui.text.name_placeholder') }}" {% if settings.anonymous_require_name %}required{% endif %}>
                         </div>
                         {% endif %}
                         {% if settings.anonymous_require_email %}
@@ -70,7 +70,7 @@
                                 {{ _('ui.label.email_or_phone') }} <span class="text-danger">*</span>
                             </label>
                             <input type="text" class="form-control" id="reporter_contact" name="reporter_contact"
-                                   placeholder="e.g. john@example.com" required>
+                                   placeholder="{{ _('ui.text.email_placeholder') }}" required>
                         </div>
                         {% endif %}
                     </div>
@@ -79,7 +79,7 @@
                     <div class="mb-3">
                         <label for="reporter_name" class="form-label">{{ _('ui.label.your_name') }} <small class="text-muted">({{ _('ui.label.optional') }})</small></label>
                         <input type="text" class="form-control" id="reporter_name" name="reporter_name"
-                               placeholder="So we can follow up with you">
+                               placeholder="{{ _('ui.text.contact_placeholder') }}">
                     </div>
                     {% endif %}
 

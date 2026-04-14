@@ -60,7 +60,7 @@
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-person"></i></span>
                             <input type="text" class="form-control" id="username" name="username"
-                                   placeholder="Enter username" required autofocus
+                                   placeholder="{{ _('ui.text.enter_username') }}" required autofocus
                                    value="{{ request.form.get('username', '') }}">
                         </div>
                     </div>
@@ -70,7 +70,7 @@
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-lock"></i></span>
                             <input type="password" class="form-control" id="password" name="password"
-                                   placeholder="Enter password" required>
+                                   placeholder="{{ _('ui.text.enter_password') }}" required>
                         </div>
                     </div>
 

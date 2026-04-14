@@ -126,7 +126,7 @@
                       class="d-inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-sm btn-link p-0 text-decoration-none"
-                            title="Toggle complete">
+                            title="{{ _('ui.button.toggle_complete') }}">
                         {% if task.is_completed %}
                             <i class="bi bi-check-square-fill text-success fs-5"></i>
                         {% else %}
@@ -197,7 +197,7 @@
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-outline-warning py-0 px-1"
                                         title="{{ _('ui.button.reverse') }}"
-                                        onclick="return confirm('Reverse this part usage and return stock?')">
+                                        onclick="return confirm('{{ _("ui.text.confirm_reverse_part") }}')">
                                     <i class="bi bi-arrow-counterclockwise"></i>
                                 </button>
                             </form>
