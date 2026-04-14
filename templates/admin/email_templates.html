@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.email_templates') }} — CMMS{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4"><i class="bi bi-shield-lock me-2"></i>{{ _('ui.navbar.admin') }}</h1>
+
+{# Sub-navigation tabs #}
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.list_users') }}">{{ _('ui.label.users') }}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.list_teams') }}">{{ _('ui.label.teams') }}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.list_sites') }}">{{ _('ui.label.sites') }}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.settings') }}">{{ _('ui.label.settings') }}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.translations') }}">{{ _('ui.label.translations') }}</a></li>
+    <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin.list_email_templates') }}">{{ _('ui.label.email_templates') }}</a></li>
+</ul>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0"><i class="bi bi-envelope-paper me-2"></i>{{ _('ui.page.email_templates') }}</h5>
+</div>
+
+{% if templates %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>{{ _('ui.label.name') }}</th>
+                <th>{{ _('ui.label.language') }}</th>
+                <th>{{ _('ui.label.urgency') }}</th>
+                <th>{{ _('ui.label.subject') }}</th>
+                <th>{{ _('ui.label.status') }}</th>
+                <th>{{ _('ui.label.actions') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tmpl in templates %}
+            <tr>
+                <td>{{ tmpl.name }}</td>
+                <td><span class="badge bg-secondary">{{ tmpl.language|upper }}</span></td>
+                <td>
+                    <span class="badge bg-{{ tmpl.urgency_color }}">
+                        {{ tmpl.urgency_label }}
+                    </span>
+                </td>
+                <td class="text-truncate" style="max-width: 300px;">{{ tmpl.subject }}</td>
+                <td>
+                    {% if tmpl.is_active %}
+                    <span class="badge bg-success">{{ _('ui.label.active') }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ _('ui.label.inactive') }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('admin.edit_email_template', id=tmpl.id) }}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil me-1"></i>{{ _('ui.button.edit') }}
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i>{{ _('ui.text.no_email_templates') }}
+</div>
+{% endif %}
+{% endblock %}

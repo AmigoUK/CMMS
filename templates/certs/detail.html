@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% block title %}{{ cert.name }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('certs.index') }}" class="text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.nav.back_to_certifications') }}
+    </a>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">
+            <i class="bi bi-award me-2"></i>{{ cert.name }}
+        </h1>
+        <div>
+            <span class="badge bg-secondary me-1">{{ cert.cert_type|replace('_', ' ')|title }}</span>
+            {% if not cert.is_active %}
+            <span class="badge bg-secondary">{{ _('ui.label.inactive') }}</span>
+            {% elif cert.is_expired %}
+            <span class="badge bg-danger">{{ _('ui.label.expired') }}</span>
+            {% elif cert.is_expiring_soon(14) %}
+            <span class="badge bg-warning text-dark">{{ _('ui.label.expiring_soon') }}</span>
+            {% else %}
+            <span class="badge bg-success">{{ _('ui.label.active') }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        {% if has_perm('assets', 'update') %}
+        <a href="{{ url_for('certs.edit', id=cert.id) }}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i>{{ _('ui.button.edit') }}
+        </a>
+        <form method="POST" action="{{ url_for('certs.toggle', id=cert.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-{{ 'danger' if cert.is_active else 'success' }}"
+                    onclick="return confirm('{{ _('ui.confirm.toggle_certification') }}');">
+                <i class="bi bi-{{ 'pause' if cert.is_active else 'play' }} me-1"></i>
+                {{ _('ui.button.deactivate') if cert.is_active else _('ui.button.activate') }}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    {# Left column: details #}
+    <div class="col-lg-8">
+        {# Info card #}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0">{{ _('ui.heading.certification_info') }}</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <th class="text-muted" style="width:40%;">{{ _('ui.label.certificate_number') }}</th>
+                                <td>{{ cert.certificate_number or '—' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">{{ _('ui.label.issuing_body') }}</th>
+                                <td>{{ cert.issuing_body or '—' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">{{ _('ui.label.target') }}</th>
+                                <td>
+                                    {% if cert.asset %}
+                                    <a href="{{ url_for('assets.detail', id=cert.asset.id) }}">
+                                        <i class="bi bi-buildings me-1"></i>{{ cert.asset.name }}
+                                    </a>
+                                    {% elif cert.location %}
+                                    <a href="{{ url_for('locations.list_locations') }}">
+                                        <i class="bi bi-geo-alt me-1"></i>{{ cert.location.name }}
+                                    </a>
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">{{ _('ui.label.contact_person') }}</th>
+                                <td>
+                                    {% if cert.contact %}
+                                    {{ cert.contact.name }}
+                                    {% if cert.contact.email %}
+                                    <br><small class="text-muted">{{ cert.contact.email }}</small>
+                                    {% endif %}
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <th class="text-muted" style="width:40%;">{{ _('ui.label.expiry_date') }}</th>
+                                <td>
+                                    {% if cert.expiry_date %}
+                                    <strong class="{% if cert.is_expired %}text-danger{% elif cert.is_expiring_soon(14) %}text-warning{% endif %}">
+                                        {{ cert.expiry_date.strftime('%d %b %Y') }}
+                                    </strong>
+                                    {% if cert.days_until_expiry is not none %}
+                                    <br>
+                                    {% if cert.days_until_expiry < 0 %}
+                                    <small class="text-danger">{{ cert.days_until_expiry|abs }} {{ _('ui.label.days_overdue') }}</small>
+                                    {% else %}
+                                    <small class="text-muted">{{ cert.days_until_expiry }} {{ _('ui.label.days_remaining') }}</small>
+                                    {% endif %}
+                                    {% endif %}
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">{{ _('ui.label.last_inspection') }}</th>
+                                <td>{{ cert.last_inspection_date.strftime('%d %b %Y') if cert.last_inspection_date else '—' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">{{ _('ui.label.frequency') }}</th>
+                                <td>{{ cert.frequency_display }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">{{ _('ui.label.created') }}</th>
+                                <td>{{ cert.created_at.strftime('%d %b %Y') }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                {% if cert.description %}
+                <hr>
+                <p class="mb-0"><strong>{{ _('ui.label.description') }}:</strong> {{ cert.description }}</p>
+                {% endif %}
+                {% if cert.notes %}
+                <hr>
+                <p class="mb-0"><strong>{{ _('ui.label.notes') }}:</strong> {{ cert.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Renewal form #}
+        {% if has_perm('assets', 'update') %}
+        <div class="card mb-3 border-success">
+            <div class="card-header bg-success bg-opacity-10">
+                <h6 class="mb-0"><i class="bi bi-arrow-repeat me-2"></i>{{ _('ui.heading.renew_certification') }}</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('certs.renew', id=cert.id) }}" class="row g-2 align-items-end">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="col-md-4">
+                        <label for="new_expiry_date" class="form-label">{{ _('ui.label.new_expiry_date') }}</label>
+                        <input type="date" class="form-control" id="new_expiry_date" name="new_expiry_date" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="renewal_notes" class="form-label">{{ _('ui.label.notes') }}</label>
+                        <input type="text" class="form-control" id="renewal_notes" name="renewal_notes"
+                               placeholder="{{ _('ui.placeholder.renewal_notes') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-success w-100"
+                                onclick="return confirm('{{ _('ui.confirm.renew_certification') }}');">
+                            <i class="bi bi-arrow-repeat me-1"></i>{{ _('ui.button.renew') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {# History log #}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>{{ _('ui.heading.history') }}</h6>
+            </div>
+            <div class="card-body p-0">
+                {% if logs %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ _('ui.label.date') }}</th>
+                                <th>{{ _('ui.label.action') }}</th>
+                                <th>{{ _('ui.label.details') }}</th>
+                                <th>{{ _('ui.label.by') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td>{{ log.created_at.strftime('%d %b %Y %H:%M') }}</td>
+                                <td>
+                                    <span class="badge bg-{% if 'renewed' in log.action %}success{% elif 'reminder' in log.action %}info{% elif 'deactivated' in log.action %}secondary{% else %}primary{% endif %}">
+                                        {{ log.action|replace('_', ' ')|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if log.old_expiry_date and log.new_expiry_date %}
+                                    {{ log.old_expiry_date.strftime('%d %b %Y') }} &rarr; {{ log.new_expiry_date.strftime('%d %b %Y') }}
+                                    {% elif log.notes %}
+                                    {{ log.notes }}
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+                                <td>{{ log.performed_by.display_name if log.performed_by else '—' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3 mb-0">{{ _('ui.text.no_history') }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Right column: reminder status + actions #}
+    <div class="col-lg-4">
+        {# Reminder status card #}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-bell me-2"></i>{{ _('ui.heading.reminder_status') }}</h6>
+            </div>
+            <div class="card-body">
+                {# Level 1 #}
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded {% if cert.reminder_1_sent %}bg-success bg-opacity-10{% else %}bg-light{% endif %}">
+                    <div>
+                        <span class="badge bg-primary me-1">L1</span>
+                        <strong>{{ cert.reminder_1_days }}d</strong>
+                        <span class="text-muted ms-1">{{ _('ui.label.before_expiry') }}</span>
+                    </div>
+                    {% if cert.reminder_1_sent %}
+                    <span class="badge bg-success"><i class="bi bi-check-lg"></i> {{ _('ui.label.sent') }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ _('ui.label.pending') }}</span>
+                    {% endif %}
+                </div>
+                {% if cert.reminder_1_sent and cert.reminder_1_sent_date %}
+                <small class="text-muted d-block mb-3 ms-2">{{ cert.reminder_1_sent_date.strftime('%d %b %Y %H:%M') }}</small>
+                {% endif %}
+
+                {# Level 2 #}
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded {% if cert.reminder_2_sent %}bg-warning bg-opacity-10{% else %}bg-light{% endif %}">
+                    <div>
+                        <span class="badge bg-warning text-dark me-1">L2</span>
+                        <strong>{{ cert.reminder_2_days }}d</strong>
+                        <span class="text-muted ms-1">{{ _('ui.label.before_expiry') }}</span>
+                    </div>
+                    {% if cert.reminder_2_sent %}
+                    <span class="badge bg-success"><i class="bi bi-check-lg"></i> {{ _('ui.label.sent') }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ _('ui.label.pending') }}</span>
+                    {% endif %}
+                </div>
+                {% if cert.reminder_2_sent and cert.reminder_2_sent_date %}
+                <small class="text-muted d-block mb-3 ms-2">{{ cert.reminder_2_sent_date.strftime('%d %b %Y %H:%M') }}</small>
+                {% endif %}
+
+                {# Level 3 #}
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded {% if cert.reminder_3_sent %}bg-danger bg-opacity-10{% else %}bg-light{% endif %}">
+                    <div>
+                        <span class="badge bg-danger me-1">L3</span>
+                        <strong>{{ cert.reminder_3_days }}d</strong>
+                        <span class="text-muted ms-1">{{ _('ui.label.before_expiry') }}</span>
+                    </div>
+                    {% if cert.reminder_3_sent %}
+                    <span class="badge bg-success"><i class="bi bi-check-lg"></i> {{ _('ui.label.sent') }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ _('ui.label.pending') }}</span>
+                    {% endif %}
+                </div>
+                {% if cert.reminder_3_sent and cert.reminder_3_sent_date %}
+                <small class="text-muted d-block mb-3 ms-2">{{ cert.reminder_3_sent_date.strftime('%d %b %Y %H:%M') }}</small>
+                {% endif %}
+
+                {# Manual send buttons #}
+                {% if has_perm('assets', 'update') and cert.contact and cert.contact.email %}
+                <hr>
+                <p class="small text-muted mb-2">{{ _('ui.text.manual_send_reminder') }}</p>
+                <div class="d-flex gap-1">
+                    {% for level in [1, 2, 3] %}
+                    <form method="POST" action="{{ url_for('certs.send_reminder', id=cert.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="level" value="{{ level }}">
+                        <button type="submit" class="btn btn-sm btn-outline-{{ ['primary', 'warning', 'danger'][level-1] }}"
+                                onclick="return confirm('Send level {{ level }} reminder to {{ cert.contact.email }}?');">
+                            <i class="bi bi-send me-1"></i>L{{ level }}
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+                {% elif not cert.contact %}
+                <hr>
+                <p class="small text-muted mb-0">
+                    <i class="bi bi-info-circle me-1"></i>{{ _('ui.text.no_contact_for_reminders') }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

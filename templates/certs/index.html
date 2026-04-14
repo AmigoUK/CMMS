@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.certifications') }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-award me-2"></i>{{ _('ui.page.certifications') }}</h1>
+    {% if has_perm('assets', 'create') %}
+    <a href="{{ url_for('certs.new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_certification') }}
+    </a>
+    {% endif %}
+</div>
+
+{# Filter tabs #}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link {% if current_filter == 'active' %}active{% endif %}"
+           href="{{ url_for('certs.index', filter='active', cert_type=current_cert_type, q=search_query) }}">
+            <i class="bi bi-check-circle me-1"></i>{{ _('ui.label.active') }}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if current_filter == 'expiring' %}active{% endif %}"
+           href="{{ url_for('certs.index', filter='expiring', cert_type=current_cert_type, q=search_query) }}">
+            <i class="bi bi-exclamation-triangle me-1"></i>{{ _('ui.label.expiring_soon') }}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if current_filter == 'expired' %}active{% endif %}"
+           href="{{ url_for('certs.index', filter='expired', cert_type=current_cert_type, q=search_query) }}">
+            <i class="bi bi-x-circle me-1"></i>{{ _('ui.label.expired') }}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if current_filter == 'all' %}active{% endif %}"
+           href="{{ url_for('certs.index', filter='all', cert_type=current_cert_type, q=search_query) }}">
+            <i class="bi bi-list me-1"></i>{{ _('ui.label.all') }}
+        </a>
+    </li>
+</ul>
+
+{# Search and type filter #}
+<form method="GET" class="row g-2 mb-3">
+    <input type="hidden" name="filter" value="{{ current_filter }}">
+    <div class="col-md-5">
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" name="q" placeholder="{{ _('ui.placeholder.search_certifications') }}"
+                   value="{{ search_query }}">
+        </div>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" name="cert_type">
+            <option value="">{{ _('ui.label.all_types') }}</option>
+            {% for ct in cert_types %}
+            <option value="{{ ct }}" {% if ct == current_cert_type %}selected{% endif %}>
+                {{ ct|replace('_', ' ')|title }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-outline-primary w-100">
+            <i class="bi bi-funnel me-1"></i>{{ _('ui.button.filter') }}
+        </button>
+    </div>
+    {% if search_query or current_cert_type %}
+    <div class="col-md-2">
+        <a href="{{ url_for('certs.index', filter=current_filter) }}" class="btn btn-outline-secondary w-100">
+            <i class="bi bi-x-lg me-1"></i>{{ _('ui.button.clear') }}
+        </a>
+    </div>
+    {% endif %}
+</form>
+
+{# Table #}
+{% if certifications %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>{{ _('ui.label.name') }}</th>
+                <th>{{ _('ui.label.type') }}</th>
+                <th>{{ _('ui.label.target') }}</th>
+                <th>{{ _('ui.label.expiry_date') }}</th>
+                <th>{{ _('ui.label.days_remaining') }}</th>
+                <th>{{ _('ui.label.reminders') }}</th>
+                <th>{{ _('ui.label.status') }}</th>
+                <th>{{ _('ui.label.actions') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cert in certifications %}
+            <tr class="{% if cert.is_expired %}table-danger{% elif cert.is_expiring_soon(14) %}table-warning{% endif %}">
+                <td>
+                    <a href="{{ url_for('certs.detail', id=cert.id) }}" class="text-decoration-none fw-semibold">
+                        {{ cert.name }}
+                    </a>
+                    {% if cert.certificate_number %}
+                    <br><small class="text-muted">{{ cert.certificate_number }}</small>
+                    {% endif %}
+                </td>
+                <td><span class="badge bg-secondary">{{ cert.cert_type|replace('_', ' ')|title }}</span></td>
+                <td>
+                    {% if cert.asset %}
+                    <i class="bi bi-buildings me-1"></i>{{ cert.asset.name }}
+                    {% elif cert.location %}
+                    <i class="bi bi-geo-alt me-1"></i>{{ cert.location.name }}
+                    {% else %}
+                    <span class="text-muted">--</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if cert.expiry_date %}
+                    {{ cert.expiry_date.strftime('%d %b %Y') }}
+                    {% else %}
+                    <span class="text-muted">--</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if cert.days_until_expiry is not none %}
+                        {% if cert.days_until_expiry < 0 %}
+                        <span class="badge bg-danger">{{ cert.days_until_expiry|abs }}d {{ _('ui.label.overdue') }}</span>
+                        {% elif cert.days_until_expiry <= 7 %}
+                        <span class="badge bg-danger">{{ cert.days_until_expiry }}d</span>
+                        {% elif cert.days_until_expiry <= 30 %}
+                        <span class="badge bg-warning text-dark">{{ cert.days_until_expiry }}d</span>
+                        {% else %}
+                        <span class="badge bg-success">{{ cert.days_until_expiry }}d</span>
+                        {% endif %}
+                    {% else %}
+                    <span class="text-muted">--</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge bg-{{ 'success' if cert.reminder_1_sent else 'outline-secondary border' }} rounded-pill" title="L1">1</span>
+                    <span class="badge bg-{{ 'warning text-dark' if cert.reminder_2_sent else 'outline-secondary border' }} rounded-pill" title="L2">2</span>
+                    <span class="badge bg-{{ 'danger' if cert.reminder_3_sent else 'outline-secondary border' }} rounded-pill" title="L3">3</span>
+                </td>
+                <td>
+                    {% if not cert.is_active %}
+                    <span class="badge bg-secondary">{{ _('ui.label.inactive') }}</span>
+                    {% elif cert.is_expired %}
+                    <span class="badge bg-danger">{{ _('ui.label.expired') }}</span>
+                    {% else %}
+                    <span class="badge bg-success">{{ _('ui.label.active') }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('certs.detail', id=cert.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    {% if has_perm('assets', 'update') %}
+                    <a href="{{ url_for('certs.edit', id=cert.id) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# Pagination #}
+{% if pagination.pages > 1 %}
+<nav>
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('certs.index', page=pagination.prev_num, filter=current_filter, cert_type=current_cert_type, q=search_query) }}">
+                &laquo;
+            </a>
+        </li>
+        {% for p in pagination.iter_pages() %}
+            {% if p %}
+            <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('certs.index', page=p, filter=current_filter, cert_type=current_cert_type, q=search_query) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('certs.index', page=pagination.next_num, filter=current_filter, cert_type=current_cert_type, q=search_query) }}">
+                &raquo;
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-award fs-1 d-block mb-3"></i>
+    <p>{{ _('ui.text.no_certifications_found') }}</p>
+    {% if has_perm('assets', 'create') %}
+    <a href="{{ url_for('certs.new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_certification') }}
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -57,11 +57,13 @@
                 {# Assets — Property + Locations (technician+) #}
                 {% if has_perm('assets', 'read') %}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {% if request.blueprint in ('assets', 'locations') %}active{% endif %}"
+                    <a class="nav-link dropdown-toggle {% if request.blueprint in ('assets', 'locations', 'certs') %}active{% endif %}"
                        href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-buildings me-1"></i>{{ _('ui.navbar.property') }}
                         {% if expiring_docs_count is defined and expiring_docs_count > 0 %}
                         <span class="badge rounded-pill bg-danger ms-1">{{ expiring_docs_count }}</span>
+                        {% elif expiring_certs_count is defined and expiring_certs_count > 0 %}
+                        <span class="badge rounded-pill bg-warning ms-1">{{ expiring_certs_count }}</span>
                         {% endif %}
                     </a>
                     <ul class="dropdown-menu">
@@ -76,6 +78,15 @@
                             <a class="dropdown-item {% if request.blueprint == 'locations' %}active{% endif %}"
                                href="{{ url_for('locations.list_locations') }}">
                                 <i class="bi bi-geo-alt me-2"></i>{{ _('ui.navbar.locations') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if request.blueprint == 'certs' %}active{% endif %}"
+                               href="{{ url_for('certs.index') }}">
+                                <i class="bi bi-award me-2"></i>{{ _('ui.navbar.certifications') }}
+                                {% if expiring_certs_count is defined and expiring_certs_count > 0 %}
+                                <span class="badge bg-warning rounded-pill float-end">{{ expiring_certs_count }}</span>
+                                {% endif %}
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>

@@ -35,4 +35,4 @@ instance/uploads/
 *.log
 
 # SSL
-certs/
+/certs/

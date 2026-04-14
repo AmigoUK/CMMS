@@ -118,6 +118,7 @@ def create_app(config_class=None):
     from blueprints.pm import pm_bp
     from blueprints.admin import admin_bp
     from blueprints.help import help_bp
+    from blueprints.certifications import certs_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(dashboard_bp)
@@ -131,6 +132,7 @@ def create_app(config_class=None):
     app.register_blueprint(pm_bp, url_prefix="/pm")
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(help_bp, url_prefix="/help")
+    app.register_blueprint(certs_bp, url_prefix="/certs")
 
     # ── Site context middleware ─────────────────────────────
     # Endpoints that work without site context
@@ -202,6 +204,10 @@ def create_app(config_class=None):
             if site and current_user.is_supervisor:
                 from utils.expiry import get_expiring_count
                 ctx["expiring_docs_count"] = get_expiring_count(site.id)
+            if site and current_user.has_role_at_least("technician"):
+                from utils.cert_reminders import get_cert_stats
+                cert_stats = get_cert_stats(site.id)
+                ctx["expiring_certs_count"] = cert_stats["expiring_soon"] + cert_stats["expired"]
         # Permission check helper for templates
         def has_perm(module, op="read"):
             return current_user.can(module, op) if current_user.is_authenticated else False
@@ -299,6 +305,18 @@ def create_app(config_class=None):
 
         db.session.commit()
         print(f"PM generation complete: {total} work orders created.")
+
+    @app.cli.command("cert-remind")
+    def cert_remind_cmd():
+        """Check and send certification expiry reminders."""
+        from utils.cert_reminders import check_and_send_reminders
+        print("Checking certification reminders...")
+        total_sent, errors = check_and_send_reminders()
+        print(f"Reminder check complete: {total_sent} reminders sent.")
+        if errors:
+            print(f"Errors ({len(errors)}):")
+            for e in errors:
+                print(f"  - {e}")
 
     return app
 

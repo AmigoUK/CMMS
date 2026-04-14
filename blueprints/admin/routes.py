@@ -843,3 +843,74 @@ def edit_help_content(slug, lang):
         en_content=en_content,
         target_content=target_content,
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  EMAIL TEMPLATES
+# ═══════════════════════════════════════════════════════════════════════
+
+@admin_bp.route("/email-templates")
+@admin_required
+def list_email_templates():
+    from models.email_template import EmailTemplate
+
+    templates = EmailTemplate.query.order_by(
+        EmailTemplate.language, EmailTemplate.urgency,
+    ).all()
+
+    return render_template(
+        "admin/email_templates.html",
+        templates=templates,
+    )
+
+
+@admin_bp.route("/email-templates/<int:id>/edit", methods=["GET"])
+@admin_required
+def edit_email_template(id):
+    from models.email_template import EmailTemplate
+    from utils.email_templates import AVAILABLE_VARIABLES
+
+    template = EmailTemplate.query.get_or_404(id)
+
+    return render_template(
+        "admin/email_template_form.html",
+        template=template,
+        variables=AVAILABLE_VARIABLES,
+    )
+
+
+@admin_bp.route("/email-templates/<int:id>/edit", methods=["POST"])
+@admin_required
+def update_email_template(id):
+    from models.email_template import EmailTemplate
+
+    template = EmailTemplate.query.get_or_404(id)
+
+    template.name = request.form.get("name", "").strip() or template.name
+    template.subject = request.form.get("subject", "").strip() or template.subject
+    template.body_html = request.form.get("body_html", "") or template.body_html
+    template.is_active = "is_active" in request.form
+
+    db.session.commit()
+    flash(f"Email template '{template.name}' updated.", "success")
+    return redirect(url_for("admin.list_email_templates"))
+
+
+@admin_bp.route("/email-templates/preview", methods=["POST"])
+@admin_required
+def preview_email_template():
+    """AJAX endpoint: preview an email template with sample data."""
+    from flask import jsonify
+    from utils.email_templates import render_template_vars, _sample_context
+
+    subject = request.form.get("subject", "")
+    body_html = request.form.get("body_html", "")
+
+    sample = _sample_context()
+    rendered_subject = render_template_vars(subject, sample)
+    rendered_body = render_template_vars(body_html, sample)
+
+    return jsonify({
+        "subject": rendered_subject,
+        "body": rendered_body,
+    })

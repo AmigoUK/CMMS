@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.edit_certification') if cert else _('ui.button.new_certification') }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('certs.index') }}" class="text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.nav.back_to_certifications') }}
+    </a>
+</div>
+
+<h1 class="h3 mb-4">
+    <i class="bi bi-award me-2"></i>{{ _('ui.page.edit_certification') if cert else _('ui.button.new_certification') }}
+</h1>
+
+<form method="POST"
+      action="{{ url_for('certs.update', id=cert.id) if cert else url_for('certs.create') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="row">
+        {# Left column #}
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('ui.heading.certification_info') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">{{ _('ui.label.name') }} <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               value="{{ cert.name if cert else '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cert_type" class="form-label">{{ _('ui.label.type') }}</label>
+                        <select class="form-select" id="cert_type" name="cert_type">
+                            {% for ct in cert_types %}
+                            <option value="{{ ct }}" {% if cert and cert.cert_type == ct %}selected{% endif %}>
+                                {{ ct|replace('_', ' ')|title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="certificate_number" class="form-label">{{ _('ui.label.certificate_number') }}</label>
+                        <input type="text" class="form-control" id="certificate_number" name="certificate_number"
+                               value="{{ cert.certificate_number if cert else '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="issuing_body" class="form-label">{{ _('ui.label.issuing_body') }}</label>
+                        <input type="text" class="form-control" id="issuing_body" name="issuing_body"
+                               value="{{ cert.issuing_body if cert else '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">{{ _('ui.label.description') }}</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ cert.description if cert else '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            {# Target: Asset or Location #}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('ui.heading.applies_to') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('ui.label.target_type') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="target_type" id="target_none"
+                                   value="" {% if not cert or (not cert.asset_id and not cert.location_id) %}checked{% endif %}
+                                   onchange="toggleTarget()">
+                            <label class="form-check-label" for="target_none">{{ _('ui.label.none') }}</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="target_type" id="target_asset"
+                                   value="asset" {% if cert and cert.asset_id %}checked{% endif %}
+                                   onchange="toggleTarget()">
+                            <label class="form-check-label" for="target_asset">
+                                <i class="bi bi-buildings me-1"></i>{{ _('ui.label.property') }}
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="target_type" id="target_location"
+                                   value="location" {% if cert and cert.location_id %}checked{% endif %}
+                                   onchange="toggleTarget()">
+                            <label class="form-check-label" for="target_location">
+                                <i class="bi bi-geo-alt me-1"></i>{{ _('ui.label.location') }}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="assetSelect" class="mb-3" style="display:none;">
+                        <label for="asset_id" class="form-label">{{ _('ui.label.select_property') }}</label>
+                        <select class="form-select" id="asset_id" name="asset_id">
+                            <option value="">-- {{ _('ui.label.select') }} --</option>
+                            {% for a in assets %}
+                            <option value="{{ a.id }}" {% if cert and cert.asset_id == a.id %}selected{% endif %}>
+                                {{ a.name }}{% if a.asset_tag %} ({{ a.asset_tag }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="locationSelect" class="mb-3" style="display:none;">
+                        <label for="location_id" class="form-label">{{ _('ui.label.select_location') }}</label>
+                        <select class="form-select" id="location_id" name="location_id">
+                            <option value="">-- {{ _('ui.label.select') }} --</option>
+                            {% for l in locations %}
+                            <option value="{{ l.id }}" {% if cert and cert.location_id == l.id %}selected{% endif %}>
+                                {{ l.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Right column #}
+        <div class="col-md-6">
+            {# Schedule #}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('ui.heading.schedule') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="expiry_date" class="form-label">{{ _('ui.label.expiry_date') }}</label>
+                            <input type="date" class="form-control" id="expiry_date" name="expiry_date"
+                                   value="{{ cert.expiry_date.isoformat() if cert and cert.expiry_date else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_inspection_date" class="form-label">{{ _('ui.label.last_inspection') }}</label>
+                            <input type="date" class="form-control" id="last_inspection_date" name="last_inspection_date"
+                                   value="{{ cert.last_inspection_date.isoformat() if cert and cert.last_inspection_date else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="frequency_value" class="form-label">{{ _('ui.label.frequency') }}</label>
+                            <input type="number" class="form-control" id="frequency_value" name="frequency_value"
+                                   min="1" value="{{ cert.frequency_value if cert else 12 }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="frequency_unit" class="form-label">{{ _('ui.label.unit') }}</label>
+                            <select class="form-select" id="frequency_unit" name="frequency_unit">
+                                {% for u in ['days', 'weeks', 'months', 'years'] %}
+                                <option value="{{ u }}" {% if cert and cert.frequency_unit == u %}selected{% elif not cert and u == 'months' %}selected{% endif %}>
+                                    {{ u|title }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contact_id" class="form-label">{{ _('ui.label.contact_person') }}</label>
+                        <select class="form-select" id="contact_id" name="contact_id">
+                            <option value="">-- {{ _('ui.label.select') }} --</option>
+                            {% for c in contacts %}
+                            <option value="{{ c.id }}" {% if cert and cert.contact_id == c.id %}selected{% endif %}>
+                                {{ c.name }} ({{ c.email }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {# Reminder configuration #}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-bell me-2"></i>{{ _('ui.heading.reminder_config') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="reminder_1_days" class="form-label">
+                                <span class="badge bg-primary me-1">L1</span>{{ _('ui.label.days') }}
+                            </label>
+                            <input type="number" class="form-control" id="reminder_1_days" name="reminder_1_days"
+                                   min="1" value="{{ cert.reminder_1_days if cert else 30 }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="reminder_2_days" class="form-label">
+                                <span class="badge bg-warning text-dark me-1">L2</span>{{ _('ui.label.days') }}
+                            </label>
+                            <input type="number" class="form-control" id="reminder_2_days" name="reminder_2_days"
+                                   min="1" value="{{ cert.reminder_2_days if cert else 14 }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="reminder_3_days" class="form-label">
+                                <span class="badge bg-danger me-1">L3</span>{{ _('ui.label.days') }}
+                            </label>
+                            <input type="number" class="form-control" id="reminder_3_days" name="reminder_3_days"
+                                   min="1" value="{{ cert.reminder_3_days if cert else 3 }}">
+                        </div>
+                    </div>
+                    <div class="form-text mt-2">{{ _('ui.text.reminder_days_help') }}</div>
+                </div>
+            </div>
+
+            {# Notes #}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('ui.label.notes') }}</h6>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ cert.notes if cert else '' }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-4">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save') }}
+        </button>
+        <a href="{{ url_for('certs.index') }}" class="btn btn-outline-secondary">{{ _('ui.button.cancel') }}</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleTarget() {
+    var val = document.querySelector('input[name="target_type"]:checked').value;
+    document.getElementById('assetSelect').style.display = val === 'asset' ? 'block' : 'none';
+    document.getElementById('locationSelect').style.display = val === 'location' ? 'block' : 'none';
+}
+document.addEventListener('DOMContentLoaded', toggleTarget);
+</script>
+{% endblock %}

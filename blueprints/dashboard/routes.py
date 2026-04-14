@@ -33,6 +33,7 @@ def index():
     overdue_pm_count = 0
     upcoming_pm_tasks = []
     expiring_fields = []
+    expiring_certs = []
 
     if site_id:
         open_requests = Request.query.filter(
@@ -101,6 +102,11 @@ def index():
             from utils.expiry import get_expiring_custom_fields
             expiring_fields = get_expiring_custom_fields(site_id, limit=10)
 
+        # ── Expiring certifications (technician+) ────────────────
+        if current_user.has_role_at_least("technician"):
+            from utils.cert_reminders import get_expiring_certs
+            expiring_certs = get_expiring_certs(site_id, limit=10)
+
         # ── Recent Work Orders (technician+) ────────────────────
         if current_user.is_technician:
             recent_wos = WorkOrder.query.filter(
@@ -120,6 +126,7 @@ def index():
         overdue_pm_count=overdue_pm_count,
         upcoming_pm_tasks=upcoming_pm_tasks,
         expiring_fields=expiring_fields,
+        expiring_certs=expiring_certs,
     )
 
 
