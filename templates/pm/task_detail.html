@@ -19,6 +19,21 @@
         </h1>
     </div>
     <div class="d-flex gap-2 no-print">
+        {% if task.is_active and task.next_due %}
+        <form method="POST" action="{{ url_for('pm.generate_wo', id=task.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-success btn-sm">
+                <i class="bi bi-clipboard-plus me-1"></i>{{ _('ui.button.generate_wo') }}
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('pm.complete_quick', id=task.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-success btn-sm"
+                    onclick="return confirm('{{ _('ui.text.confirm_quick_complete') }}')">
+                <i class="bi bi-check-circle me-1"></i>{{ _('ui.button.complete_quick') }}
+            </button>
+        </form>
+        {% endif %}
         <a href="{{ url_for('pm.task_edit', id=task.id) }}" class="btn btn-outline-primary btn-sm">
             <i class="bi bi-pencil"></i> {{ _('ui.button.edit') }}
         </a>
