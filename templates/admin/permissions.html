@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.permissions') }} — CMMS{% endblock %}
+
+{% block extra_head %}
+<style>
+.perm-cell { display: flex; gap: 2px; justify-content: center; }
+.perm-toggle {
+    width: 28px; height: 28px; border-radius: 4px;
+    border: 1px solid var(--bs-border-color);
+    background: var(--bs-body-bg); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 700;
+    transition: all 0.15s; color: var(--bs-secondary-color);
+    padding: 0;
+}
+.perm-toggle.active {
+    background: var(--bs-success-bg-subtle);
+    border-color: var(--bs-success);
+    color: var(--bs-success);
+}
+.perm-toggle.locked {
+    background: var(--bs-success-bg-subtle);
+    border-color: var(--bs-success);
+    color: var(--bs-success);
+    cursor: not-allowed; opacity: 0.6;
+}
+.perm-toggle.na {
+    background: var(--bs-tertiary-bg);
+    cursor: not-allowed; opacity: 0.3;
+    color: var(--bs-tertiary-color);
+}
+.role-header { text-align: center; min-width: 130px; }
+.crud-legend { font-size: 0.65rem; letter-spacing: 1px; color: var(--bs-secondary-color); }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4"><i class="bi bi-shield-lock me-2"></i>{{ _('ui.navbar.admin') }}</h1>
+
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.list_users') }}">
+            <i class="bi bi-people me-1"></i>{{ _('ui.text.admin_tab_users') }}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.list_teams') }}">
+            <i class="bi bi-person-badge me-1"></i>{{ _('ui.text.admin_tab_teams') }}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.list_sites') }}">
+            <i class="bi bi-building me-1"></i>{{ _('ui.text.admin_tab_sites') }}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('admin.permissions') }}">
+            <i class="bi bi-shield-check me-1"></i>{{ _('ui.text.admin_tab_permissions') }}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.settings') }}">
+            <i class="bi bi-gear me-1"></i>{{ _('ui.text.admin_tab_settings') }}
+        </a>
+    </li>
+</ul>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted small mb-0">
+        <span class="crud-legend">
+            <strong>C</strong>=Create
+            <strong>R</strong>=Read
+            <strong>U</strong>=Update
+            <strong>D</strong>=Delete
+        </span>
+    </p>
+    <form method="POST" action="{{ url_for('admin.reset_permissions') }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm btn-outline-secondary"
+                onclick="return confirm('Reset all role permissions to defaults?')">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>{{ _('ui.button.reset_defaults') }}
+        </button>
+    </form>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered align-middle mb-0">
+        <thead>
+            <tr>
+                <th style="min-width:150px">{{ _('ui.label.module') }}</th>
+                {% for role in roles %}
+                <th class="role-header">
+                    <span class="badge bg-{{ role_colors[role] }}">{{ role | title }}</span>
+                    <div class="crud-legend mt-1">C R U D</div>
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for mod in modules %}
+            <tr>
+                <td class="fw-semibold">
+                    <i class="bi bi-{{ mod.icon }} me-1"></i>{{ mod.label }}
+                </td>
+                {% for role in roles %}
+                <td>
+                    <div class="perm-cell">
+                        {% for op in ['c', 'r', 'u', 'd'] %}
+                        {% set applicable = op in mod.ops %}
+                        {% set is_admin = role == 'admin' %}
+                        {% set granted = matrix.get(role, {}).get(mod.key, {}).get(op, False) %}
+                        <button type="button"
+                                class="perm-toggle {% if is_admin %}locked{% elif not applicable %}na{% elif granted %}active{% endif %}"
+                                {% if is_admin or not applicable %}disabled{% endif %}
+                                data-role="{{ role }}"
+                                data-module="{{ mod.key }}"
+                                data-op="{{ op }}"
+                                title="{{ op | upper }}">
+                            {{ op | upper }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="saveIndicator" class="mt-2 small text-success d-none">
+    <i class="bi bi-check-circle me-1"></i>{{ _('ui.text.saved') }}
+</div>
+
+<script>
+document.querySelectorAll('.perm-toggle:not(.locked):not(.na):not([disabled])').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var isActive = this.classList.toggle('active');
+        var csrfToken = document.querySelector('[name="csrf_token"]').value;
+
+        fetch('{{ url_for("admin.update_permission") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+            body: JSON.stringify({
+                role: this.dataset.role,
+                module: this.dataset.module,
+                op: this.dataset.op,
+                granted: isActive
+            })
+        }).then(function(r) {
+            if (r.ok) {
+                var ind = document.getElementById('saveIndicator');
+                ind.classList.remove('d-none');
+                setTimeout(function() { ind.classList.add('d-none'); }, 1500);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

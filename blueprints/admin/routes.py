@@ -453,6 +453,92 @@ def test_smtp():
 
 
 # ═══════════════════════════════════════════════════════════════════════
+#  PERMISSIONS MATRIX
+# ═══════════════════════════════════════════════════════════════════════
+
+@admin_bp.route("/permissions")
+@admin_required
+def permissions():
+    """Permissions matrix page."""
+    from flask import jsonify
+    from models.permission import RolePermission, MODULES, ROLES
+
+    # Build matrix: {role: {module: {c: bool, r: bool, u: bool, d: bool}}}
+    matrix = {}
+    for role in ROLES:
+        if role == "admin":
+            # Admin gets everything
+            matrix[role] = {m["key"]: {"c": True, "r": True, "u": True, "d": True} for m in MODULES}
+            continue
+        matrix[role] = {}
+        for m in MODULES:
+            matrix[role][m["key"]] = {"c": False, "r": False, "u": False, "d": False}
+
+    for rp in RolePermission.query.all():
+        if rp.role in matrix and rp.module in matrix.get(rp.role, {}):
+            matrix[rp.role][rp.module] = {
+                "c": rp.can_create, "r": rp.can_read,
+                "u": rp.can_update, "d": rp.can_delete,
+            }
+
+    role_colors = {
+        "user": "secondary", "contractor": "warning text-dark",
+        "technician": "success", "supervisor": "primary", "admin": "danger",
+    }
+
+    return render_template(
+        "admin/permissions.html",
+        modules=MODULES,
+        roles=ROLES,
+        matrix=matrix,
+        role_colors=role_colors,
+    )
+
+
+@admin_bp.route("/permissions/update", methods=["POST"])
+@admin_required
+def update_permission():
+    """AJAX: update a single role permission toggle."""
+    from flask import jsonify
+    from models.permission import RolePermission
+
+    data = request.get_json()
+    role = data.get("role")
+    module = data.get("module")
+    op = data.get("op")
+    granted = data.get("granted", False)
+
+    if role == "admin":
+        return jsonify({"ok": False, "error": "Cannot modify admin permissions"}), 400
+
+    op_map = {"c": "can_create", "r": "can_read", "u": "can_update", "d": "can_delete"}
+    col = op_map.get(op)
+    if not col:
+        return jsonify({"ok": False, "error": "Invalid operation"}), 400
+
+    rp = RolePermission.query.filter_by(role=role, module=module).first()
+    if not rp:
+        rp = RolePermission(role=role, module=module)
+        db.session.add(rp)
+
+    setattr(rp, col, granted)
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
+@admin_bp.route("/permissions/reset", methods=["POST"])
+@admin_required
+def reset_permissions():
+    """Reset all role permissions to defaults."""
+    from models.permission import RolePermission, seed_default_permissions
+    RolePermission.query.delete()
+    db.session.commit()
+    count = seed_default_permissions()
+    flash(f"Permissions reset to defaults ({count} entries).", "success")
+    return redirect(url_for("admin.permissions"))
+
+
+# ═══════════════════════════════════════════════════════════════════════
 #  TRANSLATIONS
 # ═══════════════════════════════════════════════════════════════════════
 
