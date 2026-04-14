@@ -30,44 +30,44 @@
     {# Sidebar navigation — desktop #}
     <div class="col-lg-3 mb-4 d-none d-lg-block">
         <div class="position-sticky" style="top: 5rem;">
-            <h6 class="text-muted text-uppercase small mb-3">Help Centre</h6>
+            <h6 class="text-muted text-uppercase small mb-3">{{ _('ui.help.index') }}</h6>
             <nav class="nav flex-column">
                 <a class="nav-link px-0 {% if request.endpoint == 'help.index' %}fw-bold text-primary{% endif %}"
                    href="{{ url_for('help.index') }}">
-                    <i class="bi bi-house me-2"></i>Overview
+                    <i class="bi bi-house me-2"></i>{{ _('ui.help.overview') }}
                 </a>
                 <a class="nav-link px-0 {% if request.endpoint == 'help.getting_started' %}fw-bold text-primary{% endif %}"
                    href="{{ url_for('help.getting_started') }}">
-                    <i class="bi bi-rocket-takeoff me-2"></i>Getting Started
+                    <i class="bi bi-rocket-takeoff me-2"></i>{{ _('ui.help.getting_started') }}
                 </a>
                 <a class="nav-link px-0 {% if request.endpoint == 'help.reporting' %}fw-bold text-primary{% endif %}"
                    href="{{ url_for('help.reporting') }}">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Reporting a Problem
+                    <i class="bi bi-exclamation-triangle me-2"></i>{{ _('ui.help.reporting') }}
                 </a>
                 <a class="nav-link px-0 {% if request.endpoint == 'help.requests_help' %}fw-bold text-primary{% endif %}"
                    href="{{ url_for('help.requests_help') }}">
-                    <i class="bi bi-list-check me-2"></i>Requests
+                    <i class="bi bi-list-check me-2"></i>{{ _('ui.help.requests') }}
                 </a>
                 {% if current_user.is_authenticated %}
                 <a class="nav-link px-0 {% if request.endpoint == 'help.work_orders' %}fw-bold text-primary{% endif %}"
                    href="{{ url_for('help.work_orders') }}">
-                    <i class="bi bi-clipboard-check me-2"></i>Work Orders
+                    <i class="bi bi-clipboard-check me-2"></i>{{ _('ui.help.work_orders') }}
                 </a>
                 <a class="nav-link px-0 {% if request.endpoint == 'help.property_help' %}fw-bold text-primary{% endif %}"
                    href="{{ url_for('help.property_help') }}">
-                    <i class="bi bi-buildings me-2"></i>Property &amp; Parts
+                    <i class="bi bi-buildings me-2"></i>{{ _('ui.help.property') }}
                 </a>
                 {% endif %}
                 {% if current_user.is_authenticated and current_user.is_admin %}
                 <a class="nav-link px-0 {% if request.endpoint == 'help.admin_guide' %}fw-bold text-primary{% endif %}"
                    href="{{ url_for('help.admin_guide') }}">
-                    <i class="bi bi-shield-lock me-2"></i>Admin Guide
+                    <i class="bi bi-shield-lock me-2"></i>{{ _('ui.help.admin') }}
                 </a>
                 {% endif %}
                 <hr class="my-2">
                 <a class="nav-link px-0 {% if request.endpoint == 'help.faq' %}fw-bold text-primary{% endif %}"
                    href="{{ url_for('help.faq') }}">
-                    <i class="bi bi-patch-question me-2"></i>FAQ
+                    <i class="bi bi-patch-question me-2"></i>{{ _('ui.help.faq') }}
                 </a>
             </nav>
         </div>
@@ -78,23 +78,23 @@
         <div class="dropdown">
             <button class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
                     type="button" data-bs-toggle="dropdown">
-                <span><i class="bi bi-book me-2"></i>Help Navigation</span>
+                <span><i class="bi bi-book me-2"></i>{{ _('ui.help.navigation') }}</span>
                 <i class="bi bi-chevron-down"></i>
             </button>
             <ul class="dropdown-menu w-100">
-                <li><a class="dropdown-item" href="{{ url_for('help.index') }}"><i class="bi bi-house me-2"></i>Overview</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('help.getting_started') }}"><i class="bi bi-rocket-takeoff me-2"></i>Getting Started</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('help.reporting') }}"><i class="bi bi-exclamation-triangle me-2"></i>Reporting a Problem</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('help.requests_help') }}"><i class="bi bi-list-check me-2"></i>Requests</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('help.index') }}"><i class="bi bi-house me-2"></i>{{ _('ui.help.overview') }}</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('help.getting_started') }}"><i class="bi bi-rocket-takeoff me-2"></i>{{ _('ui.help.getting_started') }}</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('help.reporting') }}"><i class="bi bi-exclamation-triangle me-2"></i>{{ _('ui.help.reporting') }}</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('help.requests_help') }}"><i class="bi bi-list-check me-2"></i>{{ _('ui.help.requests') }}</a></li>
                 {% if current_user.is_authenticated %}
-                <li><a class="dropdown-item" href="{{ url_for('help.work_orders') }}"><i class="bi bi-clipboard-check me-2"></i>Work Orders</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('help.property_help') }}"><i class="bi bi-buildings me-2"></i>Property &amp; Parts</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('help.work_orders') }}"><i class="bi bi-clipboard-check me-2"></i>{{ _('ui.help.work_orders') }}</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('help.property_help') }}"><i class="bi bi-buildings me-2"></i>{{ _('ui.help.property') }}</a></li>
                 {% endif %}
                 {% if current_user.is_authenticated and current_user.is_admin %}
-                <li><a class="dropdown-item" href="{{ url_for('help.admin_guide') }}"><i class="bi bi-shield-lock me-2"></i>Admin Guide</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('help.admin_guide') }}"><i class="bi bi-shield-lock me-2"></i>{{ _('ui.help.admin') }}</a></li>
                 {% endif %}
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('help.faq') }}"><i class="bi bi-patch-question me-2"></i>FAQ</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('help.faq') }}"><i class="bi bi-patch-question me-2"></i>{{ _('ui.help.faq') }}</a></li>
             </ul>
         </div>
     </div>
@@ -108,7 +108,7 @@
 
 {% if not current_user.is_authenticated %}
     </main>
-    <footer class="text-center text-muted py-3"><small>CMMS Help Centre</small></footer>
+    <footer class="text-center text-muted py-3"><small>CMMS {{ _('ui.help.index') }}</small></footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
