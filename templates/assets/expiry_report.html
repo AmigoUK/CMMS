@@ -1,12 +1,34 @@
 {% extends "base.html" %}
 {% block title %}{{ _('ui.page.expiry_report') }} — CMMS{% endblock %}
 
+{% block extra_head %}
+<style>
+@media print {
+    .expiry-report h1 { font-size: 14pt; margin-bottom: 2mm; }
+    .expiry-report .report-meta { font-size: 9pt; margin-bottom: 4mm; }
+    .expiry-report table { border-collapse: collapse; width: 100%; }
+    .expiry-report th { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        border-bottom: 2px solid #000; padding: 4px 6px; text-align: left; }
+    .expiry-report td { font-size: 9pt; padding: 5px 6px; border-bottom: 1px solid #ddd; }
+    .expiry-report tr.row-expired td { font-weight: 600; }
+    .expiry-report .status-text { font-size: 8pt; font-weight: 700; text-transform: uppercase; }
+    .expiry-report .card { border: none !important; box-shadow: none !important; }
+    .expiry-report .card-body { padding: 0 !important; }
+    .expiry-report .badge { border: none !important; background: none !important;
+        color: #000 !important; font-weight: 700; padding: 0; }
+    .expiry-report .table-danger, .expiry-report .table-warning { background: none !important; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="expiry-report">
+
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <div>
-        <h1 class="h3 mb-0"><i class="bi bi-file-earmark-medical me-2"></i>{{ _('ui.page.expiry_report') }}</h1>
-        <small class="text-muted">
-            {{ current_site.name }} — {{ now.strftime('%d %b %Y %H:%M') }}
+        <h1 class="h3 mb-0"><i class="bi bi-file-earmark-medical me-2 no-print"></i>{{ _('ui.page.expiry_report') }}</h1>
+        <small class="report-meta">
+            {{ current_site.name }} — {{ now.strftime('%d %b %Y %H:%M') }} — {{ current_user.display_name }}
         </small>
     </div>
     <div class="d-flex gap-2 no-print">
@@ -48,7 +70,6 @@
                 <thead class="table-light">
                     <tr>
                         <th>{{ _('ui.label.property') }}</th>
-                        <th>{{ _('ui.label.asset_tag') }}</th>
                         <th>{{ _('ui.label.location') }}</th>
                         <th>{{ _('ui.label.document') }}</th>
                         <th>{{ _('ui.label.expiry_date') }}</th>
@@ -58,23 +79,26 @@
                 </thead>
                 <tbody>
                     {% for item in items %}
-                    <tr class="{% if item.status == 'expired' %}table-danger{% elif item.status == 'expiring' %}table-warning{% endif %}">
+                    <tr class="{% if item.status == 'expired' %}table-danger row-expired{% elif item.status == 'expiring' %}table-warning{% endif %}">
                         <td>
                             {% if item.asset %}
-                            <a href="{{ url_for('assets.detail', id=item.asset.id) }}">{{ item.asset.name }}</a>
+                            <span class="no-print"><a href="{{ url_for('assets.detail', id=item.asset.id) }}">{{ item.asset.name }}</a></span>
+                            <span class="d-none d-print-inline">{{ item.asset.name }}</span>
                             {% elif item.get('location') %}
                             {{ item.location.full_path }}
+                            {% elif item.get('cert') %}
+                            <span class="no-print"><a href="{{ url_for('certs.detail', id=item.cert.id) }}">{{ item.cert.target_name }}</a></span>
+                            <span class="d-none d-print-inline">{{ item.cert.target_name }}</span>
                             {% else %}—{% endif %}
                         </td>
-                        <td>{{ item.asset.asset_tag if item.asset else '—' }}</td>
-                        <td>{{ item.asset.location.name if item.asset and item.asset.location else (item.location.name if item.get('location') else '—') }}</td>
+                        <td>{{ item.asset.location.name if item.asset and item.asset.location else (item.get('location', {}).name if item.get('location') else '—') }}</td>
                         <td>{{ item.field_label }}</td>
                         <td>{{ item.expiry_date.strftime('%d %b %Y') }}</td>
                         <td class="text-center">
                             {% if item.days_remaining < 0 %}
-                            <span class="text-danger fw-bold">{{ item.days_remaining|abs }}d overdue</span>
+                            <span class="status-text">{{ item.days_remaining|abs }}d</span>
                             {% elif item.days_remaining == 0 %}
-                            <span class="text-danger fw-bold">Today</span>
+                            <span class="status-text">{{ _('ui.label.today') }}</span>
                             {% else %}
                             {{ item.days_remaining }}d
                             {% endif %}
@@ -101,6 +125,8 @@
     <h5 class="mt-3">{{ _('ui.text.all_documents_current') }}</h5>
 </div>
 {% endif %}
+
+</div>
 
 {% if app_settings.smtp_enabled %}
 {% with email_action=url_for('assets.email_expiry_report'), default_subject=_('ui.page.expiry_report') ~ ' — ' ~ current_site.name %}
