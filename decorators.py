@@ -59,3 +59,16 @@ def contractor_or_above(f):
             abort(403)
         return f(*args, **kwargs)
     return wrapped
+
+
+def permission_required(module, operation="read"):
+    """Decorator: require the user to have a specific CRUD permission."""
+    def decorator(f):
+        @wraps(f)
+        @login_required
+        def wrapped(*args, **kwargs):
+            if not current_user.can(module, operation):
+                abort(403)
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator

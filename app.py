@@ -202,6 +202,11 @@ def create_app(config_class=None):
             if site and current_user.is_supervisor:
                 from utils.expiry import get_expiring_count
                 ctx["expiring_docs_count"] = get_expiring_count(site.id)
+        # Permission check helper for templates
+        def has_perm(module, op="read"):
+            return current_user.can(module, op) if current_user.is_authenticated else False
+        ctx["has_perm"] = has_perm
+
         return ctx
 
     # ── Error handlers ─────────────────────────────────────
@@ -354,6 +359,13 @@ def _seed_defaults():
             )
             db.session.add(loc)
         db.session.commit()
+
+
+    # Seed default permissions
+    from models.permission import seed_default_permissions
+    count = seed_default_permissions()
+    if count:
+        print(f"  Seeded {count} default role permissions")
 
 
 if __name__ == "__main__":

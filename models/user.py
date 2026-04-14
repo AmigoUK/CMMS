@@ -90,5 +90,44 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def can(self, module, operation):
+        """Check if user has permission for module.operation.
+
+        Priority: admin always True > user override > role default.
+        Per-request caching via flask.g.
+        """
+        if self.role == "admin":
+            return True
+
+        from flask import g
+        cache_key = f"_perm_{self.id}"
+        if not hasattr(g, cache_key):
+            # Build cache: {module: {op: bool}} from role defaults + overrides
+            from models.permission import RolePermission, UserPermissionOverride
+
+            # Load role defaults
+            role_perms = {}
+            for rp in RolePermission.query.filter_by(role=self.role).all():
+                role_perms[rp.module] = {
+                    "create": rp.can_create,
+                    "read": rp.can_read,
+                    "update": rp.can_update,
+                    "delete": rp.can_delete,
+                }
+
+            # Apply user overrides
+            for ov in UserPermissionOverride.query.filter_by(user_id=self.id).all():
+                if ov.module not in role_perms:
+                    role_perms[ov.module] = {"create": False, "read": False, "update": False, "delete": False}
+                for op in ("create", "read", "update", "delete"):
+                    val = getattr(ov, f"can_{op}")
+                    if val is not None:
+                        role_perms[ov.module][op] = val
+
+            setattr(g, cache_key, role_perms)
+
+        perms = getattr(g, cache_key)
+        return perms.get(module, {}).get(operation, False)
+
     def __repr__(self):
         return f"<User {self.username} ({self.role})>"
