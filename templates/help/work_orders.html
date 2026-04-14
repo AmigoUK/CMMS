@@ -139,6 +139,26 @@
     </div>
 </div>
 
+{# ── PM-Generated Work Orders ──────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-calendar-check me-2"></i>PM-Generated Work Orders</h5>
+        <p class="text-muted small mb-3">The Preventive Maintenance (PM) Planner can automatically generate work orders based on scheduled tasks.</p>
+
+        <ul>
+            <li><strong>Automatic creation</strong> &mdash; When a PM task is due (based on its schedule and lead days), the system auto-generates a work order with the type set to "Preventive".</li>
+            <li><strong>WO prefix</strong> &mdash; PM-generated work orders use a configurable prefix (set in <strong>Admin &rarr; PM Settings</strong>) so they are easy to identify, e.g. <code>PM-20260408-001</code>.</li>
+            <li><strong>Pre-populated details</strong> &mdash; The generated work order inherits the PM task's description, checklist, assigned asset, and location.</li>
+            <li><strong>Overdue tracking</strong> &mdash; PM tasks that pass their due date without a completed work order are flagged as overdue. Thresholds are configurable in PM Settings.</li>
+        </ul>
+
+        <div class="text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            PM-generated work orders follow the same lifecycle as manually created ones. See the <a href="{{ url_for('help.admin_guide') }}">Admin Guide</a> for PM Settings configuration.
+        </div>
+    </div>
+</div>
+
 {# ── Checklists ─────────────────────────────────────────────── #}
 <div class="card shadow-sm mb-4">
     <div class="card-body">
@@ -168,12 +188,15 @@
         </ul>
 
         <h6>Time Logging</h6>
-        <ul class="mb-0">
+        <ul>
             <li>Enter the number of minutes spent on the task.</li>
             <li>Add a brief note describing what was done during that time.</li>
             <li>Multiple time entries can be logged against a single work order.</li>
             <li>Time logs help track labour costs and identify jobs that take longer than expected.</li>
         </ul>
+
+        <h6>Part Usage Reversal</h6>
+        <p class="mb-0">If parts were logged incorrectly, a <strong>Supervisor</strong> can reverse the usage entry from the work order detail page. Click the <i class="bi bi-arrow-counterclockwise"></i> reverse icon next to the part entry. The stock quantity will be restored to inventory automatically.</p>
     </div>
 </div>
 {% endblock %}

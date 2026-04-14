@@ -99,6 +99,31 @@
     </div>
 </div>
 
+{# ── Custom Fields ──────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-input-cursor-text me-2"></i>Custom Fields</h5>
+        <p class="text-muted small mb-3">Each site can have its own set of custom fields attached to property items, allowing you to track site-specific information.</p>
+
+        <ul>
+            <li><strong>Per-site configuration</strong> &mdash; Custom fields are configured independently for each site in <strong>Admin &rarr; Custom Fields</strong>. Different sites can track different data.</li>
+            <li><strong>Up to 5 fields per site</strong> &mdash; Each site supports up to 5 custom fields.</li>
+            <li><strong>Field types:</strong>
+                <ul>
+                    <li><strong>Text</strong> &mdash; Short text input (e.g. serial number, model code).</li>
+                    <li><strong>Long text</strong> &mdash; Multi-line text area for longer notes.</li>
+                    <li><strong>Date</strong> &mdash; Date picker, useful for warranty expiry, next service date, certification date, etc.</li>
+                    <li><strong>Image</strong> &mdash; Upload an image (e.g. nameplate photo, wiring diagram).</li>
+                </ul>
+            </li>
+            <li>Custom field values appear on the property detail page and are included in reports.</li>
+        </ul>
+
+        <h6>Expiry Report</h6>
+        <p class="mb-0">Date-type custom fields are monitored by the <strong>Expiry Report</strong> (available under <strong>Reports</strong>). This report lists all property items with dates that have expired or are approaching expiry, helping you stay on top of certifications, warranties, and scheduled servicing.</p>
+    </div>
+</div>
+
 {# ── Reorder Report ─────────────────────────────────────────── #}
 <div class="card shadow-sm mb-4">
     <div class="card-body">

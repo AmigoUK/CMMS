@@ -260,5 +260,70 @@
             </div>
         </div>
     </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqAdminH4">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqAdminC4" aria-expanded="false" aria-controls="faqAdminC4">
+                How do I switch to dark mode?
+            </button>
+        </h2>
+        <div id="faqAdminC4" class="accordion-collapse collapse" aria-labelledby="faqAdminH4" data-bs-parent="#faqAdmin">
+            <div class="accordion-body">
+                Click the <i class="bi bi-moon-stars"></i> icon in the navigation bar to toggle dark mode on or off. Your preference is remembered automatically, so the next time you open CMMS it will use your chosen theme.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqAdminH5">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqAdminC5" aria-expanded="false" aria-controls="faqAdminC5">
+                How do I email a report?
+            </button>
+        </h2>
+        <div id="faqAdminC5" class="accordion-collapse collapse" aria-labelledby="faqAdminH5" data-bs-parent="#faqAdmin">
+            <div class="accordion-body">
+                First, ensure SMTP email settings are configured (see <strong>Admin &rarr; Settings &rarr; Email</strong>). Then, when viewing any report, click the <strong>Email Report</strong> button. Enter the recipient's email address and click Send. The report will be delivered as a formatted email.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqAdminH6">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqAdminC6" aria-expanded="false" aria-controls="faqAdminC6">
+                How do I set up preventive maintenance?
+            </button>
+        </h2>
+        <div id="faqAdminC6" class="accordion-collapse collapse" aria-labelledby="faqAdminH6" data-bs-parent="#faqAdmin">
+            <div class="accordion-body">
+                <ol class="mb-0">
+                    <li>Go to <strong>PM Planner</strong> and create a new PM task.</li>
+                    <li>Select the asset, define the schedule (frequency, start date), and add a checklist of tasks.</li>
+                    <li>Configure <strong>Admin &rarr; PM Settings</strong> to set auto-generate days, lead days, and overdue thresholds.</li>
+                    <li>The system will automatically create work orders based on the PM schedule.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqAdminH7">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqAdminC7" aria-expanded="false" aria-controls="faqAdminC7">
+                How do I configure custom fields for a site?
+            </button>
+        </h2>
+        <div id="faqAdminC7" class="accordion-collapse collapse" aria-labelledby="faqAdminH7" data-bs-parent="#faqAdmin">
+            <div class="accordion-body">
+                Go to <strong>Admin &rarr; Custom Fields</strong>, select the site you want to configure, and add up to 5 custom fields. Choose a field type (text, long_text, date, or image), give it a label, and save. The fields will appear on every property item in that site. Date-type fields are automatically tracked by the Expiry Report.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqAdminH8">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqAdminC8" aria-expanded="false" aria-controls="faqAdminC8">
+                How do I manage user permissions?
+            </button>
+        </h2>
+        <div id="faqAdminC8" class="accordion-collapse collapse" aria-labelledby="faqAdminH8" data-bs-parent="#faqAdmin">
+            <div class="accordion-body">
+                Each role has default permissions. To customise permissions for a specific user, go to <strong>Admin &rarr; Permissions</strong>. Select the user and toggle individual Create, Read, Update, or Delete permissions for each module. Per-user overrides take precedence over role defaults.
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

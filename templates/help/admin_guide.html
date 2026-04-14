@@ -81,12 +81,144 @@
 {# ── Settings ────────────────────────────────────────────────── #}
 <div class="card shadow-sm mb-4">
     <div class="card-body">
-        <h5 class="card-title"><i class="bi bi-gear me-2"></i>Settings</h5>
+        <h5 class="card-title"><i class="bi bi-gear me-2"></i>General Settings</h5>
         <p class="text-muted small mb-3">System-wide configuration options available to administrators.</p>
 
         <ul class="mb-0">
             <li><strong>Anonymous reporting</strong> &mdash; Toggle whether visitors can submit maintenance requests without signing in. When enabled, anyone with a QR code link can report a problem.</li>
             <li><strong>Name/email requirements</strong> &mdash; Configure whether anonymous reporters must provide their name and/or email address when submitting a request.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── SMTP / Email Settings ───────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-envelope-at me-2"></i>SMTP / Email Settings</h5>
+        <p class="text-muted small mb-3">Configure outgoing email so the system can send notifications and reports.</p>
+
+        <ul>
+            <li><strong>SMTP Host</strong> &mdash; The mail server address (e.g. <code>smtp.gmail.com</code>, <code>mail.yourdomain.com</code>).</li>
+            <li><strong>SMTP Port</strong> &mdash; Common ports: <code>587</code> (STARTTLS), <code>465</code> (SSL/TLS), <code>25</code> (unencrypted, not recommended).</li>
+            <li><strong>TLS/SSL</strong> &mdash; Enable TLS for encrypted connections. Recommended for all production setups.</li>
+            <li><strong>Username &amp; Password</strong> &mdash; Credentials for SMTP authentication.</li>
+            <li><strong>From address</strong> &mdash; The sender email address that recipients will see.</li>
+        </ul>
+
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-lightbulb me-1"></i>
+            <strong>Test Connection</strong> &mdash; After entering your SMTP settings, click the <strong>Test Connection</strong> button to send a test email and verify everything works before saving.
+        </div>
+    </div>
+</div>
+
+{# ── PM Settings ─────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-calendar-check me-2"></i>PM Settings</h5>
+        <p class="text-muted small mb-3">Configure how preventive maintenance (PM) tasks generate work orders.</p>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-3">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 200px;">Setting</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Auto-generate days</strong></td>
+                        <td>How many days before the due date the system should automatically create a work order for a PM task.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Lead days</strong></td>
+                        <td>The advance notice period used when scheduling PM work orders, allowing time for planning and parts procurement.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Overdue thresholds</strong></td>
+                        <td>Number of days past due before a PM task is flagged as overdue. Can be configured with warning and critical levels.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>WO prefix</strong></td>
+                        <td>A custom prefix for PM-generated work order numbers (e.g. <code>PM-</code>) to distinguish them from manually created work orders.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            Navigate to <strong>Admin &rarr; PM Settings</strong> to configure these values.
+        </div>
+    </div>
+</div>
+
+{# ── Custom Fields ───────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-input-cursor-text me-2"></i>Custom Fields</h5>
+        <p class="text-muted small mb-3">Define custom data fields for property items, configured independently per site.</p>
+
+        <ul>
+            <li><strong>Per-site configuration</strong> &mdash; Each site can have a different set of custom fields. Go to <strong>Admin &rarr; Custom Fields</strong> and select a site to configure its fields.</li>
+            <li><strong>Up to 5 fields per site</strong> &mdash; You can define a maximum of 5 custom fields for each site.</li>
+            <li><strong>Available field types:</strong>
+                <ul>
+                    <li><code>text</code> &mdash; Single-line text input.</li>
+                    <li><code>long_text</code> &mdash; Multi-line text area.</li>
+                    <li><code>date</code> &mdash; Date picker. Date fields are tracked by the Expiry Report.</li>
+                    <li><code>image</code> &mdash; Image upload field.</li>
+                </ul>
+            </li>
+            <li><strong>Field label</strong> &mdash; Give each field a descriptive label that will be shown on the property form and detail page (e.g. "Warranty Expiry", "Certification Date", "Nameplate Photo").</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Permissions Matrix ──────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-shield-check me-2"></i>Permissions Matrix</h5>
+        <p class="text-muted small mb-3">Fine-grained access control beyond the standard role system.</p>
+
+        <ul>
+            <li><strong>Role-based defaults</strong> &mdash; Each role (Admin, Supervisor, Technician, etc.) comes with a default set of CRUD permissions (Create, Read, Update, Delete) for each module.</li>
+            <li><strong>Per-user overrides</strong> &mdash; You can grant or revoke individual permissions for specific users, overriding their role defaults. Go to <strong>Admin &rarr; Permissions</strong> to manage overrides.</li>
+            <li><strong>Module-level control</strong> &mdash; Permissions are organised by module: Requests, Work Orders, Property, Parts, Reports, etc.</li>
+        </ul>
+
+        <div class="text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            Changes to permissions take effect immediately upon save. The user will see the updated access on their next page load.
+        </div>
+    </div>
+</div>
+
+{# ── Translation Management ──────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-translate me-2"></i>Translation Management</h5>
+        <p class="text-muted small mb-3">Manage the text strings used throughout the interface in each supported language.</p>
+
+        <ul>
+            <li><strong>Edit strings</strong> &mdash; Go to <strong>Admin &rarr; Translations</strong> to view and edit translation strings for each language. You can search for specific keys or filter by untranslated entries.</li>
+            <li><strong>Export CSV</strong> &mdash; Export translation data as a CSV file for offline editing or handoff to a translator. Re-import after editing.</li>
+            <li><strong>Language settings</strong> &mdash; Configure which languages are available and set the default language for the system under <strong>Admin &rarr; Language Settings</strong>.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Help Content Editor ─────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-journal-richtext me-2"></i>Help Content Editor</h5>
+        <p class="text-muted small mb-3">Administrators can edit the help pages displayed in the Help Centre directly from the admin panel.</p>
+
+        <ul class="mb-0">
+            <li>Navigate to <strong>Admin &rarr; Help Content</strong> to see all help pages.</li>
+            <li>Select a page and language to edit its HTML content in a rich text editor.</li>
+            <li>Changes are saved to the database and take effect immediately.</li>
+            <li>English help pages are served from templates; translated pages (e.g. Polish) are served from the database and can be edited here.</li>
         </ul>
     </div>
 </div>
@@ -142,6 +274,21 @@
                 <i class="bi bi-9-circle-fill text-primary me-2"></i>
                 <strong>Enable anonymous reporting if needed</strong>
                 <p class="text-muted small mb-0 ms-4">Turn on anonymous reporting in Settings if you want anyone to submit requests via QR codes.</p>
+            </div>
+            <div class="list-group-item px-0">
+                <span class="text-primary fw-bold me-2" style="font-size: 0.9rem;">10</span>
+                <strong>Configure SMTP email settings</strong>
+                <p class="text-muted small mb-0 ms-4">Set up outgoing email so the system can send notifications and reports.</p>
+            </div>
+            <div class="list-group-item px-0">
+                <span class="text-primary fw-bold me-2" style="font-size: 0.9rem;">11</span>
+                <strong>Set up custom fields per site</strong>
+                <p class="text-muted small mb-0 ms-4">Define site-specific custom fields for property items (warranty dates, certification info, etc.).</p>
+            </div>
+            <div class="list-group-item px-0">
+                <span class="text-primary fw-bold me-2" style="font-size: 0.9rem;">12</span>
+                <strong>Configure PM Planner settings</strong>
+                <p class="text-muted small mb-0 ms-4">Set auto-generate days, lead days, and overdue thresholds for preventive maintenance scheduling.</p>
             </div>
         </div>
     </div>
