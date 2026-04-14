@@ -228,8 +228,13 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="col-sm-6" style="position:relative;">
                 <label class="form-label mb-1 small">{{ _('ui.label.part') }}</label>
-                <input type="text" class="form-control form-control-sm" id="part_search"
-                       placeholder="{{ _('ui.text.asset_search_placeholder') }}" autocomplete="off">
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" id="part_search"
+                           placeholder="{{ _('ui.text.asset_search_placeholder') }}" autocomplete="off">
+                    <button type="button" class="btn btn-outline-secondary" id="part_show_all" title="{{ _('ui.label.show_all') }}">
+                        <i class="bi bi-list"></i>
+                    </button>
+                </div>
                 <input type="hidden" id="part_id_hidden" name="part_id" required>
                 <div id="part_dropdown" class="list-group mt-1 shadow-sm"
                      style="display:none; max-height:200px; overflow-y:auto; position:absolute; z-index:1050; width:100%;"></div>
@@ -513,8 +518,18 @@
     searchInput.addEventListener('focus', function() {
         if (this.value.trim().length >= 3) this.dispatchEvent(new Event('input'));
     });
+    var showAllBtn = document.getElementById('part_show_all');
+    if (showAllBtn) {
+        showAllBtn.addEventListener('click', function() {
+            if (dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+            } else {
+                render(partsData);
+            }
+        });
+    }
     document.addEventListener('click', function(e) {
-        if (!dropdown.contains(e.target) && e.target !== searchInput) dropdown.style.display = 'none';
+        if (!dropdown.contains(e.target) && e.target !== searchInput && e.target !== showAllBtn && !showAllBtn.contains(e.target)) dropdown.style.display = 'none';
     });
 })();
 </script>
