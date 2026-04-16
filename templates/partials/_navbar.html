@@ -160,6 +160,16 @@
                 </li>
                 {% endif %}
 
+                {# Reports #}
+                {% if feature_reports and current_user.is_supervisor %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'reports' %}active{% endif %}"
+                       href="{{ url_for('reports.index') }}">
+                        <i class="bi bi-graph-up me-1"></i>{{ _('ui.navbar.reports') }}
+                    </a>
+                </li>
+                {% endif %}
+
                 {# Admin #}
                 {% if has_perm('admin', 'read') %}
                 <li class="nav-item">

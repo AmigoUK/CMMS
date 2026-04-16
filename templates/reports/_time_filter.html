@@ -1,0 +1,61 @@
+{# Shared time-filter partial. Renders an inline form that GET-posts to the
+   current URL with preset/from/to/compare query params. Callers provide
+   the form `action` via the `action_url` variable. #}
+<form method="GET" action="{{ action_url }}" class="row g-2 align-items-end mb-3 no-print">
+    <div class="col-sm-auto">
+        <label class="form-label small mb-0">{{ _('ui.label.period') }}</label>
+        <select name="preset" class="form-select form-select-sm" onchange="this.form.submit()">
+            {% for p, label_key in [
+                ('today', 'ui.label.preset.today'),
+                ('this_week', 'ui.label.preset.this_week'),
+                ('this_month', 'ui.label.preset.this_month'),
+                ('this_quarter', 'ui.label.preset.this_quarter'),
+                ('ytd', 'ui.label.preset.ytd'),
+                ('last_month', 'ui.label.preset.last_month'),
+                ('last_quarter', 'ui.label.preset.last_quarter'),
+                ('custom', 'ui.label.preset.custom'),
+            ] %}
+            <option value="{{ p }}" {% if (request.args.get('preset') or 'this_month') == p %}selected{% endif %}>
+                {{ _(label_key) }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-sm-auto">
+        <label class="form-label small mb-0">{{ _('ui.label.from_date') }}</label>
+        <input type="date" name="from" class="form-control form-control-sm"
+               value="{{ request.args.get('from') or period.start.isoformat() }}">
+    </div>
+    <div class="col-sm-auto">
+        <label class="form-label small mb-0">{{ _('ui.label.to_date') }}</label>
+        <input type="date" name="to" class="form-control form-control-sm"
+               value="{{ request.args.get('to') or period.end.isoformat() }}">
+    </div>
+    <div class="col-sm-auto">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="compare" value="previous"
+                   id="compareCheck"
+                   {% if request.args.get('compare') == 'previous' %}checked{% endif %}>
+            <label class="form-check-label small" for="compareCheck">
+                {{ _('ui.label.compare') }}
+            </label>
+        </div>
+    </div>
+    <div class="col-sm-auto">
+        <button type="submit" class="btn btn-sm btn-primary">
+            <i class="bi bi-funnel"></i> {{ _('ui.button.apply') }}
+        </button>
+    </div>
+    <div class="col-sm-auto ms-auto">
+        {% set qs = request.query_string.decode('utf-8') %}
+        <a class="btn btn-sm btn-outline-secondary"
+           href="{{ action_url }}?{{ qs }}{% if qs %}&{% endif %}format=csv">
+            <i class="bi bi-filetype-csv"></i> {{ _('ui.button.export_csv') }}
+        </a>
+    </div>
+</form>
+<div class="mb-3 text-muted small">
+    <i class="bi bi-calendar-range"></i>
+    {{ period.label }}
+    ({{ period.start.isoformat() }} — {{ period.end.isoformat() }})
+</div>

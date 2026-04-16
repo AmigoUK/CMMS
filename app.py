@@ -120,6 +120,7 @@ def create_app(config_class=None):
     from blueprints.help import help_bp
     from blueprints.certifications import certs_bp
     from blueprints.transfers import transfers_bp
+    from blueprints.reports import reports_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(dashboard_bp)
@@ -135,6 +136,7 @@ def create_app(config_class=None):
     app.register_blueprint(help_bp, url_prefix="/help")
     app.register_blueprint(certs_bp, url_prefix="/certs")
     app.register_blueprint(transfers_bp, url_prefix="/transfers")
+    app.register_blueprint(reports_bp, url_prefix="/reports")
 
     # ── Site context middleware ─────────────────────────────
     # Endpoints that work without site context

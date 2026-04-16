@@ -113,6 +113,20 @@ def index():
                 WorkOrder.site_id == site_id,
             ).order_by(WorkOrder.created_at.desc()).limit(10).all()
 
+    # Spend-this-month summary card for supervisors when reports are enabled
+    spend_summary = None
+    from flask import current_app
+    if (
+        site_id
+        and current_user.is_supervisor
+        and current_app.config.get("FEATURE_REPORTS")
+    ):
+        from utils.reports import periods as _periods
+        from utils.reports.spend import summarise as _spend_summarise
+        spend_summary = _spend_summarise(
+            site_id, _periods.resolve("this_month"),
+        )
+
     return render_template(
         "dashboard/index.html",
         open_requests=open_requests,
@@ -127,6 +141,7 @@ def index():
         upcoming_pm_tasks=upcoming_pm_tasks,
         expiring_fields=expiring_fields,
         expiring_certs=expiring_certs,
+        spend_summary=spend_summary,
     )
 
 

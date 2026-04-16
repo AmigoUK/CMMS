@@ -42,6 +42,41 @@
 </div>
 
 {% if parts %}
+{# ═══ Cross-site surplus suggestions (consider transfer before ordering) ═══ #}
+{% if feature_transfers %}
+{% set has_surplus = reorder_rows | selectattr('surplus_elsewhere') | list %}
+{% if has_surplus %}
+<div class="alert alert-success no-print">
+    <h5 class="alert-heading">
+        <i class="bi bi-arrow-left-right me-2"></i>{{ _('ui.label.cross_site_surplus') }}
+    </h5>
+    <ul class="mb-0 small">
+        {% for row in has_surplus %}
+        <li>
+            <strong>{{ row.part.name }}</strong>
+            {% if row.part.part_number %}[{{ row.part.part_number }}]{% endif %}
+            — {{ _('ui.label.on_hand') }} {{ row.part.quantity_on_hand }}/{{ row.part.minimum_stock }}.
+            {% if row.pending_inbound %}
+            <span class="text-muted">{{ _('ui.label.pending_inbound') }}: {{ row.pending_inbound }}.</span>
+            {% endif %}
+            {% for s in row.surplus_elsewhere %}
+            <span class="badge bg-light text-dark">
+                {{ s.site_code }}: {{ s.quantity_on_hand - s.maximum_stock }} surplus
+            </span>
+            {% endfor %}
+            {% if feature_transfers_writable %}
+            <a class="btn btn-sm btn-outline-primary ms-1"
+               href="{{ url_for('transfers.new', from_part=row.part.id) }}">
+                {{ _('ui.button.request_transfer') }}
+            </a>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endif %}
+
 {# ═══ Main summary table (8 columns — fits A4 portrait) ═══ #}
 <div class="card mb-4">
     <div class="card-body p-0">

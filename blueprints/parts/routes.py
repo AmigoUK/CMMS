@@ -349,6 +349,12 @@ def reorder_report():
 
     total_cost = sum(p.reorder_cost for p in parts)
 
+    # Enrich with pending-inbound netting and cross-site surplus suggestions
+    # so the operator can prefer a transfer over a purchase where stock
+    # already exists elsewhere.
+    from utils.reports.reorder import enrich_reorder_rows
+    reorder_rows = enrich_reorder_rows(parts)
+
     from datetime import datetime, timezone
     from models import Contact
     contacts = Contact.query.filter_by(is_active=True).order_by(Contact.category, Contact.name).all()
@@ -356,6 +362,7 @@ def reorder_report():
     return render_template(
         "parts/reorder.html",
         parts=parts,
+        reorder_rows=reorder_rows,
         total_cost=total_cost,
         now=datetime.now(timezone.utc),
         contacts=contacts,
