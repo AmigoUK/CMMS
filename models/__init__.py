@@ -15,7 +15,10 @@ from models.work_order import (
 )
 from models.request import Request, REQUEST_STATUSES, REQUEST_PRIORITIES
 from models.supplier import Supplier
-from models.part import Part, PartUsage, StockAdjustment, part_assets
+from models.part import (
+    Part, PartUsage, StockAdjustment, PartTransfer,
+    part_assets, TRANSFER_STATUSES,
+)
 from models.time_log import TimeLog
 from models.attachment import Attachment, ENTITY_TYPES, ALLOWED_EXTENSIONS
 from models.meter import Meter, MeterReading
@@ -39,7 +42,7 @@ __all__ = [
     "WorkOrder", "WorkOrderTask", "WO_STATUSES", "WO_TYPES", "WO_PRIORITIES",
     "Request", "REQUEST_STATUSES", "REQUEST_PRIORITIES",
     "Supplier",
-    "Part", "PartUsage", "StockAdjustment",
+    "Part", "PartUsage", "StockAdjustment", "PartTransfer", "TRANSFER_STATUSES",
     "TimeLog",
     "Attachment", "ENTITY_TYPES", "ALLOWED_EXTENSIONS",
     "Meter", "MeterReading",

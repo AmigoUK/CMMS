@@ -102,6 +102,15 @@ class WorkOrder(db.Model):
         )
 
     @property
+    def total_labor_cost(self):
+        """Sum of snapshotted labor costs; logs without rate_at_log contribute 0."""
+        return round(sum(t.labor_cost for t in self.time_logs), 2)
+
+    @property
+    def total_cost(self):
+        return round(self.total_parts_cost + self.total_labor_cost, 2)
+
+    @property
     def is_overdue(self):
         if not self.due_date:
             return False

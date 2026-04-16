@@ -3,6 +3,9 @@ from datetime import datetime, timezone
 from extensions import db
 
 
+TRANSFER_STATUSES = ("pending", "completed", "cancelled")
+
+
 # Many-to-many: parts <-> assets (compatibility)
 part_assets = db.Table(
     "part_assets",
@@ -14,15 +17,19 @@ part_assets = db.Table(
 
 class Part(db.Model):
     __tablename__ = "parts"
+    # Composite uniqueness enforces "same SKU may exist in multiple sites but
+    # not duplicated within one site". The Phase 2 migration script drops the
+    # legacy single-column unique on part_number and adds this one in prod.
+    __table_args__ = (
+        db.UniqueConstraint("site_id", "part_number", name="uq_parts_site_partnumber"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     site_id = db.Column(
-        db.Integer, db.ForeignKey("sites.id"), nullable=True
+        db.Integer, db.ForeignKey("sites.id"), nullable=True, index=True
     )
     name = db.Column(db.String(200), nullable=False)
-    part_number = db.Column(
-        db.String(100), unique=True, nullable=True, index=True
-    )
+    part_number = db.Column(db.String(100), nullable=True, index=True)
     description = db.Column(db.String(500), default="")
     category = db.Column(db.String(100), default="")
     unit = db.Column(db.String(30), default="each")
@@ -151,3 +158,96 @@ class StockAdjustment(db.Model):
 
     def __repr__(self):
         return f"<StockAdjustment {self.part_id} {self.adjustment_type} {self.quantity}>"
+
+
+class PartTransfer(db.Model):
+    __tablename__ = "part_transfers"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    source_site_id = db.Column(
+        db.Integer, db.ForeignKey("sites.id"), nullable=False, index=True
+    )
+    destination_site_id = db.Column(
+        db.Integer, db.ForeignKey("sites.id"), nullable=False, index=True
+    )
+    source_part_id = db.Column(
+        db.Integer, db.ForeignKey("parts.id"), nullable=False, index=True
+    )
+    destination_part_id = db.Column(
+        db.Integer, db.ForeignKey("parts.id"), nullable=True, index=True
+    )
+
+    # Snapshots keep the audit trail readable even if a Part is deleted.
+    part_number_snapshot = db.Column(db.String(100), default="")
+    name_snapshot = db.Column(db.String(200), default="")
+
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_cost_at_transfer = db.Column(db.Float, default=0.0)
+
+    status = db.Column(
+        db.String(20), nullable=False, default="pending", index=True
+    )
+    notes = db.Column(db.String(500), default="")
+    cancellation_reason = db.Column(db.String(500), default="")
+
+    requested_by_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=False
+    )
+    approved_by_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=True
+    )
+    cancelled_by_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=True
+    )
+
+    requested_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+    approved_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    cancelled_at = db.Column(db.DateTime, nullable=True)
+
+    source_adjustment_id = db.Column(
+        db.Integer, db.ForeignKey("stock_adjustments.id"), nullable=True
+    )
+    destination_adjustment_id = db.Column(
+        db.Integer, db.ForeignKey("stock_adjustments.id"), nullable=True
+    )
+
+    # Relationships
+    source_site = db.relationship("Site", foreign_keys=[source_site_id])
+    destination_site = db.relationship("Site", foreign_keys=[destination_site_id])
+    source_part = db.relationship("Part", foreign_keys=[source_part_id])
+    destination_part = db.relationship("Part", foreign_keys=[destination_part_id])
+    requested_by = db.relationship("User", foreign_keys=[requested_by_id])
+    approved_by = db.relationship("User", foreign_keys=[approved_by_id])
+    cancelled_by = db.relationship("User", foreign_keys=[cancelled_by_id])
+    source_adjustment = db.relationship(
+        "StockAdjustment", foreign_keys=[source_adjustment_id]
+    )
+    destination_adjustment = db.relationship(
+        "StockAdjustment", foreign_keys=[destination_adjustment_id]
+    )
+
+    @property
+    def is_pending(self):
+        return self.status == "pending"
+
+    @property
+    def is_completed(self):
+        return self.status == "completed"
+
+    @property
+    def is_cancelled(self):
+        return self.status == "cancelled"
+
+    @property
+    def total_value(self):
+        return round((self.quantity or 0) * (self.unit_cost_at_transfer or 0), 2)
+
+    def __repr__(self):
+        return (
+            f"<PartTransfer #{self.id} {self.source_site_id}->"
+            f"{self.destination_site_id} x{self.quantity} {self.status}>"
+        )

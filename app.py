@@ -246,6 +246,13 @@ def create_app(config_class=None):
         )
 
         db.create_all()
+
+        # Apply additive column migrations (idempotent, runs every boot).
+        from utils.migrations import run_startup_migrations
+        applied = run_startup_migrations()
+        if applied:
+            print(f"  Applied migrations: {', '.join(applied)}")
+
         os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
         _seed_defaults()

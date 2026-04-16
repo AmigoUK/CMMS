@@ -41,6 +41,8 @@ class User(UserMixin, db.Model):
     )
     is_active_user = db.Column(db.Boolean, default=True)
     language = db.Column(db.String(5), default="en")
+    # NULL or 0 means the user is excluded from labor-cost aggregation.
+    hourly_rate = db.Column(db.Numeric(8, 2), nullable=True)
     created_at = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc)
     )
@@ -81,6 +83,12 @@ class User(UserMixin, db.Model):
     def has_site_access(self, site_id):
         """Return True if user is assigned to the given site."""
         return any(s.id == site_id for s in self.sites)
+
+    def is_supervisor_at(self, site_id):
+        """Supervisor-or-admin role, with access to the given site. Admin bypasses site check."""
+        if self.role == "admin":
+            return True
+        return self.is_supervisor and self.has_site_access(site_id)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(

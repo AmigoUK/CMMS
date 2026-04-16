@@ -27,3 +27,11 @@ class Config:
     REMEMBER_COOKIE_DURATION = timedelta(days=14)
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "true").lower() != "false"
+
+    # Feature flags for per-site parts refactor (see /root/.claude/plans/sunny-jumping-glacier.md)
+    # Each flag gates one phase of rollout; all default False until the phase ships.
+    FEATURE_PER_SITE_PARTS = os.environ.get("FEATURE_PER_SITE_PARTS", "false").lower() == "true"
+    FEATURE_TRANSFERS = os.environ.get("FEATURE_TRANSFERS", "false").lower() == "true"
+    FEATURE_TRANSFERS_WRITABLE = os.environ.get("FEATURE_TRANSFERS_WRITABLE", "false").lower() == "true"
+    FEATURE_LABOR_COST = os.environ.get("FEATURE_LABOR_COST", "false").lower() == "true"
+    FEATURE_REPORTS = os.environ.get("FEATURE_REPORTS", "false").lower() == "true"
