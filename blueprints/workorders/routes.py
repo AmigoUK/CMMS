@@ -538,12 +538,12 @@ def log_time(id):
         flash("Duration must be at least 1 minute.", "warning")
         return redirect(url_for("workorders.detail", id=wo.id))
 
-    entry = TimeLog(
-        work_order_id=wo.id,
-        user_id=current_user.id,
+    entry = TimeLog.create(
+        user=current_user,
+        work_order=wo,
+        start_time=datetime.now(timezone.utc),
         duration_minutes=duration,
         notes=notes,
-        start_time=datetime.now(timezone.utc),
     )
     db.session.add(entry)
     db.session.commit()

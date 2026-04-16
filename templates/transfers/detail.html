@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ui.page.transfer') }} #{{ t.id }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-arrow-left-right me-2"></i>{{ _('ui.page.transfer') }} #{{ t.id }}
+    </h1>
+    <div>
+        {% if t.status == 'pending' %}<span class="badge bg-warning text-dark fs-6">{{ _('status.transfer.pending') }}</span>
+        {% elif t.status == 'completed' %}<span class="badge bg-success fs-6">{{ _('status.transfer.completed') }}</span>
+        {% elif t.status == 'cancelled' %}<span class="badge bg-secondary fs-6">{{ _('status.transfer.cancelled') }}</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+<div class="col-md-8">
+<dl class="row">
+    <dt class="col-sm-4">{{ _('ui.label.part') }}</dt>
+    <dd class="col-sm-8">
+        <strong>{{ t.name_snapshot or '—' }}</strong>
+        {% if t.part_number_snapshot %}<br><small class="text-muted">{{ t.part_number_snapshot }}</small>{% endif %}
+    </dd>
+
+    <dt class="col-sm-4">{{ _('ui.label.from_site') }}</dt>
+    <dd class="col-sm-8">
+        <span class="badge bg-secondary">{{ t.source_site.code }}</span>
+        {{ t.source_site.name }}
+    </dd>
+
+    <dt class="col-sm-4">{{ _('ui.label.to_site') }}</dt>
+    <dd class="col-sm-8">
+        <span class="badge bg-primary">{{ t.destination_site.code }}</span>
+        {{ t.destination_site.name }}
+    </dd>
+
+    <dt class="col-sm-4">{{ _('ui.label.quantity') }}</dt>
+    <dd class="col-sm-8">{{ t.quantity }}</dd>
+
+    <dt class="col-sm-4">{{ _('ui.label.unit_cost') }}</dt>
+    <dd class="col-sm-8">&pound;{{ '%.2f' | format(t.unit_cost_at_transfer or 0) }}</dd>
+
+    <dt class="col-sm-4">{{ _('ui.label.value') }}</dt>
+    <dd class="col-sm-8"><strong>&pound;{{ '%.2f' | format(t.total_value) }}</strong></dd>
+
+    {% if t.notes %}
+    <dt class="col-sm-4">{{ _('ui.label.notes') }}</dt>
+    <dd class="col-sm-8">{{ t.notes }}</dd>
+    {% endif %}
+
+    <dt class="col-sm-4">{{ _('ui.label.requested_by') }}</dt>
+    <dd class="col-sm-8">
+        {{ t.requested_by.display_name if t.requested_by }}
+        — <small class="text-muted">{{ t.requested_at.strftime('%Y-%m-%d %H:%M') if t.requested_at }}</small>
+    </dd>
+
+    {% if t.approved_by %}
+    <dt class="col-sm-4">{{ _('ui.label.approved_by') }}</dt>
+    <dd class="col-sm-8">
+        {{ t.approved_by.display_name }}
+        — <small class="text-muted">{{ t.completed_at.strftime('%Y-%m-%d %H:%M') if t.completed_at }}</small>
+    </dd>
+    {% endif %}
+
+    {% if t.cancelled_by %}
+    <dt class="col-sm-4">{{ _('ui.label.cancelled_by') }}</dt>
+    <dd class="col-sm-8">
+        {{ t.cancelled_by.display_name }}
+        — <small class="text-muted">{{ t.cancelled_at.strftime('%Y-%m-%d %H:%M') if t.cancelled_at }}</small>
+        {% if t.cancellation_reason %}<br><em>{{ t.cancellation_reason }}</em>{% endif %}
+    </dd>
+    {% endif %}
+</dl>
+</div>
+
+<div class="col-md-4">
+{% if can_approve or can_cancel %}
+<div class="card">
+    <div class="card-body">
+        <h6 class="card-title">{{ _('ui.label.actions') }}</h6>
+
+        {% if can_approve %}
+        <form method="POST" action="{{ url_for('transfers.approve', id=t.id) }}"
+              class="mb-2" onsubmit="return confirm('{{ _('ui.text.confirm_approve_transfer') }}');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-success w-100">
+                <i class="bi bi-check-circle me-1"></i>{{ _('ui.button.approve_transfer') }}
+            </button>
+        </form>
+        {% endif %}
+
+        {% if can_cancel %}
+        <form method="POST" action="{{ url_for('transfers.cancel', id=t.id) }}"
+              onsubmit="return confirm('{{ _('ui.text.confirm_cancel_transfer') }}');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="reason" class="form-control form-control-sm mb-2"
+                   placeholder="{{ _('ui.label.reason') }}">
+            <button type="submit" class="btn btn-outline-danger w-100">
+                <i class="bi bi-x-circle me-1"></i>{{ _('ui.button.cancel_transfer') }}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+</div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('transfers.list_transfers') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.button.back') }}
+    </a>
+</div>
+{% endblock %}

@@ -75,6 +75,12 @@ def create_user():
     if role not in ROLES:
         role = "user"
 
+    rate_raw = request.form.get("hourly_rate", "").strip()
+    try:
+        hourly_rate = float(rate_raw) if rate_raw else None
+    except ValueError:
+        hourly_rate = None
+
     user = User(
         username=username,
         email=email,
@@ -82,6 +88,7 @@ def create_user():
         role=role,
         phone=request.form.get("phone", "").strip(),
         team_id=request.form.get("team_id", type=int) or None,
+        hourly_rate=hourly_rate,
     )
     user.set_password(password)
 
@@ -179,6 +186,12 @@ def update_user(id):
     user.role = role
     user.phone = request.form.get("phone", "").strip()
     user.team_id = request.form.get("team_id", type=int) or None
+
+    rate_raw = request.form.get("hourly_rate", "").strip()
+    try:
+        user.hourly_rate = float(rate_raw) if rate_raw else None
+    except ValueError:
+        pass
 
     # Password: only update if provided
     password = request.form.get("password", "").strip()

@@ -15,10 +15,19 @@ if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
 
+from sqlalchemy.pool import StaticPool
+
+
 class _TestConfig:
     TESTING = True
     SECRET_KEY = "test-secret"
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    # StaticPool keeps one in-memory DB across all connections — without it,
+    # each request/test session gets its own empty DB.
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "poolclass": StaticPool,
+        "connect_args": {"check_same_thread": False},
+    }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = False
     SESSION_COOKIE_SECURE = False

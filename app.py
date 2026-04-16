@@ -119,6 +119,7 @@ def create_app(config_class=None):
     from blueprints.admin import admin_bp
     from blueprints.help import help_bp
     from blueprints.certifications import certs_bp
+    from blueprints.transfers import transfers_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(dashboard_bp)
@@ -133,6 +134,7 @@ def create_app(config_class=None):
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(help_bp, url_prefix="/help")
     app.register_blueprint(certs_bp, url_prefix="/certs")
+    app.register_blueprint(transfers_bp, url_prefix="/transfers")
 
     # ── Site context middleware ─────────────────────────────
     # Endpoints that work without site context
@@ -204,6 +206,19 @@ def create_app(config_class=None):
             if site and current_user.is_supervisor:
                 from utils.expiry import get_expiring_custom_fields_only
                 ctx["expiring_docs_count"] = len(get_expiring_custom_fields_only(site.id))
+                # Transfers awaiting this user's approval (destination supervisor).
+                if app.config.get("FEATURE_TRANSFERS"):
+                    from models import PartTransfer
+                    from extensions import db as _db
+                    if current_user.is_admin:
+                        q = PartTransfer.query.filter_by(status="pending")
+                    else:
+                        my_ids = [s.id for s in current_user.sites]
+                        q = PartTransfer.query.filter(
+                            PartTransfer.status == "pending",
+                            PartTransfer.destination_site_id.in_(my_ids),
+                        )
+                    ctx["pending_transfers_count"] = q.count()
             if site and current_user.has_role_at_least("technician"):
                 from utils.cert_reminders import get_cert_stats
                 cert_stats = get_cert_stats(site.id)
@@ -212,6 +227,12 @@ def create_app(config_class=None):
         def has_perm(module, op="read"):
             return current_user.can(module, op) if current_user.is_authenticated else False
         ctx["has_perm"] = has_perm
+
+        # Feature flags exposed to templates
+        ctx["feature_transfers"] = app.config.get("FEATURE_TRANSFERS", False)
+        ctx["feature_transfers_writable"] = app.config.get("FEATURE_TRANSFERS_WRITABLE", False)
+        ctx["feature_labor_cost"] = app.config.get("FEATURE_LABOR_COST", False)
+        ctx["feature_reports"] = app.config.get("FEATURE_REPORTS", False)
 
         return ctx
 
