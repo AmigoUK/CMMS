@@ -208,7 +208,7 @@ def detail(id):
 
     attachments = Attachment.get_for_entity("work_order", wo.id)
     parts = Part.query.filter(
-        db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
+        Part.site_id == g.current_site.id,
         Part.is_active == True,
     ).order_by(Part.name).all()
     assignable = _assignable_users()
@@ -451,7 +451,7 @@ def add_part(id):
 
     part = Part.query.filter(
         Part.id == part_id,
-        db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
+        Part.site_id == g.current_site.id,
     ).first_or_404()
 
     if part.quantity_on_hand <= 0:

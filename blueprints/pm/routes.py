@@ -60,7 +60,7 @@ def _site_meters():
 
 def _site_parts():
     return Part.query.filter(
-        db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
+        Part.site_id == g.current_site.id,
         Part.is_active == True,
     ).order_by(Part.name).all()
 

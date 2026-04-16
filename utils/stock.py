@@ -5,7 +5,7 @@ from models.part import Part, StockAdjustment
 def get_low_stock_count(site_id):
     """Count active parts at or below minimum stock for a site."""
     return Part.query.filter(
-        db.or_(Part.site_id == site_id, Part.site_id.is_(None)),
+        Part.site_id == site_id,
         Part.is_active == True,
         Part.minimum_stock > 0,
         Part.quantity_on_hand <= Part.minimum_stock,
@@ -15,7 +15,7 @@ def get_low_stock_count(site_id):
 def get_low_stock_parts(site_id, limit=None):
     """Return active parts at or below minimum stock, ordered by severity."""
     query = Part.query.filter(
-        db.or_(Part.site_id == site_id, Part.site_id.is_(None)),
+        Part.site_id == site_id,
         Part.is_active == True,
         Part.minimum_stock > 0,
         Part.quantity_on_hand <= Part.minimum_stock,

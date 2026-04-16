@@ -21,13 +21,10 @@ from utils.uploads import is_allowed_image, generate_stored_filename
 # ── helpers ────────────────────────────────────────────────────────────
 
 def _get_part_or_404(part_id):
-    """Load a part in the current site (or shared) or 404."""
+    """Load a part in the current site or 404."""
     return Part.query.filter(
         Part.id == part_id,
-        db.or_(
-            Part.site_id == g.current_site.id,
-            Part.site_id.is_(None),
-        ),
+        Part.site_id == g.current_site.id,
     ).first_or_404()
 
 
@@ -54,10 +51,7 @@ def list_parts():
     page = request.args.get("page", 1, type=int)
 
     query = Part.query.filter(
-        db.or_(
-            Part.site_id == g.current_site.id,
-            Part.site_id.is_(None),
-        ),
+        Part.site_id == g.current_site.id,
         Part.is_active == True,  # noqa: E712
     )
 
@@ -83,7 +77,7 @@ def list_parts():
 
     # Count items needing reorder for badge
     reorder_count = Part.query.filter(
-        db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
+        Part.site_id == g.current_site.id,
         Part.is_active == True,  # noqa: E712
         Part.minimum_stock > 0,
         Part.quantity_on_hand <= Part.minimum_stock,
@@ -345,7 +339,7 @@ def remove_compatibility(id, asset_id):
 def reorder_report():
     """Printable reorder report — parts at or below minimum stock."""
     query = Part.query.filter(
-        db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
+        Part.site_id == g.current_site.id,
         Part.is_active == True,  # noqa: E712
         Part.minimum_stock > 0,
         Part.quantity_on_hand <= Part.minimum_stock,
@@ -392,7 +386,7 @@ def email_reorder_report():
 
     # Generate report data
     query = Part.query.filter(
-        db.or_(Part.site_id == g.current_site.id, Part.site_id.is_(None)),
+        Part.site_id == g.current_site.id,
         Part.is_active == True,
         Part.minimum_stock > 0,
         Part.quantity_on_hand <= Part.minimum_stock,
