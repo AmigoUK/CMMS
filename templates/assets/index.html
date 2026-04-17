@@ -17,6 +17,20 @@
     </div>
 </div>
 
+{% if filter_location %}
+<div class="alert alert-info d-flex align-items-center mb-3">
+    <i class="bi bi-funnel-fill me-2"></i>
+    <span>
+        {{ _('ui.text.filtered_by_location') }}:
+        <strong>{{ filter_location.name }}</strong>
+        ({{ filter_location.location_type | title }})
+    </span>
+    <a href="{{ url_for('assets.list_assets') }}" class="btn btn-sm btn-outline-info ms-auto">
+        <i class="bi bi-x-lg me-1"></i>{{ _('ui.label.all') }}
+    </a>
+</div>
+{% endif %}
+
 {# Search bar #}
 <form method="GET" action="{{ url_for('assets.list_assets') }}" class="mb-3">
     <div class="input-group">

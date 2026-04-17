@@ -32,9 +32,11 @@
             <span class="badge bg-body-secondary text-body border ms-2">{{ loc.location_type | title }}</span>
 
             {% if loc.assets | length > 0 %}
-            <span class="badge bg-info text-dark ms-1" title="Property in this location">
+            <a href="{{ url_for('assets.list_assets', location_id=loc.id) }}"
+               class="badge bg-info text-dark ms-1 text-decoration-none"
+               title="{{ _('ui.label.view_property_at_location') }}">
                 <i class="bi bi-gear"></i> {{ loc.assets | length }}
-            </span>
+            </a>
             {% endif %}
 
             {% if not loc.is_active %}

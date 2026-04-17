@@ -76,6 +76,7 @@ def _save_custom_fields(asset):
 def list_assets():
     q = request.args.get("q", "").strip()
     status_filter = request.args.get("status", "")
+    location_id = request.args.get("location_id", type=int)
     page = request.args.get("page", 1, type=int)
 
     query = Asset.query.filter_by(site_id=g.current_site.id)
@@ -83,6 +84,9 @@ def list_assets():
     # By default show only active assets
     if not status_filter:
         query = query.filter_by(is_active=True)
+
+    if location_id:
+        query = query.filter_by(location_id=location_id)
 
     if q:
         like = f"%{q}%"
@@ -97,6 +101,9 @@ def list_assets():
     if status_filter and status_filter in ASSET_STATUSES:
         query = query.filter_by(status=status_filter)
 
+    from models import Location
+    filter_location = db.session.get(Location, location_id) if location_id else None
+
     pagination = query.order_by(Asset.name).paginate(
         page=page, per_page=25, error_out=False,
     )
@@ -108,6 +115,7 @@ def list_assets():
         statuses=ASSET_STATUSES,
         current_status=status_filter,
         search_query=q,
+        filter_location=filter_location,
     )
 
 
