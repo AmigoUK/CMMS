@@ -2,7 +2,7 @@
 
 A full-featured, multi-site maintenance management system built with Flask. Designed for bakery and food production operations but adaptable to any facility maintenance workflow.
 
-**Version:** 0.1.0 | **License:** Private | **Languages:** English, Polish
+**Version:** 0.1.1 | **License:** Private | **Languages:** English, Polish
 
 ## Screenshots
 
@@ -79,6 +79,56 @@ Team management showing internal maintenance teams and external contractor compa
 ### Address Book
 ![Address Book](docs/screenshots/address-book.png)
 Contact directory for email recipients with category filters (Staff, Supplier, External). Used as the recipient picker when emailing reports or sending certification reminders. Supports bulk import from existing suppliers or system users.
+
+### Part Transfers *(v0.1.1)*
+![Transfers List](docs/screenshots/transfers-list.png)
+*Placeholder — capture at `/transfers/` as a supervisor.*
+Formal inter-site transfer workflow: source-site supervisor requests, destination-site supervisor approves, and stock moves atomically on approval. Filter by pending / completed / cancelled. A banner at the top alerts the logged-in user to transfers awaiting their approval.
+
+![New Transfer Form](docs/screenshots/transfer-new.png)
+*Placeholder — capture at `/transfers/new?from_part=N`.*
+Create a transfer from any part with stock in the current site. Destination-site dropdown is scoped to the user's assigned sites. Unit cost at transfer is snapshotted on submission so later cost changes don't rewrite history.
+
+![Transfer Detail & Approval](docs/screenshots/transfer-detail.png)
+*Placeholder — capture at `/transfers/<id>` while status is pending.*
+Transfer detail shows both sides, value at transfer time, notes, and an approve / cancel panel gated on destination-site supervisor role. Completed transfers link to the two linked stock adjustments for full audit.
+
+### Per-Site Spend Reports *(v0.1.1)*
+![Reports Landing](docs/screenshots/reports-index.png)
+*Placeholder — capture at `/reports/` as a supervisor.*
+Dedicated `/reports` hub with tiles for Spend Overview, Parts to Order, and Transfers ledger. Supervisor+ access only.
+
+![Spend Overview — Month](docs/screenshots/reports-spend-month.png)
+*Placeholder — capture at `/reports/spend?preset=this_month`.*
+Per-site spend summary with four cards (total, parts, labor, net transfers). Preset dropdown (today / week / month / quarter / YTD / last month / last quarter / custom). Per-site breakdown table below. CSV export via `?format=csv`.
+
+![Spend Overview — Compare Periods](docs/screenshots/reports-spend-compare.png)
+*Placeholder — capture at `/reports/spend?preset=this_month&compare=previous`.*
+Compare-to-previous toggle shows the previous equal-length window side-by-side for quick month-over-month or year-over-year comparisons.
+
+### Labor Cost Tracking *(v0.1.1)*
+![Hourly Rate in User Form](docs/screenshots/admin-user-hourly-rate.png)
+*Placeholder — capture the admin user edit form.*
+Admin user form gains an optional Hourly Rate input (£). When set, every new `TimeLog` snapshots the rate at creation (`rate_at_log`) so historical labor cost is immutable under future rate changes.
+
+![Work Order Labor Cost](docs/screenshots/wo-labor-cost.png)
+*Placeholder — capture a work order with time logs while labor cost is enabled.*
+Work orders show parts cost, labor cost, and total cost — each snapshotted at the time of consumption / time logging, never re-derived from current rates.
+
+### Enhanced Reorder Report *(v0.1.1)*
+![Reorder — Cross-Site Surplus](docs/screenshots/reorder-cross-site-surplus.png)
+*Placeholder — capture `/parts/reorder` when another site has surplus of a short SKU.*
+The reorder report now detects when another site holds surplus (on-hand > its own max) of a part you're short on, and surfaces a one-click "Request Transfer" shortcut before you send a purchase order. Pending inbound transfers are netted from the shortfall so you don't order what's already in transit.
+
+### Per-Site Parts Isolation *(v0.1.1)*
+![Parts Scoped to Site](docs/screenshots/parts-per-site.png)
+*Placeholder — parts list header showing active site name.*
+Every `Part` now belongs to exactly one site (no shared catalog). Parts dropdowns in work orders, stock reports, and reorder lists are strictly scoped to the active site. The browser tab title suffix `· {site name}` makes multi-tab workflows unambiguous.
+
+### Clickable Location → Property Filter *(v0.1.1)*
+![Location Property Badge](docs/screenshots/location-property-badge.png)
+*Placeholder — capture `/locations/` showing the info badge next to a location with assets.*
+The blue property-count badge on the locations list is a link to `/assets/?location_id=N`, giving you a one-click drilldown from "which location has how many assets" to the exact list. The assets page shows a "Filtered by location: X" banner with an "All" button to clear.
 
 ## Tech Stack
 
@@ -392,14 +442,36 @@ cmms/
 
 | Metric | Count |
 |--------|-------|
-| Blueprints | 13 |
-| Routes | 151 |
-| Database Models | 22 |
-| Templates | 73 |
-| Translation Keys | 846 per language |
-| Utility Modules | 8 |
-| Seeder Scripts | 9 |
+| Blueprints | 15 |
+| Routes | 165+ |
+| Database Models | 23 |
+| Templates | 80+ |
+| Translation Keys | 904 per language |
+| Utility Modules | 12 |
+| Seeder Scripts | 10 |
+| Tests | 41 (pytest, in-memory SQLite) |
 | CLI Commands | 2 |
+
+## Changelog
+
+### v0.1.1 — 2026-04-17
+- **Per-site parts refactor.** Every Part belongs to exactly one site (was: mixed global/per-site). Includes idempotent migration script (`scripts/migrate_parts_per_site.py`) with `--dry-run`, `--apply`, `--rollback` modes.
+- **Part transfers.** New `PartTransfer` model + `/transfers` blueprint with pending/approve/cancel workflow, two-sided supervisor permission gating, and pessimistic locking on the source Part. Atomic stock movement on approval via linked StockAdjustments.
+- **Labor cost.** `User.hourly_rate` + `TimeLog.rate_at_log` snapshotting. `WorkOrder.total_labor_cost` / `total_cost` properties.
+- **Reports blueprint.** `/reports/spend` with period presets (today / week / month / quarter / YTD / last month / last quarter / custom), compare-to-previous, CSV export.
+- **Enhanced reorder report.** Cross-site surplus suggestions and pending-inbound netting on `/parts/reorder`.
+- **Dashboard cards.** "Spend this month" (supervisor+) and "Transfers awaiting your approval" (supervisor+).
+- **Site name in title.** Every page's `<title>` now suffixes with `· {active site name}` to prevent cross-site mistakes when working in multiple tabs.
+- **Clickable property-count badge.** Location list's info badge is now a link to the filtered property list.
+- **Feature flags.** `FEATURE_PER_SITE_PARTS`, `FEATURE_TRANSFERS`, `FEATURE_TRANSFERS_WRITABLE`, `FEATURE_LABOR_COST`, `FEATURE_REPORTS` in `config.py` / `.env` for staged rollout.
+- **Bug fix.** `/parts/reorder` no longer crashes with `TypeError: '<' not supported between instances of 'int' and 'NoneType'` when some parts have no supplier.
+- **Tests.** First test suite (`tests/`) with 41 passing tests covering transfer service, labor snapshot, migration, reports aggregation, period resolution.
+
+### v0.1.0 — initial public release
+- Core CMMS: requests, work orders, preventive maintenance, assets, locations, parts, suppliers, contacts, certifications, admin, help.
+- Bilingual EN / PL with DB-driven translations.
+- Dark mode, QR codes, custom fields per site, email reports (PDF via xhtml2pdf).
+- Granular permissions matrix (CRUD × role × module, with per-user overrides).
 
 ---
 
