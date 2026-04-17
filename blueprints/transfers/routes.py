@@ -20,6 +20,7 @@ from blueprints.transfers import transfers_bp
 from decorators import supervisor_required
 from extensions import db
 from models import Part, PartTransfer, Site
+from utils.i18n import translate as _t
 from utils.transfers import (
     request_transfer, approve_and_complete, cancel_transfer,
     TransferError, InsufficientStock, PermissionDenied,
@@ -126,7 +127,7 @@ def new():
     if source_part_id:
         source_part = db.session.get(Part, source_part_id)
         if source_part is None or source_part.site_id != g.current_site.id:
-            flash("Source part not in current site.", "warning")
+            flash(_t("flash.transfer.source_not_in_site"), "warning")
             source_part = None
 
     parts = (
@@ -163,16 +164,16 @@ def create():
         dest_site_id = int(request.form.get("destination_site_id", 0))
         quantity = int(request.form.get("quantity", 0))
     except (TypeError, ValueError):
-        flash("Invalid form data.", "danger")
+        flash(_t("flash.transfer.invalid_form"), "danger")
         return redirect(url_for("transfers.new"))
 
     source_part = db.session.get(Part, source_part_id)
     dest_site = db.session.get(Site, dest_site_id)
     if source_part is None or dest_site is None:
-        flash("Part or destination site not found.", "danger")
+        flash(_t("flash.transfer.part_or_site_not_found"), "danger")
         return redirect(url_for("transfers.new"))
     if source_part.site_id != g.current_site.id:
-        flash("Source part must be in the current site.", "warning")
+        flash(_t("flash.transfer.source_must_be_current_site"), "warning")
         return redirect(url_for("transfers.new"))
 
     try:
@@ -192,7 +193,7 @@ def create():
         flash(str(e), "warning")
         return redirect(url_for("transfers.new"))
 
-    flash(f"Transfer #{t.id} created and pending approval.", "success")
+    flash(_t("flash.transfer.created", id=t.id), "success")
     return redirect(url_for("transfers.detail", id=t.id))
 
 
@@ -207,7 +208,7 @@ def approve(id):
     except (PermissionDenied, InsufficientStock, TransferAlreadyResolved) as e:
         flash(str(e), "warning")
         return redirect(url_for("transfers.detail", id=id))
-    flash(f"Transfer #{id} completed. Stock moved.", "success")
+    flash(_t("flash.transfer.completed", id=id), "success")
     return redirect(url_for("transfers.detail", id=id))
 
 
@@ -223,5 +224,5 @@ def cancel(id):
     except (PermissionDenied, TransferAlreadyResolved) as e:
         flash(str(e), "warning")
         return redirect(url_for("transfers.detail", id=id))
-    flash(f"Transfer #{id} cancelled.", "info")
+    flash(_t("flash.transfer.cancelled", id=id), "info")
     return redirect(url_for("transfers.detail", id=id))

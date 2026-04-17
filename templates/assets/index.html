@@ -34,7 +34,8 @@
 {# Search bar #}
 <form method="GET" action="{{ url_for('assets.list_assets') }}" class="mb-3">
     <div class="input-group">
-        <input type="text" name="q" class="form-control" placeholder="Search by name, tag, or serial number..."
+        <input type="text" name="q" class="form-control"
+               placeholder="{{ _('ui.text.search_assets_placeholder') }}"
                value="{{ search_query }}">
         {% if current_status %}
         <input type="hidden" name="status" value="{{ current_status }}">
@@ -127,10 +128,10 @@
                 </td>
                 <td>
                     <a href="{{ url_for('assets.detail', id=asset.id) }}" class="btn btn-sm btn-outline-primary"
-                       title="View"><i class="bi bi-eye"></i></a>
+                       title="{{ _('ui.button.view') }}"><i class="bi bi-eye"></i></a>
                     {% if current_user.is_supervisor %}
                     <a href="{{ url_for('assets.edit', id=asset.id) }}" class="btn btn-sm btn-outline-secondary"
-                       title="Edit"><i class="bi bi-pencil"></i></a>
+                       title="{{ _('ui.button.edit') }}"><i class="bi bi-pencil"></i></a>
                     {% endif %}
                 </td>
             </tr>

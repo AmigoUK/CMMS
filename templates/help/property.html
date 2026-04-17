@@ -138,6 +138,24 @@
     </div>
 </div>
 
+{# ── Per-site parts ────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-building me-2"></i>Parts are per-site</h5>
+        <p class="text-muted small mb-3">
+            Each site has its own parts inventory and budget. The same SKU
+            (e.g. a bearing or oil filter) can exist in multiple sites as
+            independent rows with their own on-hand quantities and minimum
+            levels.
+        </p>
+        <ul class="mb-0">
+            <li><strong>Stock and budget separation:</strong> Each site is tracked independently in the <em>Reports → Spend Overview</em>.</li>
+            <li><strong>Out of stock at one site, surplus at another?</strong> Use a <a href="{{ url_for('help.transfers_help') }}">part transfer</a> instead of placing a new purchase order — it's faster and cheaper.</li>
+            <li><strong>Switching sites:</strong> The site switcher in the navbar (top right) and the colored chip next to every page heading make it clear which site you're working in.</li>
+        </ul>
+    </div>
+</div>
+
 {# ── Reorder Report ─────────────────────────────────────────── #}
 <div class="card shadow-sm mb-4">
     <div class="card-body">
@@ -145,8 +163,10 @@
         <p class="text-muted small mb-3">The reorder report helps you stay on top of stock replenishment before you run out of critical parts.</p>
 
         <ul>
-            <li><strong>What triggers it?</strong> Any part whose current stock is at or below its configured minimum level.</li>
-            <li><strong>Where to find it:</strong> Navigate to <strong>Parts</strong> &rarr; <strong>Reorder Report</strong>.</li>
+            <li><strong>What triggers it?</strong> Any part whose current stock is at or below its configured minimum level for the active site.</li>
+            <li><strong>Where to find it:</strong> Navigate to <strong>Inventory &rarr; Reorder Report</strong>.</li>
+            <li><strong>Cross-site surplus suggestions:</strong> When another site holds more than its own maximum of a part you're short on, a green banner offers a one-click "Request Transfer" before you order from the supplier.</li>
+            <li><strong>Pending-inbound netting:</strong> If a transfer is already on its way to your site, the shortfall shown is the <em>net</em> shortfall — you don't double-order.</li>
             <li><strong>Grouped by supplier</strong> &mdash; Items are grouped by their assigned supplier, making it easy to place consolidated orders.</li>
             <li><strong>Printable</strong> &mdash; The report is print-friendly so you can hand it to your purchasing team or take it with you.</li>
         </ul>

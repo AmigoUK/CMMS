@@ -72,12 +72,32 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <h5 class="card-title"><i class="bi bi-geo-alt me-2"></i>Managing Sites</h5>
-        <p class="text-muted small mb-3">Sites represent the physical locations your organisation maintains.</p>
+        <p class="text-muted small mb-3">Sites represent the physical locations your organisation maintains. Each site is its own budget account — parts inventory, work orders, and spend reports are scoped to one site.</p>
 
-        <ul class="mb-0">
+        <ul>
             <li><strong>Adding a site:</strong> Go to <strong>Admin &rarr; Sites &rarr; New Site</strong>. Enter the site name, address, and a short site code.</li>
             <li><strong>Site codes</strong> &mdash; Short identifiers (e.g. HQ, DEPOT-01) used in reports and labels for quick reference.</li>
+            <li><strong>Color and icon</strong> &mdash; Pick from 12 curated swatches and ~30 Bootstrap icons. The choice appears in the top-right site chip on every page, the navbar site switcher, the dashboard welcome card, and the admin sites list. Helps prevent operators editing the wrong site by accident when working in multiple browser tabs.</li>
+            <li><strong>Custom fields</strong> &mdash; Up to 5 per site (text / long text / date / image), with optional date-expiry reminders.</li>
             <li>Users and property items are assigned to specific sites, so data stays organised per location.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── User hourly rates (for labor cost reports) ─────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-clock-history me-2"></i>User hourly rates &amp; labor cost</h5>
+        <p class="text-muted small mb-3">
+            For the spend reports to include labor cost, set an <strong>Hourly
+            Rate</strong> on each user's profile (<em>Admin → Users → Edit</em>).
+            All <em>future</em> time logs created by that user will snapshot the
+            rate at log-creation time.
+        </p>
+        <ul class="mb-0">
+            <li>Rates are immutable once snapshotted — changing a user's rate later doesn't rewrite history.</li>
+            <li>Users without a rate aren't broken — their time logs simply contribute zero to the labor total.</li>
+            <li>Historical time logs (created before this feature shipped) show "rate not recorded" and contribute zero. There is no backfill.</li>
         </ul>
     </div>
 </div>

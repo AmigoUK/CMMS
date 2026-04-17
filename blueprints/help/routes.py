@@ -55,6 +55,18 @@ def admin_guide():
     return _render_help("admin", "help/admin_guide.html")
 
 
+@help_bp.route("/transfers")
+@login_required
+def transfers_help():
+    return _render_help("transfers", "help/transfers.html")
+
+
+@help_bp.route("/reports")
+@login_required
+def reports_help():
+    return _render_help("reports", "help/reports.html")
+
+
 @help_bp.route("/faq")
 def faq():
     return _render_help("faq", "help/faq.html")

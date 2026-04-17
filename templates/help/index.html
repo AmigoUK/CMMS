@@ -88,11 +88,31 @@
         <div class="card shadow-sm h-100">
             <div class="card-body">
                 <h6><i class="bi bi-buildings me-2"></i>Property &amp; Parts</h6>
-                <p class="text-muted small mb-2">Manage equipment, parts inventory, and compatibility.</p>
+                <p class="text-muted small mb-2">Manage equipment, parts inventory, and per-site stock.</p>
                 <a href="{{ url_for('help.property_help') }}" class="stretched-link small">Read more <i class="bi bi-arrow-right"></i></a>
             </div>
         </div>
     </div>
+    {% if current_user.is_authenticated %}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h6><i class="bi bi-arrow-left-right me-2"></i>Part Transfers</h6>
+                <p class="text-muted small mb-2">Move stock between sites with a pending → approve workflow.</p>
+                <a href="{{ url_for('help.transfers_help') }}" class="stretched-link small">Read more <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h6><i class="bi bi-graph-up me-2"></i>Reports</h6>
+                <p class="text-muted small mb-2">Per-site spend overview, period filters, CSV export.</p>
+                <a href="{{ url_for('help.reports_help') }}" class="stretched-link small">Read more <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     <div class="col-md-6">
         <div class="card shadow-sm h-100">
             <div class="card-body">

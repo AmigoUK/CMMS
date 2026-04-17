@@ -326,4 +326,56 @@
         </div>
     </div>
 </div>
+
+<h6 class="text-muted text-uppercase small mt-4 mb-3">Transfers &amp; Reports</h6>
+<div class="accordion mb-4" id="faqTransfers">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqTransfersH1">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTransfersC1" aria-expanded="false" aria-controls="faqTransfersC1">
+                Why are parts no longer shared between sites?
+            </button>
+        </h2>
+        <div id="faqTransfersC1" class="accordion-collapse collapse" aria-labelledby="faqTransfersH1" data-bs-parent="#faqTransfers">
+            <div class="accordion-body">
+                Each site is its own budget account, so spend reports can show per-site cost. Parts now belong to one site each. To move stock between sites, use the <a href="{{ url_for('help.transfers_help') }}">part transfers workflow</a>.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqTransfersH2">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTransfersC2" aria-expanded="false" aria-controls="faqTransfersC2">
+                I'm short of a part. Should I order it or transfer from another site?
+            </button>
+        </h2>
+        <div id="faqTransfersC2" class="accordion-collapse collapse" aria-labelledby="faqTransfersH2" data-bs-parent="#faqTransfers">
+            <div class="accordion-body">
+                Open <strong>Inventory &rarr; Reorder Report</strong>. If another site holds surplus (more than its own maximum) of the part, a green "Cross-site surplus" banner appears with a one-click "Request Transfer" link. Use the transfer first — it's faster and saves money compared to placing a new purchase order.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqTransfersH3">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTransfersC3" aria-expanded="false" aria-controls="faqTransfersC3">
+                Why is labor cost zero on my work order?
+            </button>
+        </h2>
+        <div id="faqTransfersC3" class="accordion-collapse collapse" aria-labelledby="faqTransfersH3" data-bs-parent="#faqTransfers">
+            <div class="accordion-body">
+                Labor cost only counts when the technician had an hourly rate set on their user profile <em>at the time the time log was created</em>. Ask an admin to set the rate at <strong>Admin &rarr; Users &rarr; Edit</strong>. New time logs will start counting; old ones stay at zero by design.
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="faqTransfersH4">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTransfersC4" aria-expanded="false" aria-controls="faqTransfersC4">
+                How do I see total spend per site for last month?
+            </button>
+        </h2>
+        <div id="faqTransfersC4" class="accordion-collapse collapse" aria-labelledby="faqTransfersH4" data-bs-parent="#faqTransfers">
+            <div class="accordion-body">
+                Go to <strong>Reports &rarr; Spend Overview</strong>, set the period preset to <em>Last month</em>, optionally tick <em>Compare</em> to see the previous month side-by-side, and click <em>Export CSV</em> if you need it for accounting. See the <a href="{{ url_for('help.reports_help') }}">Reports help article</a> for the full formula.
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

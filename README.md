@@ -2,7 +2,7 @@
 
 A full-featured, multi-site maintenance management system built with Flask. Designed for bakery and food production operations but adaptable to any facility maintenance workflow.
 
-**Version:** 0.1.4 | **License:** Private | **Languages:** English, Polish
+**Version:** 0.1.5 | **License:** Private | **Languages:** English, Polish
 
 ## Screenshots
 
@@ -453,6 +453,12 @@ cmms/
 | CLI Commands | 2 |
 
 ## Changelog
+
+### v0.1.5 — 2026-04-17
+- **Translation completeness sweep.** Wrapped every hardcoded English string left in templates (button tooltips, search placeholders, deactivate/activate labels) and every flash message in the admin and transfers blueprints in `_()`. Added 39 new EN+PL keys via `seed_translations_v015.py`. Polish UI is now complete across the app.
+- **Help: Transfers article.** New `/help/transfers` covering the full transfer lifecycle, requesting/approving/cancelling, cross-site surplus on the reorder report, and common questions. EN template + Polish DB content.
+- **Help: Reports article.** New `/help/reports` covering the spend formula (parts + labor + transfers in/out), period presets, compare-to-previous, labor cost setup, CSV export, and FAQ. EN + PL.
+- **Help refresh.** Property article gained a "Parts are per-site" section + cross-site surplus + pending-inbound netting on the reorder report. Admin guide gained "Color and icon" branding under Sites + new "User hourly rates & labor cost" section. FAQ added 4 new entries (per-site parts, transfer-vs-order, zero labor cost, monthly spend). Help index links the new articles. Sidebar nav extended.
 
 ### v0.1.4 — 2026-04-17
 - **Per-site color + icon branding.** Each Site now has an assignable color (12-swatch curated palette) and icon (~30-icon Bootstrap Icons grid) set from the admin Site form. Applied to: the top-right site chip (border + code badge take the site color, leading icon is per-site), navbar site switcher (icon dot next to each site name), the admin /sites list (colored icon badge), and a new branded welcome card at the top of the Dashboard. Makes multi-site work unmistakably visual — MAS green shop, BM orange egg-fried, OB pink cup, TR blue truck, DM gray gear out of the box. `scripts/seed_site_style.py` seeds sensible defaults for existing sites without overwriting admin choices.

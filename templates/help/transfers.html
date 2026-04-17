@@ -1,0 +1,141 @@
+{% extends "help/base_help.html" %}
+{% block title %}Part Transfers — CMMS Help{% endblock %}
+
+{% block help_content %}
+<h4 class="mb-3"><i class="bi bi-arrow-left-right me-2"></i>Part Transfers</h4>
+<p class="text-muted mb-4">
+    Each site is its own budget account, with its own parts inventory. When one
+    site needs a part another site has in surplus, you don't have to order a
+    new one — you transfer it. Every transfer is recorded with two sides
+    (source out, destination in) and an audit trail.
+</p>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Who can do what?</strong>
+    A <strong>supervisor at the source site</strong> requests a transfer.
+    A <strong>supervisor at the destination site</strong> approves it.
+    Admins can do both. The two-sided gate prevents one site silently
+    pulling stock from another.
+</div>
+
+{# ── Transfer Lifecycle ─────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-arrow-repeat me-2"></i>Transfer Lifecycle</h5>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3 justify-content-center">
+            <span class="badge bg-warning text-dark fs-6">Pending</span>
+            <i class="bi bi-arrow-right text-muted"></i>
+            <span class="badge bg-success fs-6">Completed</span>
+        </div>
+        <div class="text-center mb-3">
+            <span class="text-muted small">Or, at any pending stage:</span>
+            <span class="badge bg-secondary fs-6 ms-2">Cancelled</span>
+        </div>
+        <ul class="mb-0 small">
+            <li><strong>Pending</strong> — Source supervisor requested. No stock has moved yet. Source supervisor or destination supervisor can still cancel.</li>
+            <li><strong>Completed</strong> — Destination supervisor approved. Stock decremented at source, incremented (or created) at destination, atomically. Two linked stock adjustments are written for audit.</li>
+            <li><strong>Cancelled</strong> — No stock movement, just a record of the request and cancellation reason.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── How to request ─────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-plus-circle me-2"></i>Requesting a Transfer</h5>
+        <ol>
+            <li>Switch to the <strong>source site</strong> using the navbar site switcher.</li>
+            <li>Open the part in <em>Inventory → Parts</em>. Click the <span class="badge bg-warning text-dark"><i class="bi bi-arrow-left-right"></i> Request Transfer</span> button (only visible when the part has stock on hand).</li>
+            <li>Pick the destination site (your accessible sites only — admins see all).</li>
+            <li>Enter the quantity (must not exceed source on-hand) and an optional note.</li>
+            <li>Submit. The transfer becomes <span class="badge bg-warning text-dark">Pending</span>.</li>
+        </ol>
+        <p class="small text-muted mb-0">
+            The unit cost on the source part is captured at request time, so
+            the transfer's value stays correct even if costs change later.
+        </p>
+    </div>
+</div>
+
+{# ── How to approve ─────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-check-circle me-2"></i>Approving a Transfer</h5>
+        <p class="small text-muted">
+            Pending transfers waiting for your approval are surfaced in two
+            places when you log in as the destination-site supervisor:
+        </p>
+        <ul>
+            <li>The <strong>Inventory navbar item</strong> shows a counter badge for parts low on stock plus pending transfers.</li>
+            <li>The <strong>Dashboard</strong> shows a "Transfers awaiting your approval" card.</li>
+        </ul>
+        <p class="small mb-0">
+            Click into the transfer detail. Verify the part, quantity, and
+            source. Click <span class="badge bg-success">Approve &amp; Complete</span>.
+            Stock moves immediately. If the destination site doesn't yet have
+            this part (matched by part number), it is created with the same
+            catalogue info and the transferred quantity.
+        </p>
+    </div>
+</div>
+
+{# ── Cross-site surplus on the reorder report ───────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-cart me-2"></i>Cross-Site Surplus on Reorder</h5>
+        <p class="small">
+            On the <em>Inventory → Reorder Report</em> page, when a part is
+            below minimum stock <strong>and</strong> another site is sitting on
+            more than its own maximum, you'll see a green "Cross-site surplus"
+            banner with one-click "Request Transfer" links. Use these <em>before</em>
+            placing a purchase order — you save money and reduce overall
+            inventory waste.
+        </p>
+        <p class="small mb-0">
+            The same banner accounts for any pending inbound transfers, so the
+            shortfall shown is the <em>net</em> shortfall after expected receipts.
+        </p>
+    </div>
+</div>
+
+{# ── Cancellation ───────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-x-circle me-2"></i>Cancelling a Pending Transfer</h5>
+        <p class="small mb-0">
+            Either the original requester, a supervisor at the source site, or
+            a supervisor at the destination site (and admins) can cancel a
+            transfer while it's still pending. Provide a short reason — it's
+            shown on the transfer detail and audit log. <strong>Completed
+            transfers cannot be cancelled</strong> — to undo an already-moved
+            transfer, request a new transfer in the opposite direction.
+        </p>
+    </div>
+</div>
+
+{# ── Common questions ──────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-patch-question me-2"></i>Common Questions</h5>
+        <dl class="small mb-0">
+            <dt>What if the destination site doesn't have the part yet?</dt>
+            <dd>It's created automatically on approval, copying the catalogue
+                info (name, description, supplier, unit cost) from the source
+                and starting at the transferred quantity.</dd>
+
+            <dt>Can two transfers race to drain the same source?</dt>
+            <dd>No — the approval step takes a row-level lock on the source
+                part, re-checks stock sufficiency under the lock, and rolls
+                back if there isn't enough.</dd>
+
+            <dt>Where does this show up in spend reports?</dt>
+            <dd>On <em>Reports → Spend Overview</em> the source site sees the
+                value as <strong>Transfers out</strong> (positive spend), and
+                the destination site sees the same value as <strong>Transfers in</strong>
+                (negative spend / inflow). Net inter-site movement is zero
+                organisationally; per-site it's a cost movement.</dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}

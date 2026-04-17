@@ -1,0 +1,153 @@
+{% extends "help/base_help.html" %}
+{% block title %}Reports — CMMS Help{% endblock %}
+
+{% block help_content %}
+<h4 class="mb-3"><i class="bi bi-graph-up me-2"></i>Reports</h4>
+<p class="text-muted mb-4">
+    The <em>Reports</em> module turns the operational data your team enters
+    daily — work orders, part usage, time logs, transfers — into spend-by-site
+    insights with date filters and CSV export.
+</p>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Who can see Reports?</strong>
+    Supervisors and admins. The <em>Reports</em> nav item is hidden for users,
+    contractors, and technicians.
+</div>
+
+{# ── What's in the Reports section ───────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-card-list me-2"></i>What's available</h5>
+        <ul class="mb-0">
+            <li><strong>Spend Overview</strong> — parts consumed + labor cost + transfers in/out, broken down per site, for any time window. CSV export.</li>
+            <li><strong>Parts to Order</strong> (linked from /parts/reorder) — low-stock list per site with cross-site surplus suggestions and pending-inbound netting.</li>
+            <li><strong>Transfers ledger</strong> — every transfer with status (pending/completed/cancelled) and value.</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Time-frame filters ────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-calendar-range me-2"></i>Time-frame filters</h5>
+        <p class="small text-muted">
+            Every report uses the same filter row at the top. Pick a preset or
+            enter a custom range, and tick "Compare" to see the previous
+            equal-length window side-by-side.
+        </p>
+        <ul class="small mb-0">
+            <li><strong>Today</strong> / <strong>This week</strong> (Mon–Sun) / <strong>This month</strong> / <strong>This quarter</strong> / <strong>YTD</strong></li>
+            <li><strong>Last month</strong> / <strong>Last quarter</strong></li>
+            <li><strong>Custom</strong> — pick from / to dates manually</li>
+            <li><strong>Compare</strong> — adds a column showing the same metrics for the previous window of equal length</li>
+        </ul>
+    </div>
+</div>
+
+{# ── Spend math ───────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-cash-stack me-2"></i>How spend is calculated</h5>
+        <p class="small text-muted mb-3">
+            Per site, per period, the total spend formula is:
+        </p>
+        <div class="bg-body-tertiary p-3 rounded mb-3">
+            <code>net_spend = parts_consumed + labor + transfers_out − transfers_in</code>
+        </div>
+        <table class="table table-sm">
+            <thead class="table-light">
+                <tr>
+                    <th>Component</th>
+                    <th>Source</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Parts consumed</td>
+                    <td><code>PartUsage.quantity_used × unit_cost_at_use</code> on work orders for the site, in range. Reversed usages are excluded.</td>
+                </tr>
+                <tr>
+                    <td>Labor</td>
+                    <td><code>(duration_minutes / 60) × rate_at_log</code> on time logs for the site, in range. Time logs without a rate snapshot count as zero.</td>
+                </tr>
+                <tr>
+                    <td>Transfers out</td>
+                    <td><code>quantity × unit_cost_at_transfer</code> for completed transfers <em>from</em> this site, in range — value left this site's budget.</td>
+                </tr>
+                <tr>
+                    <td>Transfers in</td>
+                    <td>Same formula, transfers <em>to</em> this site — subtracted (inflow).</td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="small text-muted mb-0">
+            All component values are <strong>snapshotted at the time of the
+            event</strong> (consumption, log creation, transfer request). Later
+            edits to user rates or part costs do <em>not</em> rewrite history.
+        </p>
+    </div>
+</div>
+
+{# ── Labor cost setup ─────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-clock-history me-2"></i>Labor cost setup</h5>
+        <p class="small">
+            Labor cost only appears in spend reports for time logs that
+            captured a rate. To enable it, an admin sets the <strong>Hourly
+            Rate</strong> field on a user's profile (<em>Admin → Users →
+            Edit</em>). All <em>future</em> time logs will snapshot that rate.
+        </p>
+        <p class="small mb-0">
+            Existing historical time logs (created before a rate was set) show
+            up as "rate not recorded" and contribute zero. There is no backfill
+            — set the rate once and labor cost is correct going forward.
+        </p>
+    </div>
+</div>
+
+{# ── CSV export ────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-filetype-csv me-2"></i>CSV export</h5>
+        <p class="small mb-0">
+            Click <span class="badge bg-secondary">Export CSV</span> on any
+            report and the same period filter is applied. The CSV has one row
+            per site with columns: <code>site_code, site_name, period,
+            parts_consumed, labor, transfers_in, transfers_out,
+            net_spend</code>. Open in Excel, Google Sheets, or any
+            accounting tool.
+        </p>
+    </div>
+</div>
+
+{# ── Common questions ──────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-patch-question me-2"></i>Common Questions</h5>
+        <dl class="small mb-0">
+            <dt>Why does my labor total seem low?</dt>
+            <dd>Most likely time logs were created before a user had an hourly
+                rate set. New time logs will count, old ones won't.</dd>
+
+            <dt>The "Transfers in" value is shown as negative — why?</dt>
+            <dd>From a single site's view, receiving a transfer is value
+                arriving — it offsets that site's spend. It doesn't change the
+                organisation total because the source site shows the same
+                amount as Transfers out.</dd>
+
+            <dt>Can I see spend across all sites at once?</dt>
+            <dd>Admins see all sites in one table by default. Supervisors see
+                the sites they have access to. Use the totals row at the top
+                of the table for the cross-site sum.</dd>
+
+            <dt>How do I compare months?</dt>
+            <dd>Select <em>This month</em> (or <em>Last month</em>) and tick
+                <em>Compare</em>. The previous equal-length window is shown
+                next to each component so you can spot trends.</dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}

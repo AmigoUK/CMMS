@@ -11,6 +11,7 @@ from blueprints.admin import admin_bp
 from decorators import admin_required
 from extensions import db
 from models import AppSettings, Site, Team, User, ROLES
+from utils.i18n import translate as _t
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -59,16 +60,16 @@ def create_user():
     password = request.form.get("password", "").strip()
 
     if not username or not email or not display_name or not password:
-        flash("Username, email, display name, and password are required.", "danger")
+        flash(_t("flash.user.required_fields_create"), "danger")
         return redirect(url_for("admin.new_user"))
 
     # Check for duplicates
     if User.query.filter_by(username=username).first():
-        flash("Username already exists.", "danger")
+        flash(_t("flash.user.username_exists"), "danger")
         return redirect(url_for("admin.new_user"))
 
     if User.query.filter_by(email=email).first():
-        flash("Email already exists.", "danger")
+        flash(_t("flash.user.email_exists"), "danger")
         return redirect(url_for("admin.new_user"))
 
     role = request.form.get("role", "user")
@@ -102,7 +103,7 @@ def create_user():
         user.sites = sites
 
     db.session.commit()
-    flash(f"User '{username}' created successfully.", "success")
+    flash(_t("flash.user.created", username=username), "success")
     return redirect(url_for("admin.list_users"))
 
 
@@ -157,7 +158,7 @@ def update_user(id):
     display_name = request.form.get("display_name", "").strip()
 
     if not username or not email or not display_name:
-        flash("Username, email, and display name are required.", "danger")
+        flash(_t("flash.user.required_fields_edit"), "danger")
         return redirect(url_for("admin.edit_user", id=user.id))
 
     # Check for duplicate username (excluding self)
@@ -165,7 +166,7 @@ def update_user(id):
         User.username == username, User.id != user.id,
     ).first()
     if existing:
-        flash("Username already exists.", "danger")
+        flash(_t("flash.user.username_exists"), "danger")
         return redirect(url_for("admin.edit_user", id=user.id))
 
     # Check for duplicate email (excluding self)
@@ -173,7 +174,7 @@ def update_user(id):
         User.email == email, User.id != user.id,
     ).first()
     if existing:
-        flash("Email already exists.", "danger")
+        flash(_t("flash.user.email_exists"), "danger")
         return redirect(url_for("admin.edit_user", id=user.id))
 
     role = request.form.get("role", "user")
@@ -207,7 +208,7 @@ def update_user(id):
     user.is_active_user = "is_active" in request.form
 
     db.session.commit()
-    flash(f"User '{username}' updated successfully.", "success")
+    flash(_t("flash.user.updated", username=username), "success")
     return redirect(url_for("admin.list_users"))
 
 
@@ -220,14 +221,17 @@ def toggle_user(id):
 
     # Prevent admin from deactivating themselves
     if user.id == current_user.id:
-        flash("You cannot deactivate your own account.", "warning")
+        flash(_t("flash.user.cannot_deactivate_self"), "warning")
         return redirect(url_for("admin.list_users"))
 
     user.is_active_user = not user.is_active_user
     db.session.commit()
 
-    state = "activated" if user.is_active_user else "deactivated"
-    flash(f"User '{user.username}' {state}.", "success")
+    if user.is_active_user:
+        msg = _t("flash.user.activated", username=user.username)
+    else:
+        msg = _t("flash.user.deactivated", username=user.username)
+    flash(msg, "success")
     return redirect(url_for("admin.list_users"))
 
 
@@ -243,8 +247,7 @@ def reset_password(id):
     db.session.commit()
 
     flash(
-        f"Password for '{user.username}' has been reset. "
-        f"Temporary password: {temp_password}",
+        _t("flash.user.password_reset", username=user.username, password=temp_password),
         "warning",
     )
     return redirect(url_for("admin.edit_user", id=user.id))
@@ -257,18 +260,18 @@ def impersonate(id):
     user = User.query.get_or_404(id)
 
     if user.id == current_user.id:
-        flash("Cannot impersonate yourself.", "warning")
+        flash(_t("flash.user.cannot_impersonate_self"), "warning")
         return redirect(url_for("admin.list_users"))
 
     if not user.is_active_user:
-        flash("Cannot impersonate an inactive user.", "danger")
+        flash(_t("flash.user.cannot_impersonate_inactive"), "danger")
         return redirect(url_for("admin.list_users"))
 
     # Save the real admin's ID so we can return later
     session["impersonating_from"] = current_user.id
 
     login_user(user)
-    flash(f"Now logged in as {user.display_name} ({user.role}). Use the banner to return.", "info")
+    flash(_t("flash.user.now_impersonating", name=user.display_name, role=user.role), "info")
     return redirect(url_for("dashboard.index"))
 
 
@@ -278,16 +281,16 @@ def stop_impersonating():
     """Return to the original admin account."""
     admin_id = session.pop("impersonating_from", None)
     if not admin_id:
-        flash("Not impersonating anyone.", "warning")
+        flash(_t("flash.user.not_impersonating"), "warning")
         return redirect(url_for("dashboard.index"))
 
     admin_user = User.query.get(admin_id)
     if not admin_user or not admin_user.is_admin:
-        flash("Original admin account not found.", "danger")
+        flash(_t("flash.user.original_admin_missing"), "danger")
         return redirect(url_for("dashboard.index"))
 
     login_user(admin_user)
-    flash("Returned to your admin account.", "success")
+    flash(_t("flash.user.returned_to_admin"), "success")
     return redirect(url_for("admin.list_users"))
 
 
@@ -317,7 +320,7 @@ def new_team():
 def create_team():
     name = request.form.get("name", "").strip()
     if not name:
-        flash("Team name is required.", "danger")
+        flash(_t("flash.team.name_required"), "danger")
         return redirect(url_for("admin.new_team"))
 
     team = Team(
@@ -327,7 +330,7 @@ def create_team():
     )
     db.session.add(team)
     db.session.commit()
-    flash(f"Team '{name}' created successfully.", "success")
+    flash(_t("flash.team.created", name=name), "success")
     return redirect(url_for("admin.list_teams"))
 
 
@@ -345,7 +348,7 @@ def update_team(id):
 
     name = request.form.get("name", "").strip()
     if not name:
-        flash("Team name is required.", "danger")
+        flash(_t("flash.team.name_required"), "danger")
         return redirect(url_for("admin.edit_team", id=team.id))
 
     team.name = name
@@ -353,7 +356,7 @@ def update_team(id):
     team.is_contractor = "is_contractor" in request.form
 
     db.session.commit()
-    flash(f"Team '{name}' updated successfully.", "success")
+    flash(_t("flash.team.updated", name=name), "success")
     return redirect(url_for("admin.list_teams"))
 
 
@@ -390,11 +393,11 @@ def create_site():
     code = request.form.get("code", "").strip().upper()
 
     if not name or not code:
-        flash("Site name and code are required.", "danger")
+        flash(_t("flash.site.name_code_required"), "danger")
         return redirect(url_for("admin.new_site"))
 
     if Site.query.filter_by(code=code).first():
-        flash("Site code already exists.", "danger")
+        flash(_t("flash.site.code_exists"), "danger")
         return redirect(url_for("admin.new_site"))
 
     site = Site(
@@ -407,7 +410,7 @@ def create_site():
     )
     db.session.add(site)
     db.session.commit()
-    flash(f"Site '{name}' created successfully.", "success")
+    flash(_t("flash.site.created", name=name), "success")
     return redirect(url_for("admin.list_sites"))
 
 
@@ -432,7 +435,7 @@ def update_site(id):
     code = request.form.get("code", "").strip().upper()
 
     if not name or not code:
-        flash("Site name and code are required.", "danger")
+        flash(_t("flash.site.name_code_required"), "danger")
         return redirect(url_for("admin.edit_site", id=site.id))
 
     # Check for duplicate code (excluding self)
@@ -440,7 +443,7 @@ def update_site(id):
         Site.code == code, Site.id != site.id,
     ).first()
     if existing:
-        flash("Site code already exists.", "danger")
+        flash(_t("flash.site.code_exists"), "danger")
         return redirect(url_for("admin.edit_site", id=site.id))
 
     site.name = name
@@ -451,7 +454,7 @@ def update_site(id):
     site.icon = validate_site_icon(request.form.get("icon", "").strip())
 
     db.session.commit()
-    flash(f"Site '{name}' updated successfully.", "success")
+    flash(_t("flash.site.updated", name=name), "success")
     return redirect(url_for("admin.list_sites"))
 
 
@@ -477,7 +480,7 @@ def update_site_custom_fields(id):
     site.custom_remind_days = request.form.get("custom_remind_days", 0, type=int)
 
     db.session.commit()
-    flash(f"Custom fields for '{site.name}' saved.", "success")
+    flash(_t("flash.site.custom_fields_saved", name=site.name), "success")
     return redirect(url_for("admin.edit_site", id=site.id))
 
 
@@ -521,7 +524,7 @@ def update_settings():
     settings.smtp_use_tls = "smtp_use_tls" in request.form
 
     db.session.commit()
-    flash("Settings saved.", "success")
+    flash(_t("flash.settings.saved"), "success")
     return redirect(url_for("admin.settings"))
 
 
@@ -625,7 +628,7 @@ def reset_permissions():
     RolePermission.query.delete()
     db.session.commit()
     count = seed_default_permissions()
-    flash(f"Permissions reset to defaults ({count} entries).", "success")
+    flash(_t("flash.permissions.reset", count=count), "success")
     return redirect(url_for("admin.permissions"))
 
 
@@ -672,7 +675,7 @@ def clear_user_permissions(id):
     user = User.query.get_or_404(id)
     UserPermissionOverride.query.filter_by(user_id=user.id).delete()
     db.session.commit()
-    flash(f"Permission overrides cleared for {user.display_name}.", "success")
+    flash(_t("flash.permissions.user_overrides_cleared", name=user.display_name), "success")
     return redirect(url_for("admin.edit_user", id=user.id))
 
 
@@ -807,7 +810,7 @@ def edit_translation(key):
                     db.session.add(t)
         db.session.commit()
         invalidate_cache()
-        flash("Translation saved.", "success")
+        flash(_t("flash.translation.saved"), "success")
         return redirect(url_for("admin.translations"))
 
     target_values = {}
@@ -887,7 +890,7 @@ def edit_help_content(slug, lang):
         title = request.form.get("title", "").strip()
         content = request.form.get("content", "").strip()
         if not title or not content:
-            flash("Title and content are required.", "danger")
+            flash(_t("flash.help.title_content_required"), "danger")
             return redirect(url_for("admin.edit_help_content", slug=slug, lang=lang))
 
         if target_content:
@@ -902,7 +905,7 @@ def edit_help_content(slug, lang):
             )
             db.session.add(target_content)
         db.session.commit()
-        flash("Help content saved.", "success")
+        flash(_t("flash.help.saved"), "success")
         return redirect(url_for("admin.help_translations"))
 
     return render_template(
@@ -960,7 +963,7 @@ def update_email_template(id):
     template.is_active = "is_active" in request.form
 
     db.session.commit()
-    flash(f"Email template '{template.name}' updated.", "success")
+    flash(_t("flash.email_template.updated", name=template.name), "success")
     return redirect(url_for("admin.list_email_templates"))
 
 

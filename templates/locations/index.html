@@ -45,14 +45,15 @@
         </div>
         <div>
             <a href="{{ url_for('locations.edit', id=loc.id) }}" class="btn btn-sm btn-outline-secondary"
-               title="Edit">
+               title="{{ _('ui.button.edit') }}">
                 <i class="bi bi-pencil"></i>
             </a>
+            {% set toggle_label = _('ui.button.deactivate') if loc.is_active else _('ui.button.activate') %}
             <button type="button" class="btn btn-sm btn-outline-{{ 'warning' if loc.is_active else 'success' }}"
                     data-bs-toggle="modal" data-bs-target="#confirmModal"
                     data-action="{{ url_for('locations.toggle', id=loc.id) }}"
-                    data-message="{{ 'Deactivate' if loc.is_active else 'Activate' }} location '{{ loc.name }}'?"
-                    title="{{ 'Deactivate' if loc.is_active else 'Activate' }}">
+                    data-message="{{ toggle_label }} {{ _('ui.label.location').lower() }} '{{ loc.name }}'?"
+                    title="{{ toggle_label }}">
                 <i class="bi bi-{{ 'pause' if loc.is_active else 'play' }}"></i>
             </button>
         </div>

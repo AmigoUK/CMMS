@@ -8,7 +8,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from config import Config
 from extensions import csrf, db, login_manager
 
-APP_VERSION = "0.1.4"
+APP_VERSION = "0.1.5"
 
 
 def create_app(config_class=None):
@@ -146,6 +146,7 @@ def create_app(config_class=None):
         "help.index", "help.getting_started", "help.reporting",
         "help.requests_help", "help.work_orders", "help.property_help",
         "help.admin_guide", "help.faq",
+        "help.transfers_help", "help.reports_help",
     }
 
     @app.before_request
