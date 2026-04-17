@@ -45,6 +45,19 @@
     {% endif %}
 
     <main class="container py-4">
+        {% if current_site and current_user.is_authenticated %}
+        <div class="site-banner d-flex align-items-center gap-2 mb-3 py-2 px-3 rounded border-start border-4 border-primary bg-body-tertiary no-print"
+             role="status" aria-label="Active site">
+            <i class="bi bi-building fs-5 text-primary"></i>
+            <div>
+                <div class="small text-muted lh-1">{{ _('ui.label.working_on') }}</div>
+                <div class="fw-semibold lh-1 mt-1">
+                    <span class="badge bg-primary me-1">{{ current_site.code }}</span>
+                    {{ current_site.name }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
         {% include "partials/_flash_messages.html" %}
         {% block content %}{% endblock %}
     </main>
