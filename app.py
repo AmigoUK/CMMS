@@ -8,7 +8,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from config import Config
 from extensions import csrf, db, login_manager
 
-APP_VERSION = "0.1.2"
+APP_VERSION = "0.1.3"
 
 
 def create_app(config_class=None):
