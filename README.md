@@ -2,7 +2,7 @@
 
 A full-featured, multi-site maintenance management system built with Flask. Designed for bakery and food production operations but adaptable to any facility maintenance workflow.
 
-**Version:** 0.1.1 | **License:** Private | **Languages:** English, Polish
+**Version:** 0.1.2 | **License:** Private | **Languages:** English, Polish
 
 ## Screenshots
 
@@ -453,6 +453,9 @@ cmms/
 | CLI Commands | 2 |
 
 ## Changelog
+
+### v0.1.2 — 2026-04-17
+- **Working-on-site banner.** Every authenticated page now shows a prominent `Working on: {site code} {site name}` banner at the top, complementing the browser-tab suffix and navbar switcher, so users working on multiple sites in parallel tabs can't mistakenly edit the wrong one.
 
 ### v0.1.1 — 2026-04-17
 - **Per-site parts refactor.** Every Part belongs to exactly one site (was: mixed global/per-site). Includes idempotent migration script (`scripts/migrate_parts_per_site.py`) with `--dry-run`, `--apply`, `--rollback` modes.
