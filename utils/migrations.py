@@ -39,4 +39,8 @@ def run_startup_migrations():
         applied.append("time_logs.rate_at_log")
     if _add_column("time_logs", "site_id", "INT NULL"):
         applied.append("time_logs.site_id")
+    if _add_column("sites", "color", "VARCHAR(7) NULL"):
+        applied.append("sites.color")
+    if _add_column("sites", "icon", "VARCHAR(50) NULL"):
+        applied.append("sites.icon")
     return applied

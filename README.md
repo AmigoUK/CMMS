@@ -2,7 +2,7 @@
 
 A full-featured, multi-site maintenance management system built with Flask. Designed for bakery and food production operations but adaptable to any facility maintenance workflow.
 
-**Version:** 0.1.3 | **License:** Private | **Languages:** English, Polish
+**Version:** 0.1.4 | **License:** Private | **Languages:** English, Polish
 
 ## Screenshots
 
@@ -453,6 +453,9 @@ cmms/
 | CLI Commands | 2 |
 
 ## Changelog
+
+### v0.1.4 — 2026-04-17
+- **Per-site color + icon branding.** Each Site now has an assignable color (12-swatch curated palette) and icon (~30-icon Bootstrap Icons grid) set from the admin Site form. Applied to: the top-right site chip (border + code badge take the site color, leading icon is per-site), navbar site switcher (icon dot next to each site name), the admin /sites list (colored icon badge), and a new branded welcome card at the top of the Dashboard. Makes multi-site work unmistakably visual — MAS green shop, BM orange egg-fried, OB pink cup, TR blue truck, DM gray gear out of the box. `scripts/seed_site_style.py` seeds sensible defaults for existing sites without overwriting admin choices.
 
 ### v0.1.3 — 2026-04-17
 - **Inline site chip.** Swapped the full-width site banner for a compact pill-shaped chip that floats to the top-right of each page, sitting inline next to the page heading instead of taking a full row above it. Cleaner layout, same safety.

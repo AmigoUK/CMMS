@@ -45,6 +45,7 @@
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
+                <th style="width: 56px;"></th>
                 <th>{{ _('ui.label.code') }}</th>
                 <th>{{ _('ui.label.name') }}</th>
                 <th>{{ _('ui.label.address') }}</th>
@@ -56,6 +57,12 @@
         <tbody>
             {% for site in sites %}
             <tr class="{% if not site.is_active %}text-muted{% endif %}">
+                <td class="text-center">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle"
+                          style="width: 36px; height: 36px; background-color: {{ site.display_color }}20; border: 2px solid {{ site.display_color }};">
+                        <i class="bi {{ site.display_icon }}" style="color: {{ site.display_color }}; font-size: 1.1rem;"></i>
+                    </span>
+                </td>
                 <td><span class="fw-bold">{{ site.code }}</span></td>
                 <td>{{ site.name }}</td>
                 <td>{{ site.address or '—' }}</td>

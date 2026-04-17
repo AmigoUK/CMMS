@@ -375,12 +375,17 @@ def list_sites():
 @admin_bp.route("/sites/new", methods=["GET"])
 @admin_required
 def new_site():
-    return render_template("admin/site_form.html", site=None)
+    from models.site import SITE_COLORS, SITE_ICONS
+    return render_template(
+        "admin/site_form.html", site=None,
+        site_colors=SITE_COLORS, site_icons=SITE_ICONS,
+    )
 
 
 @admin_bp.route("/sites/new", methods=["POST"])
 @admin_required
 def create_site():
+    from models.site import validate_site_color, validate_site_icon
     name = request.form.get("name", "").strip()
     code = request.form.get("code", "").strip().upper()
 
@@ -397,6 +402,8 @@ def create_site():
         code=code,
         address=request.form.get("address", "").strip(),
         description=request.form.get("description", "").strip(),
+        color=validate_site_color(request.form.get("color", "").strip()),
+        icon=validate_site_icon(request.form.get("icon", "").strip()),
     )
     db.session.add(site)
     db.session.commit()
@@ -407,13 +414,18 @@ def create_site():
 @admin_bp.route("/sites/<int:id>/edit", methods=["GET"])
 @admin_required
 def edit_site(id):
+    from models.site import SITE_COLORS, SITE_ICONS
     site = Site.query.get_or_404(id)
-    return render_template("admin/site_form.html", site=site)
+    return render_template(
+        "admin/site_form.html", site=site,
+        site_colors=SITE_COLORS, site_icons=SITE_ICONS,
+    )
 
 
 @admin_bp.route("/sites/<int:id>/edit", methods=["POST"])
 @admin_required
 def update_site(id):
+    from models.site import validate_site_color, validate_site_icon
     site = Site.query.get_or_404(id)
 
     name = request.form.get("name", "").strip()
@@ -435,6 +447,8 @@ def update_site(id):
     site.code = code
     site.address = request.form.get("address", "").strip()
     site.description = request.form.get("description", "").strip()
+    site.color = validate_site_color(request.form.get("color", "").strip())
+    site.icon = validate_site_icon(request.form.get("icon", "").strip())
 
     db.session.commit()
     flash(f"Site '{name}' updated successfully.", "success")

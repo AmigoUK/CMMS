@@ -47,11 +47,16 @@
     <main class="container py-4">
         {% if current_site and current_user.is_authenticated %}
         {# Floats right so it sits inline next to the page heading (h1)
-           that appears first in every {% block content %}. #}
-        <div class="site-chip float-end ms-3 py-1 px-2 rounded-pill border border-primary-subtle bg-body-tertiary small no-print"
-             role="status" aria-label="Active site" title="{{ _('ui.label.working_on') }}">
-            <i class="bi bi-building text-primary me-1"></i>
-            <span class="badge bg-primary me-1">{{ current_site.code }}</span>
+           that appears first in every {% block content %}. Border + badge
+           use the site's assigned color; leading icon is per-site. #}
+        <div class="site-chip float-end ms-3 py-1 px-2 rounded-pill border bg-body-tertiary small no-print"
+             role="status" aria-label="Active site"
+             title="{{ _('ui.label.working_on') }}"
+             style="border-color: {{ current_site.display_color }}; border-width: 2px !important;">
+            <i class="bi {{ current_site.display_icon }} me-1"
+               style="color: {{ current_site.display_color }};"></i>
+            <span class="badge me-1"
+                  style="background-color: {{ current_site.display_color }};">{{ current_site.code }}</span>
             <span class="fw-semibold">{{ current_site.name }}</span>
         </div>
         {% endif %}

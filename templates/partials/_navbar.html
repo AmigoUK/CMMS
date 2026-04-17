@@ -197,7 +197,12 @@
                 {% if user_sites|length > 1 %}
                 <li class="nav-item dropdown site-switcher">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-building me-1"></i>{{ current_site.name if current_site else _('ui.navbar.select_site') }}
+                        {% if current_site %}
+                        <i class="bi {{ current_site.display_icon }} me-1"
+                           style="color: {{ current_site.display_color }};"></i>{{ current_site.name }}
+                        {% else %}
+                        <i class="bi bi-building me-1"></i>{{ _('ui.navbar.select_site') }}
+                        {% endif %}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         {% for site in user_sites %}
@@ -205,6 +210,8 @@
                             <form method="POST" action="{{ url_for('dashboard.switch_site', site_id=site.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="dropdown-item {% if current_site and site.id == current_site.id %}active{% endif %}">
+                                    <i class="bi {{ site.display_icon }} me-2"
+                                       style="color: {{ site.display_color }};"></i>
                                     <strong>{{ site.code }}</strong> — {{ site.name }}
                                 </button>
                             </form>
@@ -215,7 +222,8 @@
                 {% elif current_site %}
                 <li class="nav-item">
                     <span class="nav-link text-muted">
-                        <i class="bi bi-building me-1"></i>{{ current_site.code }}
+                        <i class="bi {{ current_site.display_icon }} me-1"
+                           style="color: {{ current_site.display_color }};"></i>{{ current_site.code }}
                     </span>
                 </li>
                 {% endif %}

@@ -47,6 +47,62 @@
                                   rows="3">{{ site.description if site else '' }}</textarea>
                     </div>
 
+                    {# Color swatch picker #}
+                    {% set current_color = (site.color if site and site.color else '#0d6efd') %}
+                    <div class="mb-3">
+                        <label class="form-label d-block">{{ _('ui.label.color') }}</label>
+                        <input type="hidden" name="color" id="color-input" value="{{ current_color }}">
+                        <div class="d-flex flex-wrap gap-2" id="color-swatches">
+                            {% for hex, label in site_colors %}
+                            <button type="button"
+                                    class="site-color-swatch rounded-circle border
+                                           {% if hex == current_color %}border-4 border-dark{% else %}border-2{% endif %}"
+                                    title="{{ label }}"
+                                    data-color="{{ hex }}"
+                                    style="width: 36px; height: 36px; background-color: {{ hex }}; cursor: pointer;">
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {# Icon picker #}
+                    {% set current_icon = (site.icon if site and site.icon else 'bi-building') %}
+                    <div class="mb-3">
+                        <label class="form-label d-block">
+                            {{ _('ui.label.icon') }}
+                            <small class="text-muted">— {{ _('ui.text.click_to_select_icon') }}</small>
+                        </label>
+                        <input type="hidden" name="icon" id="icon-input" value="{{ current_icon }}">
+                        <div class="d-flex flex-wrap gap-1" id="icon-grid">
+                            {% for ic in site_icons %}
+                            <button type="button"
+                                    class="site-icon-tile btn btn-outline-secondary
+                                           {% if ic == current_icon %}active{% endif %}"
+                                    data-icon="{{ ic }}"
+                                    title="{{ ic }}"
+                                    style="width: 42px; height: 42px;">
+                                <i class="bi {{ ic }}" style="font-size: 1.2rem;"></i>
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {# Live preview #}
+                    <div class="mb-3">
+                        <label class="form-label d-block">{{ _('ui.label.preview') }}</label>
+                        <div id="site-style-preview"
+                             class="d-inline-flex align-items-center gap-2 py-1 px-2 rounded-pill border small"
+                             style="border-color: {{ current_color }}; border-width: 2px !important;">
+                            <i class="bi {{ current_icon }}" id="preview-icon"
+                               style="color: {{ current_color }};"></i>
+                            <span class="badge" id="preview-badge"
+                                  style="background-color: {{ current_color }};">
+                                {{ site.code if site else 'XXX' }}
+                            </span>
+                            <span class="fw-semibold">{{ site.name if site else 'Site Name' }}</span>
+                        </div>
+                    </div>
+
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save_changes') if site else _('ui.button.create_site') }}
@@ -54,6 +110,42 @@
                         <a href="{{ url_for('admin.list_sites') }}" class="btn btn-outline-secondary">{{ _('ui.button.cancel') }}</a>
                     </div>
                 </form>
+
+                <script>
+                (function(){
+                    const colorInput = document.getElementById('color-input');
+                    const iconInput = document.getElementById('icon-input');
+                    const preview = document.getElementById('site-style-preview');
+                    const previewIcon = document.getElementById('preview-icon');
+                    const previewBadge = document.getElementById('preview-badge');
+
+                    document.querySelectorAll('.site-color-swatch').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const c = btn.dataset.color;
+                            colorInput.value = c;
+                            document.querySelectorAll('.site-color-swatch').forEach(b => {
+                                b.classList.remove('border-4', 'border-dark');
+                                b.classList.add('border-2');
+                            });
+                            btn.classList.remove('border-2');
+                            btn.classList.add('border-4', 'border-dark');
+                            preview.style.borderColor = c;
+                            previewIcon.style.color = c;
+                            previewBadge.style.backgroundColor = c;
+                        });
+                    });
+
+                    document.querySelectorAll('.site-icon-tile').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const ic = btn.dataset.icon;
+                            iconInput.value = ic;
+                            document.querySelectorAll('.site-icon-tile').forEach(b => b.classList.remove('active'));
+                            btn.classList.add('active');
+                            previewIcon.className = 'bi ' + ic;
+                        });
+                    });
+                })();
+                </script>
 
                 {% if site %}
                 {# Custom Field Definitions #}
