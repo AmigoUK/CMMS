@@ -355,6 +355,20 @@ def reorder_report():
     from utils.reports.reorder import enrich_reorder_rows
     reorder_rows = enrich_reorder_rows(parts)
 
+    # Pre-group by supplier here so Jinja's groupby filter never has to
+    # sort mixed int/None supplier_id values (raises TypeError in Python 3).
+    # Group order: named suppliers first (by name), then unassigned parts.
+    groups_by_sid = {}
+    for p in parts:
+        groups_by_sid.setdefault(p.supplier_id, []).append(p)
+    supplier_groups = sorted(
+        groups_by_sid.items(),
+        key=lambda kv: (
+            0 if kv[1][0].supplier_rel else 1,
+            (kv[1][0].supplier_rel.name.lower() if kv[1][0].supplier_rel else ""),
+        ),
+    )
+
     from datetime import datetime, timezone
     from models import Contact
     contacts = Contact.query.filter_by(is_active=True).order_by(Contact.category, Contact.name).all()
@@ -363,6 +377,7 @@ def reorder_report():
         "parts/reorder.html",
         parts=parts,
         reorder_rows=reorder_rows,
+        supplier_groups=supplier_groups,
         total_cost=total_cost,
         now=datetime.now(timezone.utc),
         contacts=contacts,

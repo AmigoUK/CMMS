@@ -136,9 +136,9 @@
 
 {# ═══ Grouped by supplier ═══ #}
 <h5 class="mt-4 mb-3"><i class="bi bi-truck me-2"></i>{{ _('ui.label.grouped_by_supplier') }}</h5>
-{% set supplier_groups = parts | groupby('supplier_id') %}
-{% for supplier_id, supplier_parts in supplier_groups %}
-{% set sp_list = supplier_parts | list %}
+{# supplier_groups is pre-built in the route as list of (supplier_id, [parts])
+   so Jinja does not have to compare int with None in its groupby sort. #}
+{% for supplier_id, sp_list in supplier_groups %}
 {% set supplier = sp_list[0].supplier_rel %}
 <div class="card mb-3 supplier-group">
     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
