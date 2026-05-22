@@ -266,7 +266,7 @@ def create_app(config_class=None):
             WorkOrder, WorkOrderTask, Request,
             Part, PartUsage, TimeLog, Attachment,
             PreventiveTask, AppSettings, RequestActivity,
-            Translation, HelpContent,
+            Translation, HelpContent, AdminAuditLog,
         )
 
         db.create_all()

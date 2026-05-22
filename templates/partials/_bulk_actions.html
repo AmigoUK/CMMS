@@ -1,0 +1,89 @@
+{#
+  Shared bulk-action component for admin & operational list views.
+
+  Usage in a list template:
+    {% from "partials/_bulk_actions.html" import bulk_checkbox_header,
+                                                  bulk_checkbox_cell,
+                                                  bulk_action_bar %}
+
+    <form method="POST" action="{{ url_for('...bulk') }}" data-bulk-form
+          data-bulk-confirm-text="{{ _('ui.bulk.confirm_generic') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <table>
+        <thead><tr>{{ bulk_checkbox_header() }} ...</tr></thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>{{ bulk_checkbox_cell(row.id) }} ...</tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% call bulk_action_bar(actions, pagination.total) %}
+        ... optional action-specific sub-inputs, each in a hidden wrapper:
+        a div[data-bulk-for="role_change"] holding a select[name="new_role"] ...
+      {% endcall %}
+    </form>
+
+  The bar starts hidden; static/js/bulk-actions.js reveals it when at least
+  one row checkbox is ticked and wires up select-all / clear / confirm.
+#}
+
+{% macro bulk_checkbox_header() %}
+<th class="bulk-col" style="width:2.5rem;">
+  <input type="checkbox" class="form-check-input" data-bulk-master
+         title="{{ _('ui.bulk.select_page') }}"
+         aria-label="{{ _('ui.bulk.select_page') }}">
+</th>
+{% endmacro %}
+
+{% macro bulk_checkbox_cell(row_id) %}
+<td class="bulk-col">
+  <input type="checkbox" class="form-check-input bulk-cb" name="ids"
+         value="{{ row_id }}" aria-label="Select row {{ row_id }}">
+</td>
+{% endmacro %}
+
+{% macro bulk_action_bar(actions, total_count=0) %}
+<div class="bulk-bar card shadow-sm position-sticky bottom-0 mt-3" data-bulk-bar hidden>
+  <div class="card-body py-2 d-flex flex-wrap align-items-center gap-2">
+    {# JS flips this to "filtered" when "select all matching" is used. #}
+    <input type="hidden" name="select_scope" value="page" data-bulk-scope>
+
+    <span class="fw-semibold text-nowrap">
+      {{ _('ui.bulk.selected_label') }}:
+      <span class="badge text-bg-primary" data-bulk-count>0</span>
+    </span>
+
+    {% if total_count and total_count > 0 %}
+    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none"
+            data-bulk-select-all-matching data-total="{{ total_count }}">
+      {{ _('ui.bulk.select_all_matching', count=total_count) }}
+    </button>
+    {% endif %}
+
+    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none text-muted"
+            data-bulk-clear>
+      {{ _('ui.bulk.clear') }}
+    </button>
+
+    <div class="vr d-none d-md-block"></div>
+
+    <select class="form-select form-select-sm w-auto" name="bulk_action"
+            data-bulk-action-select required>
+      <option value="">{{ _('ui.bulk.choose_action') }}</option>
+      {% for a in actions %}
+      <option value="{{ a.value }}"{% if a.confirm %} data-confirm="1"{% endif %}>
+        {{ a.label }}
+      </option>
+      {% endfor %}
+    </select>
+
+    {# Action-specific sub-inputs supplied by the calling template. #}
+    {% if caller %}{{ caller() }}{% endif %}
+
+    <button type="submit" class="btn btn-sm btn-primary" data-bulk-apply disabled>
+      <i class="bi bi-lightning-charge me-1"></i>{{ _('ui.bulk.apply') }}
+    </button>
+  </div>
+</div>
+{% endmacro %}
