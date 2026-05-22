@@ -149,3 +149,221 @@ def test_bulk_parts_deactivate(app, factory, client):
         follow_redirects=False,
     )
     assert db.session.get(Part, p.id).is_active is False
+
+
+# ── PM tasks ───────────────────────────────────────────────────────────
+
+def test_bulk_pm_deactivate(app, factory, client):
+    from extensions import db
+    from models import PreventiveTask
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    t = PreventiveTask(site_id=s.id, name="Lubricate")
+    db.session.add(t)
+    db.session.commit()
+    _login(client, sup, s.id)
+
+    r = client.post(
+        "/pm/tasks/bulk",
+        data={"ids": [t.id], "bulk_action": "deactivate"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+    assert db.session.get(PreventiveTask, t.id).is_active is False
+
+
+def test_bulk_pm_reassign(app, factory, client):
+    from extensions import db
+    from models import PreventiveTask
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    tech = factory.user(role="technician", sites=[s])
+    t = PreventiveTask(site_id=s.id, name="Lubricate")
+    db.session.add(t)
+    db.session.commit()
+    _login(client, sup, s.id)
+
+    client.post(
+        "/pm/tasks/bulk",
+        data={"ids": [t.id], "bulk_action": "reassign",
+              "new_assignee_id": tech.id},
+        follow_redirects=False,
+    )
+    assert db.session.get(PreventiveTask, t.id).assigned_to_id == tech.id
+
+
+def test_bulk_pm_delete_clean(app, factory, client):
+    from extensions import db
+    from models import PreventiveTask
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    t = PreventiveTask(site_id=s.id, name="Lubricate")
+    db.session.add(t)
+    db.session.commit()
+    tid = t.id
+    _login(client, sup, s.id)
+
+    client.post(
+        "/pm/tasks/bulk",
+        data={"ids": [tid], "bulk_action": "delete"}, follow_redirects=False,
+    )
+    assert db.session.get(PreventiveTask, tid) is None
+
+
+# ── certifications ─────────────────────────────────────────────────────
+
+def test_bulk_certs_set_status(app, factory, client):
+    from extensions import db
+    from models import Certification
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    c = Certification(site_id=s.id, name="Fire inspection")
+    db.session.add(c)
+    db.session.commit()
+    _login(client, sup, s.id)
+
+    client.post(
+        "/certs/bulk",
+        data={"ids": [c.id], "bulk_action": "set_status",
+              "new_status": "suspended"},
+        follow_redirects=False,
+    )
+    assert db.session.get(Certification, c.id).status == "suspended"
+
+
+def test_bulk_certs_delete_removes_owned_logs(app, factory, client):
+    from extensions import db
+    from models import Certification, CertificationLog
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    c = Certification(site_id=s.id, name="Fire inspection")
+    db.session.add(c)
+    db.session.flush()
+    db.session.add(CertificationLog(certification_id=c.id, action="created"))
+    db.session.commit()
+    cid = c.id
+    _login(client, sup, s.id)
+
+    client.post(
+        "/certs/bulk",
+        data={"ids": [cid], "bulk_action": "delete"}, follow_redirects=False,
+    )
+    assert db.session.get(Certification, cid) is None
+
+
+# ── locations ──────────────────────────────────────────────────────────
+
+def _location(site, name, parent=None):
+    from extensions import db
+    from models import Location
+
+    loc = Location(
+        site_id=site.id, name=name, location_type="area",
+        parent_id=parent.id if parent else None,
+    )
+    db.session.add(loc)
+    db.session.flush()
+    return loc
+
+
+def test_bulk_locations_deactivate(app, factory, client):
+    from extensions import db
+    from models import Location
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    loc = _location(s, "Workshop")
+    db.session.commit()
+    _login(client, sup, s.id)
+
+    r = client.post(
+        "/locations/bulk",
+        data={"ids": [loc.id], "bulk_action": "deactivate"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+    assert db.session.get(Location, loc.id).is_active is False
+
+
+def test_bulk_locations_reparent(app, factory, client):
+    from extensions import db
+    from models import Location
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    building = _location(s, "Building A")
+    room = _location(s, "Room 1")
+    db.session.commit()
+    _login(client, sup, s.id)
+
+    client.post(
+        "/locations/bulk",
+        data={"ids": [room.id], "bulk_action": "reparent",
+              "new_parent_id": building.id},
+        follow_redirects=False,
+    )
+    assert db.session.get(Location, room.id).parent_id == building.id
+
+
+def test_bulk_locations_reparent_skips_cycle(app, factory, client):
+    """Reparenting a location under its own descendant must be refused."""
+    from extensions import db
+    from models import Location
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    parent = _location(s, "Building A")
+    child = _location(s, "Room 1", parent=parent)
+    db.session.commit()
+    _login(client, sup, s.id)
+
+    # parent under child → cycle
+    client.post(
+        "/locations/bulk",
+        data={"ids": [parent.id], "bulk_action": "reparent",
+              "new_parent_id": child.id},
+        follow_redirects=False,
+    )
+    assert db.session.get(Location, parent.id).parent_id is None
+
+
+def test_bulk_locations_delete_clean(app, factory, client):
+    from extensions import db
+    from models import Location
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    loc = _location(s, "Workshop")
+    db.session.commit()
+    lid = loc.id
+    _login(client, sup, s.id)
+
+    client.post(
+        "/locations/bulk",
+        data={"ids": [lid], "bulk_action": "delete"}, follow_redirects=False,
+    )
+    assert db.session.get(Location, lid) is None
+
+
+def test_bulk_locations_delete_skips_blocked_by_child(app, factory, client):
+    from extensions import db
+    from models import Location
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    parent = _location(s, "Building A")
+    _location(s, "Room 1", parent=parent)
+    db.session.commit()
+    pid = parent.id
+    _login(client, sup, s.id)
+
+    client.post(
+        "/locations/bulk",
+        data={"ids": [pid], "bulk_action": "delete"}, follow_redirects=False,
+    )
+    assert db.session.get(Location, pid) is not None  # blocked by its child

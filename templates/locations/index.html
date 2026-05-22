@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/_bulk_actions.html" import bulk_action_bar %}
 
 {% block title %}{{ _('ui.page.locations') }} — CMMS{% endblock %}
 
@@ -18,6 +19,8 @@
      style="padding-left: {{ 1.25 + depth * 1.5 }}rem;">
     <div class="d-flex justify-content-between align-items-center">
         <div>
+            <input type="checkbox" class="form-check-input bulk-cb me-2" name="ids"
+                   value="{{ loc.id }}">
             {% if depth == 0 %}
             <i class="bi bi-building me-1"></i>
             <strong>{{ loc.name }}</strong>
@@ -67,9 +70,35 @@
 
 {# Location tree #}
 {% if tree %}
+{% set bulk_location_actions = [
+    {"value": "activate", "label": _('ui.bulk.action.activate')},
+    {"value": "deactivate", "label": _('ui.bulk.action.deactivate'), "confirm": true},
+    {"value": "reparent", "label": _('ui.bulk.action.reparent')},
+    {"value": "delete", "label": _('ui.bulk.action.delete'), "confirm": true},
+] %}
+<form method="POST" action="{{ url_for('locations.bulk') }}" data-bulk-form
+      data-bulk-confirm-text="{{ _('ui.bulk.confirm_generic') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="mb-2">
+    <label class="small text-muted">
+        <input type="checkbox" class="form-check-input me-1" data-bulk-master>
+        {{ _('ui.bulk.select_page') }}
+    </label>
+</div>
 <div class="list-group">
     {{ render_tree(tree) }}
 </div>
+{% call bulk_action_bar(bulk_location_actions, locations | length) %}
+    <div data-bulk-for="reparent" hidden>
+        <select name="new_parent_id" class="form-select form-select-sm w-auto">
+            <option value="">{{ _('ui.bulk.top_level') }}</option>
+            {% for l in locations %}
+            <option value="{{ l.id }}">{{ l.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+{% endcall %}
+</form>
 {% else %}
 <div class="text-center text-muted py-5">
     <i class="bi bi-geo-alt display-4"></i>

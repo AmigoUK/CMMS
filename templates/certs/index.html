@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/_bulk_actions.html" import bulk_checkbox_header, bulk_checkbox_cell, bulk_action_bar %}
 {% block title %}{{ _('ui.page.certifications') }} — CMMS{% endblock %}
 
 {% block content %}
@@ -75,10 +76,20 @@
 
 {# Table #}
 {% if certifications %}
+{% set bulk_cert_actions = [
+    {"value": "set_status", "label": _('ui.bulk.action.set_status')},
+    {"value": "delete", "label": _('ui.bulk.action.delete'), "confirm": true},
+] %}
+{% if current_user.is_supervisor %}
+<form method="POST" action="{{ url_for('certs.bulk') }}" data-bulk-form
+      data-bulk-confirm-text="{{ _('ui.bulk.confirm_generic') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% endif %}
 <div class="table-responsive">
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
+                {% if current_user.is_supervisor %}{{ bulk_checkbox_header() }}{% endif %}
                 <th>{{ _('ui.label.name') }}</th>
                 <th>{{ _('ui.label.type') }}</th>
                 <th>{{ _('ui.label.target') }}</th>
@@ -92,6 +103,7 @@
         <tbody>
             {% for cert in certifications %}
             <tr class="{% if cert.is_expired %}table-danger{% elif cert.is_expiring_soon(14) %}table-warning{% endif %}">
+                {% if current_user.is_supervisor %}{{ bulk_checkbox_cell(cert.id) }}{% endif %}
                 <td>
                     <a href="{{ url_for('certs.detail', id=cert.id) }}" class="text-decoration-none fw-semibold">
                         {{ cert.name }}
@@ -161,6 +173,18 @@
         </tbody>
     </table>
 </div>
+{% if current_user.is_supervisor %}
+{% call bulk_action_bar(bulk_cert_actions, pagination.total) %}
+    <div data-bulk-for="set_status" hidden>
+        <select name="new_status" class="form-select form-select-sm w-auto">
+            {% for st in cert_statuses %}
+            <option value="{{ st }}">{{ st | title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+{% endcall %}
+</form>
+{% endif %}
 
 {# Pagination #}
 {% if pagination.pages > 1 %}

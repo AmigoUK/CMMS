@@ -49,6 +49,12 @@ TRANSLATIONS = {
     ("ui.bulk.no_location", "ui"): {
         "en": "— No location —", "pl": "— Brak lokalizacji —",
     },
+    ("ui.bulk.no_assignee", "ui"): {
+        "en": "— Unassign —", "pl": "— Bez przypisania —",
+    },
+    ("ui.bulk.top_level", "ui"): {
+        "en": "— Top level —", "pl": "— Poziom główny —",
+    },
 
     # ── Bulk action labels ──────────────────────────────────────────────
     ("ui.bulk.action.activate", "ui"): {"en": "Activate", "pl": "Aktywuj"},

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/_bulk_actions.html" import bulk_checkbox_header, bulk_checkbox_cell, bulk_action_bar %}
 {% block title %}{{ _('ui.page.pm_tasks') }} — CMMS{% endblock %}
 
 {% block content %}
@@ -41,10 +42,20 @@
 </div>
 
 {% if tasks %}
+{% set bulk_pm_actions = [
+    {"value": "activate", "label": _('ui.bulk.action.activate')},
+    {"value": "deactivate", "label": _('ui.bulk.action.deactivate'), "confirm": true},
+    {"value": "reassign", "label": _('ui.bulk.action.reassign')},
+    {"value": "delete", "label": _('ui.bulk.action.delete'), "confirm": true},
+] %}
+<form method="POST" action="{{ url_for('pm.bulk_tasks') }}" data-bulk-form
+      data-bulk-confirm-text="{{ _('ui.bulk.confirm_generic') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="table-responsive">
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
+                {{ bulk_checkbox_header() }}
                 <th>{{ _('ui.label.name') }}</th>
                 <th>{{ _('ui.label.asset') }}</th>
                 <th>{{ _('ui.label.frequency') }}</th>
@@ -58,6 +69,7 @@
         <tbody>
             {% for task in tasks %}
             <tr class="{% if task.is_overdue %}pm-overdue{% elif task.is_in_lead_window() %}pm-in-lead{% endif %}">
+                {{ bulk_checkbox_cell(task.id) }}
                 <td>
                     <a href="{{ url_for('pm.task_detail', id=task.id) }}" class="fw-semibold">
                         {{ task.name }}
@@ -104,19 +116,31 @@
                        class="btn btn-sm btn-outline-secondary" title="{{ _('ui.button.edit') }}">
                         <i class="bi bi-pencil"></i>
                     </a>
-                    <form method="POST" action="{{ url_for('pm.task_toggle', id=task.id) }}" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if task.is_active else 'success' }}"
-                                title="{{ _('ui.label.deactivate') if task.is_active else _('ui.label.activate') }}">
-                            <i class="bi bi-{{ 'pause' if task.is_active else 'play' }}"></i>
-                        </button>
-                    </form>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-{{ 'warning' if task.is_active else 'success' }}"
+                            data-bs-toggle="modal" data-bs-target="#confirmModal"
+                            data-action="{{ url_for('pm.task_toggle', id=task.id) }}"
+                            data-message="{{ _('ui.label.deactivate') if task.is_active else _('ui.label.activate') }} '{{ task.name }}'?"
+                            title="{{ _('ui.label.deactivate') if task.is_active else _('ui.label.activate') }}">
+                        <i class="bi bi-{{ 'pause' if task.is_active else 'play' }}"></i>
+                    </button>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+{% call bulk_action_bar(bulk_pm_actions, pagination.total) %}
+    <div data-bulk-for="reassign" hidden>
+        <select name="new_assignee_id" class="form-select form-select-sm w-auto">
+            <option value="">{{ _('ui.bulk.no_assignee') }}</option>
+            {% for t in technicians %}
+            <option value="{{ t.id }}">{{ t.display_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+{% endcall %}
+</form>
 {% include "partials/_pagination.html" %}
 {% else %}
 <div class="text-center text-muted py-5">

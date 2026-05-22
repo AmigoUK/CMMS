@@ -90,11 +90,65 @@ def index():
         certifications=pagination.items,
         pagination=pagination,
         cert_types=CERT_TYPES,
+        cert_statuses=CERT_STATUSES,
         current_filter=filter_mode,
         current_cert_type=cert_type,
         search_query=q,
         today=today,
     )
+
+
+@certs_bp.route("/bulk", methods=["POST"])
+@supervisor_required
+def bulk():
+    """Apply one action to many certifications in the current site."""
+    from utils.admin_ops import check_deletable, perform_entity_delete
+    from utils.audit import log_admin_action
+    from utils.bulk import BulkResult, parse_selection
+    from utils.i18n import translate as _t
+
+    action = request.form.get("bulk_action", "").strip()
+    if action not in {"set_status", "delete"}:
+        flash(_t("flash.bulk.unknown_action"), "danger")
+        return redirect(url_for("certs.index"))
+
+    base = Certification.query.filter_by(site_id=g.current_site.id)
+    ids = parse_selection(request.form, base_query=base)
+    if not ids:
+        flash(_t("flash.bulk.none_selected"), "warning")
+        return redirect(url_for("certs.index"))
+
+    new_status = request.form.get("new_status", "")
+    result = BulkResult()
+    for cert in base.filter(Certification.id.in_(ids)).all():
+        if action == "delete":
+            can_delete, _blockers = check_deletable(
+                cert, owned_tables=("certification_logs",),
+            )
+            if not can_delete:
+                result.skip(cert.id, cert.name, "blocked")
+                continue
+            perform_entity_delete(cert, owned_tables=("certification_logs",))
+        elif action == "set_status":
+            if new_status not in CERT_STATUSES:
+                result.skip(cert.id, cert.name, "invalid_value")
+                continue
+            cert.status = new_status
+        result.mark_updated()
+
+    log_admin_action(
+        f"cert.bulk_{action}", "batch",
+        summary=f"{result.updated} cert(s) updated, "
+                f"{result.skipped_count} skipped",
+        detail={"action": action, "updated": result.updated},
+    )
+    db.session.commit()
+    flash(
+        _t("flash.bulk.summary",
+           updated=result.updated, skipped=result.skipped_count),
+        "success",
+    )
+    return redirect(url_for("certs.index"))
 
 
 # ═══════════════════════════════════════════════════════════════════════

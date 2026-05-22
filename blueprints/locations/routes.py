@@ -42,6 +42,18 @@ def _build_tree(locations):
     return roots
 
 
+def _creates_cycle(location, new_parent):
+    """True if making *new_parent* the parent of *location* would form a
+    cycle — i.e. new_parent is the location itself or one of its
+    descendants. Prevents an infinite loop in the tree renderer."""
+    cur = new_parent
+    while cur is not None:
+        if cur.id == location.id:
+            return True
+        cur = cur.parent
+    return False
+
+
 # ── list (tree view) ──────────────────────────────────────────────────
 
 @locations_bp.route("/")
@@ -59,6 +71,73 @@ def list_locations():
         tree=tree,
         location_types=LOCATION_TYPES,
     )
+
+
+# ── bulk operations ───────────────────────────────────────────────────
+
+@locations_bp.route("/bulk", methods=["POST"])
+@supervisor_required
+def bulk():
+    """Apply one action to many locations in the current site."""
+    from utils.admin_ops import check_deletable, perform_entity_delete
+    from utils.audit import log_admin_action
+    from utils.bulk import BulkResult, parse_selection
+    from utils.i18n import translate as _t
+
+    action = request.form.get("bulk_action", "").strip()
+    if action not in {"activate", "deactivate", "reparent", "delete"}:
+        flash(_t("flash.bulk.unknown_action"), "danger")
+        return redirect(url_for("locations.list_locations"))
+
+    base = Location.query.filter_by(site_id=g.current_site.id)
+    ids = parse_selection(request.form, base_query=base)
+    if not ids:
+        flash(_t("flash.bulk.none_selected"), "warning")
+        return redirect(url_for("locations.list_locations"))
+
+    new_parent = None
+    if action == "reparent":
+        raw = request.form.get("new_parent_id", type=int)
+        if raw:
+            new_parent = Location.query.filter_by(
+                id=raw, site_id=g.current_site.id,
+            ).first()
+            if not new_parent:
+                flash(_t("flash.bulk.unknown_action"), "danger")
+                return redirect(url_for("locations.list_locations"))
+
+    result = BulkResult()
+    for loc in base.filter(Location.id.in_(ids)).all():
+        if action == "delete":
+            can_delete, _blockers = check_deletable(loc)
+            if not can_delete:
+                result.skip(loc.id, loc.name, "blocked")
+                continue
+            perform_entity_delete(loc)
+        elif action == "activate":
+            loc.is_active = True
+        elif action == "deactivate":
+            loc.is_active = False
+        elif action == "reparent":
+            if new_parent and _creates_cycle(loc, new_parent):
+                result.skip(loc.id, loc.name, "cycle")
+                continue
+            loc.parent_id = new_parent.id if new_parent else None
+        result.mark_updated()
+
+    log_admin_action(
+        f"location.bulk_{action}", "batch",
+        summary=f"{result.updated} location(s) updated, "
+                f"{result.skipped_count} skipped",
+        detail={"action": action, "updated": result.updated},
+    )
+    db.session.commit()
+    flash(
+        _t("flash.bulk.summary",
+           updated=result.updated, skipped=result.skipped_count),
+        "success",
+    )
+    return redirect(url_for("locations.list_locations"))
 
 
 # ── new location ─────────────────────────────────────────────────────
