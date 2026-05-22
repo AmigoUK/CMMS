@@ -218,6 +218,93 @@ TRANSLATIONS = {
         "en": "Site '{name}' access updated ({count} change(s)).",
         "pl": "Dostęp do obiektu '{name}' zaktualizowany (zmian: {count}).",
     },
+
+    # ── User CSV import / export (Phase 3) ──────────────────────────────
+    ("ui.button.import_users", "ui"): {"en": "Import", "pl": "Importuj"},
+    ("ui.button.export_users", "ui"): {"en": "Export", "pl": "Eksportuj"},
+    ("ui.button.preview_import", "ui"): {
+        "en": "Preview", "pl": "Podgląd",
+    },
+    ("ui.button.download_template", "ui"): {
+        "en": "Download template", "pl": "Pobierz szablon",
+    },
+    ("ui.button.confirm_import", "ui"): {
+        "en": "Confirm import", "pl": "Potwierdź import",
+    },
+    ("ui.button.download_csv", "ui"): {
+        "en": "Download as CSV", "pl": "Pobierz jako CSV",
+    },
+    ("ui.button.done", "ui"): {"en": "Done", "pl": "Gotowe"},
+    ("ui.page.import_users", "ui"): {
+        "en": "Import users", "pl": "Import użytkowników",
+    },
+    ("ui.label.csv_file", "ui"): {"en": "CSV file", "pl": "Plik CSV"},
+    ("ui.text.import_help", "ui"): {
+        "en": "Upload a CSV file to create multiple users at once. The file is "
+              "validated and previewed before anything is saved.",
+        "pl": "Prześlij plik CSV, aby utworzyć wielu użytkowników naraz. Plik "
+              "zostanie sprawdzony i pokazany w podglądzie przed zapisem.",
+    },
+    ("ui.text.import_columns", "ui"): {
+        "en": "Columns", "pl": "Kolumny",
+    },
+    ("ui.text.import_note_required", "ui"): {
+        "en": "username, email and display_name are required; other columns are optional.",
+        "pl": "username, email i display_name są wymagane; pozostałe kolumny są opcjonalne.",
+    },
+    ("ui.text.import_note_sites", "ui"): {
+        "en": "sites is a pipe-separated list of site codes, e.g. HQ|BM.",
+        "pl": "sites to lista kodów obiektów rozdzielona znakiem |, np. HQ|BM.",
+    },
+    ("ui.text.import_note_password", "ui"): {
+        "en": "A temporary password is generated for each new user and shown after import.",
+        "pl": "Dla każdego nowego użytkownika generowane jest hasło tymczasowe, pokazane po imporcie.",
+    },
+    ("ui.import.preview_heading", "ui"): {
+        "en": "Import preview", "pl": "Podgląd importu",
+    },
+    ("ui.import.status_create", "ui"): {
+        "en": "To create", "pl": "Do utworzenia",
+    },
+    ("ui.import.status_skip", "ui"): {
+        "en": "Skipped (exists)", "pl": "Pominięte (istnieje)",
+    },
+    ("ui.import.status_error", "ui"): {"en": "Error", "pl": "Błąd"},
+    ("ui.import.nothing_to_import", "ui"): {
+        "en": "No valid new users to import.",
+        "pl": "Brak prawidłowych nowych użytkowników do importu.",
+    },
+    ("ui.import.result_heading", "ui"): {
+        "en": "Import complete", "pl": "Import zakończony",
+    },
+    ("ui.import.temp_password", "ui"): {
+        "en": "Temporary password", "pl": "Hasło tymczasowe",
+    },
+    ("ui.import.save_passwords_warning", "ui"): {
+        "en": "Save these temporary passwords now — they are shown only once.",
+        "pl": "Zapisz te hasła tymczasowe teraz — są pokazywane tylko raz.",
+    },
+    ("ui.import.nothing_created", "ui"): {
+        "en": "No users were created.", "pl": "Nie utworzono żadnych użytkowników.",
+    },
+    ("flash.import.file_required", "flash"): {
+        "en": "Please choose a CSV file.", "pl": "Wybierz plik CSV.",
+    },
+    ("flash.import.file_too_large", "flash"): {
+        "en": "The file is too large.", "pl": "Plik jest za duży.",
+    },
+    ("flash.import.bad_format", "flash"): {
+        "en": "The file could not be read as CSV.",
+        "pl": "Nie udało się odczytać pliku jako CSV.",
+    },
+    ("flash.import.bad_header", "flash"): {
+        "en": "Invalid CSV header — {detail}.",
+        "pl": "Nieprawidłowy nagłówek CSV — {detail}.",
+    },
+    ("flash.import.done", "flash"): {
+        "en": "{count} user(s) imported.",
+        "pl": "Zaimportowano użytkowników: {count}.",
+    },
 }
 
 

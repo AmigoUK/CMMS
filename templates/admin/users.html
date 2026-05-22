@@ -6,9 +6,17 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0"><i class="bi bi-shield-lock me-2"></i>{{ _('ui.page.user_management') }}</h1>
-    <a href="{{ url_for('admin.new_user') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_user') }}
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.import_users_form') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-upload me-1"></i>{{ _('ui.button.import_users') }}
+        </a>
+        <a href="{{ url_for('admin.export_users') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-download me-1"></i>{{ _('ui.button.export_users') }}
+        </a>
+        <a href="{{ url_for('admin.new_user') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_user') }}
+        </a>
+    </div>
 </div>
 
 {# Sub-navigation tabs #}

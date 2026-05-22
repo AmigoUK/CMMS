@@ -392,6 +392,99 @@ def bulk_users():
     return redirect(url_for("admin.list_users"))
 
 
+# ── user CSV import / export ──────────────────────────────────────────
+
+_MAX_IMPORT_BYTES = 1_000_000  # processed in memory — cap to avoid abuse
+
+
+def _csv_response(text, filename):
+    from flask import make_response
+    resp = make_response(text)
+    resp.headers["Content-Type"] = "text/csv"
+    resp.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return resp
+
+
+@admin_bp.route("/users/export")
+@admin_required
+def export_users():
+    from utils.csv_users import export_users_csv
+    return _csv_response(export_users_csv(), "cmms_users.csv")
+
+
+@admin_bp.route("/users/import/template")
+@admin_required
+def download_user_template():
+    from utils.csv_users import csv_template
+    return _csv_response(csv_template(), "cmms_users_template.csv")
+
+
+@admin_bp.route("/users/import", methods=["GET"])
+@admin_required
+def import_users_form():
+    from utils.csv_users import CSV_COLUMNS
+    return render_template("admin/users_import.html", columns=CSV_COLUMNS)
+
+
+@admin_bp.route("/users/import", methods=["POST"])
+@admin_required
+def import_users_preview():
+    """Dry run — parse and validate the upload, render the preview. No writes."""
+    from utils.csv_users import parse_user_csv
+
+    file = request.files.get("csv_file")
+    if not file or not file.filename:
+        flash(_t("flash.import.file_required"), "danger")
+        return redirect(url_for("admin.import_users_form"))
+
+    raw = file.read()
+    if len(raw) > _MAX_IMPORT_BYTES:
+        flash(_t("flash.import.file_too_large"), "danger")
+        return redirect(url_for("admin.import_users_form"))
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        flash(_t("flash.import.bad_format"), "danger")
+        return redirect(url_for("admin.import_users_form"))
+
+    rows, header_error = parse_user_csv(text)
+    if header_error:
+        flash(_t("flash.import.bad_header", detail=header_error), "danger")
+        return redirect(url_for("admin.import_users_form"))
+
+    counts = {
+        status: sum(1 for r in rows if r["status"] == status)
+        for status in ("create", "skip", "error")
+    }
+    return render_template(
+        "admin/users_import_preview.html",
+        rows=rows, counts=counts, csv_text=text,
+    )
+
+
+@admin_bp.route("/users/import/confirm", methods=["POST"])
+@admin_required
+def import_users_commit():
+    """Re-validate the previewed CSV and create the new users."""
+    from utils.csv_users import commit_user_import, parse_user_csv
+
+    text = request.form.get("csv_text", "")
+    rows, header_error = parse_user_csv(text)
+    if header_error:
+        flash(_t("flash.import.bad_format"), "danger")
+        return redirect(url_for("admin.import_users_form"))
+
+    created = commit_user_import(rows)
+    log_admin_action(
+        "user.csv_import", "batch",
+        summary=f"{len(created)} user(s) imported from CSV",
+        detail={"created": [c["username"] for c in created]},
+    )
+    db.session.commit()
+    flash(_t("flash.import.done", count=len(created)), "success")
+    return render_template("admin/users_import_result.html", created=created)
+
+
 # ═══════════════════════════════════════════════════════════════════════
 #  TEAMS
 # ═══════════════════════════════════════════════════════════════════════

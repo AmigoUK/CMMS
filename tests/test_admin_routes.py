@@ -1,6 +1,8 @@
-"""HTTP-level tests for the Phase 1 admin routes:
-delete users/teams, toggle teams/sites, and the user bulk-action dispatch.
+"""HTTP-level tests for the admin routes: delete users/teams, toggle
+teams/sites, user bulk actions, membership panels, and CSV import/export.
 """
+
+import io
 
 
 def _login(client, user):
@@ -325,3 +327,89 @@ def test_edit_pages_render_membership_panels(app, factory, client):
     site_page = client.get(f"/admin/sites/{s.id}/edit")
     assert site_page.status_code == 200
     assert f"/sites/{s.id}/users".encode() in site_page.data
+
+
+# ── CSV import / export (Phase 3) ──────────────────────────────────────
+
+_CSV_HEADER = "username,email,display_name,role,phone,team,sites,hourly_rate,is_active"
+
+
+def test_export_users_route(app, factory, client):
+    from extensions import db
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s], username="bossadmin")
+    db.session.commit()
+    _login(client, admin)
+
+    r = client.get("/admin/users/export")
+    assert r.status_code == 200
+    assert "text/csv" in r.content_type
+    assert b"username,email,display_name" in r.data
+    assert b"bossadmin" in r.data
+
+
+def test_import_users_form_renders(app, factory, client):
+    from extensions import db
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    db.session.commit()
+    _login(client, admin)
+
+    assert client.get("/admin/users/import").status_code == 200
+
+
+def test_import_users_preview_classifies_rows(app, factory, client):
+    from extensions import db
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    db.session.commit()
+    _login(client, admin)
+
+    csv_body = _CSV_HEADER + "\nnewbie,newbie@x.com,New Bie,technician,,,,,"
+    r = client.post(
+        "/admin/users/import",
+        data={"csv_file": (io.BytesIO(csv_body.encode()), "users.csv")},
+        content_type="multipart/form-data",
+    )
+    assert r.status_code == 200
+    assert b"newbie" in r.data
+
+
+def test_import_users_commit_creates_users(app, factory, client):
+    from extensions import db
+    from models import AdminAuditLog, User
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    db.session.commit()
+    _login(client, admin)
+
+    csv_text = _CSV_HEADER + "\nimported,imported@x.com,Imported User,user,,,,,"
+    r = client.post(
+        "/admin/users/import/confirm",
+        data={"csv_text": csv_text}, follow_redirects=False,
+    )
+    assert r.status_code == 200
+    created = User.query.filter_by(username="imported").first()
+    assert created is not None
+    assert AdminAuditLog.query.filter_by(action="user.csv_import").count() == 1
+
+
+def test_import_users_preview_bad_header_redirects(app, factory, client):
+    from extensions import db
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    db.session.commit()
+    _login(client, admin)
+
+    r = client.post(
+        "/admin/users/import",
+        data={"csv_file": (io.BytesIO(b"foo,bar\n1,2"), "bad.csv")},
+        content_type="multipart/form-data",
+        follow_redirects=False,
+    )
+    assert r.status_code == 302

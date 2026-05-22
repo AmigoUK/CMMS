@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('ui.import.result_heading') }} — CMMS{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">
+    <i class="bi bi-check-circle me-2 text-success"></i>{{ _('ui.import.result_heading') }}
+</h1>
+
+{% if created %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-1"></i>{{ _('ui.import.save_passwords_warning') }}
+</div>
+<div class="table-responsive">
+    <table class="table table-sm align-middle" id="resultTable">
+        <thead class="table-light">
+            <tr>
+                <th>{{ _('ui.label.username') }}</th>
+                <th>{{ _('ui.import.temp_password') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in created %}
+            <tr>
+                <td>{{ c.username }}</td>
+                <td><code>{{ c.temp_password }}</code></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<button type="button" class="btn btn-sm btn-outline-secondary" id="downloadBtn">
+    <i class="bi bi-download me-1"></i>{{ _('ui.button.download_csv') }}
+</button>
+{% else %}
+<div class="alert alert-info">{{ _('ui.import.nothing_created') }}</div>
+{% endif %}
+
+<a href="{{ url_for('admin.list_users') }}" class="btn btn-primary ms-1">
+    {{ _('ui.button.done') }}
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var btn = document.getElementById("downloadBtn");
+    if (!btn) { return; }
+    btn.addEventListener("click", function () {
+        var lines = ["username,temp_password"];
+        document.querySelectorAll("#resultTable tbody tr").forEach(function (tr) {
+            var c = tr.querySelectorAll("td");
+            lines.push(c[0].textContent.trim() + "," + c[1].textContent.trim());
+        });
+        var blob = new Blob([lines.join("\n")], { type: "text/csv" });
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "cmms_imported_users.csv";
+        a.click();
+        URL.revokeObjectURL(a.href);
+    });
+});
+</script>
+{% endblock %}
