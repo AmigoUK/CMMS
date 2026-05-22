@@ -10,49 +10,58 @@ from utils.bulk import BulkResult, would_remove_last_admin
 from utils.dependencies import user_delete_report
 
 
+# Tables whose rows belong to the user and are removed on delete, rather
+# than having their foreign key to the user nulled.
+_USER_OWNED_TABLES = {"user_sites", "user_permission_overrides"}
+
+
 def perform_user_delete(user):
     """Hard-delete *user*.
 
     The caller must first confirm user_delete_report(user)['can_delete'].
-    Every nullable foreign key referencing the user is cleared, owned rows
-    (permission overrides, site links) are removed, then the user is
-    deleted. Operational and financial history is preserved with a NULL
+    Every nullable column referencing users.id — discovered from SQLAlchemy
+    metadata, so the set can never drift out of sync with the schema — is
+    set to NULL. Rows the user owns (permission overrides, site links) are
+    removed. Operational and financial history is preserved with a NULL
     actor rather than destroyed.
     """
-    from models import (
-        Attachment, Certification, CertificationLog, HelpContent,
-        MeterReading, PartTransfer, PartUsage, PreventiveTask, Request,
-        RequestActivity, WorkOrder, WorkOrderTask, AdminAuditLog,
-    )
     from models.permission import UserPermissionOverride
 
     uid = user.id
 
-    # Clear every nullable reference so the delete cannot violate an FK.
-    _null_fk(WorkOrder, "assigned_to_id", uid)
-    _null_fk(Request, "requester_id", uid)
-    _null_fk(Request, "assigned_to_id", uid)
-    _null_fk(PartUsage, "used_by_id", uid)
-    _null_fk(PartTransfer, "approved_by_id", uid)
-    _null_fk(PartTransfer, "cancelled_by_id", uid)
-    _null_fk(PreventiveTask, "assigned_to_id", uid)
-    _null_fk(PreventiveTask, "created_by_id", uid)
-    _null_fk(Certification, "last_renewed_by_id", uid)
-    _null_fk(CertificationLog, "performed_by_id", uid)
-    _null_fk(MeterReading, "recorded_by_id", uid)
-    _null_fk(Attachment, "uploaded_by_id", uid)
-    _null_fk(RequestActivity, "user_id", uid)
-    _null_fk(HelpContent, "updated_by_id", uid)
-    _null_fk(WorkOrderTask, "completed_by_id", uid)
-    _null_fk(AdminAuditLog, "actor_id", uid)
+    # Clear every nullable foreign key onto users.id so the final DELETE
+    # cannot violate a constraint. NOT-NULL references are guaranteed
+    # absent by the caller's user_delete_report() can_delete check.
+    for column in columns_referencing("users"):
+        if column.table.name in _USER_OWNED_TABLES:
+            continue
+        if column.nullable:
+            db.session.execute(
+                column.table.update()
+                .where(column == uid)
+                .values({column.name: None})
+            )
 
-    # Remove rows owned by the user.
+    # Remove rows the user owns.
     UserPermissionOverride.query.filter_by(user_id=uid).delete(
         synchronize_session=False
     )
     user.sites = []
 
     db.session.delete(user)
+
+
+def columns_referencing(target_table):
+    """Every Column in the schema that is a foreign key onto
+    `target_table`.id, discovered from SQLAlchemy metadata. This keeps
+    delete-cleanup exhaustive without a hand-maintained list."""
+    columns = []
+    for table in db.metadata.tables.values():
+        for fk in table.foreign_keys:
+            ref = fk.column
+            if ref.table.name == target_table and ref.name == "id":
+                columns.append(fk.parent)
+    return columns
 
 
 def perform_team_delete(team):

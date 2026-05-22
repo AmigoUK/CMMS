@@ -40,6 +40,36 @@ def test_perform_user_delete_nulls_assigned_work_orders(app, factory):
     assert refreshed.assigned_to_id is None
 
 
+def test_perform_user_delete_nulls_pm_completion_log(app, factory):
+    """Regression: a PM completion log referencing the user must have its
+    completed_by_id cleared — a missed FK here caused a MySQL IntegrityError."""
+    from datetime import date
+
+    from extensions import db
+    from models import PMCompletionLog, PreventiveTask, User
+    from utils.admin_ops import perform_user_delete
+
+    s = factory.site()
+    u = factory.user(role="technician", sites=[s])
+    pt = PreventiveTask(site_id=s.id, name="Lubricate conveyor")
+    db.session.add(pt)
+    db.session.flush()
+    log = PMCompletionLog(
+        preventive_task_id=pt.id,
+        scheduled_date=date.today(),
+        completed_by_id=u.id,
+    )
+    db.session.add(log)
+    db.session.commit()
+    uid, log_id = u.id, log.id
+
+    perform_user_delete(u)
+    db.session.commit()
+
+    assert db.session.get(User, uid) is None
+    assert db.session.get(PMCompletionLog, log_id).completed_by_id is None
+
+
 def test_perform_user_delete_clears_sites_and_permission_overrides(app, factory):
     from extensions import db
     from models import user_sites
