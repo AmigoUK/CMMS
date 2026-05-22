@@ -46,6 +46,9 @@ TRANSLATIONS = {
     ("ui.bulk.no_team", "ui"): {
         "en": "— No team —", "pl": "— Brak zespołu —",
     },
+    ("ui.bulk.no_location", "ui"): {
+        "en": "— No location —", "pl": "— Brak lokalizacji —",
+    },
 
     # ── Bulk action labels ──────────────────────────────────────────────
     ("ui.bulk.action.activate", "ui"): {"en": "Activate", "pl": "Aktywuj"},

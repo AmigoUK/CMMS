@@ -108,15 +108,103 @@ def list_assets():
         page=page, per_page=25, error_out=False,
     )
 
+    locations = Location.query.filter_by(
+        site_id=g.current_site.id, is_active=True,
+    ).order_by(Location.name).all()
+
     return render_template(
         "assets/index.html",
         assets=pagination.items,
         pagination=pagination,
         statuses=ASSET_STATUSES,
+        criticalities=ASSET_CRITICALITIES,
+        locations=locations,
         current_status=status_filter,
         search_query=q,
         filter_location=filter_location,
     )
+
+
+# ── bulk operations ────────────────────────────────────────────────────
+
+_BULK_ASSET_ACTIONS = {
+    "activate", "deactivate", "set_status", "set_criticality",
+    "set_location", "set_category",
+}
+
+
+@assets_bp.route("/bulk", methods=["POST"])
+@supervisor_required
+def bulk():
+    """Apply one action to many assets in the current site."""
+    from utils.audit import log_admin_action
+    from utils.bulk import BulkResult, parse_selection
+    from utils.i18n import translate as _t
+
+    action = request.form.get("bulk_action", "").strip()
+    if action not in _BULK_ASSET_ACTIONS:
+        flash(_t("flash.bulk.unknown_action"), "danger")
+        return redirect(url_for("assets.list_assets"))
+
+    # base query is site-scoped — selection and the final fetch both use
+    # it, so a tampered POST cannot reach another site's assets.
+    base = Asset.query.filter_by(site_id=g.current_site.id)
+    ids = parse_selection(request.form, base_query=base)
+    if not ids:
+        flash(_t("flash.bulk.none_selected"), "warning")
+        return redirect(url_for("assets.list_assets"))
+
+    new_status = request.form.get("new_status", "")
+    new_criticality = request.form.get("new_criticality", "")
+    new_category = request.form.get("new_category", "").strip()
+
+    new_location_id = None
+    if action == "set_location":
+        raw = request.form.get("new_location_id", type=int)
+        if raw:
+            loc = Location.query.filter_by(
+                id=raw, site_id=g.current_site.id,
+            ).first()
+            if not loc:
+                flash(_t("flash.bulk.unknown_action"), "danger")
+                return redirect(url_for("assets.list_assets"))
+            new_location_id = loc.id
+
+    result = BulkResult()
+    for asset in base.filter(Asset.id.in_(ids)).all():
+        if action == "activate":
+            asset.is_active = True
+        elif action == "deactivate":
+            asset.is_active = False
+        elif action == "set_status":
+            if new_status not in ASSET_STATUSES:
+                result.skip(asset.id, asset.name, "invalid_value")
+                continue
+            asset.status = new_status
+        elif action == "set_criticality":
+            if new_criticality not in ASSET_CRITICALITIES:
+                result.skip(asset.id, asset.name, "invalid_value")
+                continue
+            asset.criticality = new_criticality
+        elif action == "set_location":
+            asset.location_id = new_location_id
+        elif action == "set_category":
+            asset.category = new_category
+        result.mark_updated()
+
+    log_admin_action(
+        f"asset.bulk_{action}", "batch",
+        summary=f"{result.updated} asset(s) updated, "
+                f"{result.skipped_count} skipped",
+        detail={"action": action, "updated": result.updated},
+    )
+    db.session.commit()
+    flash(
+        _t("flash.bulk.summary",
+           updated=result.updated, skipped=result.skipped_count),
+        "success",
+    )
+    return redirect(url_for("assets.list_assets"))
 
 
 # ── new asset ─────────────────────────────────────────────────────────
