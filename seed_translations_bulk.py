@@ -191,6 +191,33 @@ TRANSLATIONS = {
         "en": "Site '{name}' deactivated.",
         "pl": "Obiekt '{name}' dezaktywowany.",
     },
+
+    # ── Membership panels (Phase 2) ─────────────────────────────────────
+    ("ui.heading.team_members", "ui"): {
+        "en": "Members", "pl": "Członkowie",
+    },
+    ("ui.heading.team_bulk", "ui"): {
+        "en": "Apply to all members", "pl": "Zastosuj do wszystkich członków",
+    },
+    ("ui.heading.site_users", "ui"): {
+        "en": "Users with access", "pl": "Użytkownicy z dostępem",
+    },
+    ("ui.text.team_bulk_help", "ui"): {
+        "en": "Applies the chosen action to every current member of this team.",
+        "pl": "Stosuje wybraną akcję do wszystkich obecnych członków zespołu.",
+    },
+    ("ui.text.team_no_members", "ui"): {
+        "en": "This team has no members yet.",
+        "pl": "Ten zespół nie ma jeszcze członków.",
+    },
+    ("flash.team.members_updated", "flash"): {
+        "en": "Team '{name}' membership updated ({count} change(s)).",
+        "pl": "Skład zespołu '{name}' zaktualizowany (zmian: {count}).",
+    },
+    ("flash.site.users_updated", "flash"): {
+        "en": "Site '{name}' access updated ({count} change(s)).",
+        "pl": "Dostęp do obiektu '{name}' zaktualizowany (zmian: {count}).",
+    },
 }
 
 

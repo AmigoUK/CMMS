@@ -436,7 +436,13 @@ def create_team():
 @admin_required
 def edit_team(id):
     team = Team.query.get_or_404(id)
-    return render_template("admin/team_form.html", team=team)
+    return render_template(
+        "admin/team_form.html",
+        team=team,
+        users=User.query.order_by(User.username).all(),
+        sites=Site.query.filter_by(is_active=True).order_by(Site.name).all(),
+        roles=ROLES,
+    )
 
 
 @admin_bp.route("/teams/<int:id>/edit", methods=["POST"])
@@ -485,6 +491,79 @@ def delete_team(id):
     db.session.commit()
     flash(_t("flash.team.deleted", name=name, count=count), "success")
     return redirect(url_for("admin.list_teams"))
+
+
+@admin_bp.route("/teams/<int:id>/members", methods=["POST"])
+@admin_required
+def update_team_members(id):
+    """Set a team's membership from the checkbox panel on its edit page.
+    A user belongs to one team — checking them here moves them in,
+    omitting a current member moves them out."""
+    team = Team.query.get_or_404(id)
+    selected = set(request.form.getlist("user_ids", type=int))
+
+    changed = 0
+    for u in User.query.all():
+        if u.id in selected and u.team_id != team.id:
+            u.team_id = team.id
+            changed += 1
+        elif u.id not in selected and u.team_id == team.id:
+            u.team_id = None
+            changed += 1
+
+    log_admin_action(
+        "team.members_updated", "team", id,
+        summary=f"Team '{team.name}' membership updated ({changed} change(s))",
+    )
+    db.session.commit()
+    flash(_t("flash.team.members_updated", name=team.name, count=changed), "success")
+    return redirect(url_for("admin.edit_team", id=team.id))
+
+
+# Whole-team bulk actions exclude delete (too destructive for one click)
+# and team_assign (out of scope here).
+_BULK_TEAM_ACTIONS = {"activate", "deactivate", "role_change", "site_access"}
+
+
+@admin_bp.route("/teams/<int:id>/bulk", methods=["POST"])
+@admin_required
+def bulk_team_members(id):
+    """Apply one bulk action to every current member of a team."""
+    team = Team.query.get_or_404(id)
+    action = request.form.get("bulk_action", "").strip()
+    if action not in _BULK_TEAM_ACTIONS:
+        flash(_t("flash.bulk.unknown_action"), "danger")
+        return redirect(url_for("admin.edit_team", id=team.id))
+
+    member_ids = [u.id for u in team.members]
+    if not member_ids:
+        flash(_t("flash.bulk.none_selected"), "warning")
+        return redirect(url_for("admin.edit_team", id=team.id))
+
+    result = bulk_user_action(
+        action, member_ids,
+        actor_id=current_user.id,
+        new_role=request.form.get("new_role", "").strip() or None,
+        site_ids=request.form.getlist("site_ids", type=int),
+        site_mode=request.form.get("site_mode", "add"),
+    )
+    log_admin_action(
+        f"team.bulk_{action}", "team", id,
+        summary=f"Team '{team.name}': {result.updated} updated, "
+                f"{result.skipped_count} skipped",
+        detail={
+            "action": action,
+            "updated": result.updated,
+            "skipped": result.skipped,
+        },
+    )
+    db.session.commit()
+    flash(
+        _t("flash.bulk.summary",
+           updated=result.updated, skipped=result.skipped_count),
+        "success",
+    )
+    return redirect(url_for("admin.edit_team", id=team.id))
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -549,6 +628,7 @@ def edit_site(id):
     return render_template(
         "admin/site_form.html", site=site,
         site_colors=SITE_COLORS, site_icons=SITE_ICONS,
+        users=User.query.order_by(User.username).all(),
     )
 
 
@@ -634,6 +714,34 @@ def confirm_delete_site(id):
         site=site,
         report=site_delete_report(site),
     )
+
+
+@admin_bp.route("/sites/<int:id>/users", methods=["POST"])
+@admin_required
+def update_site_users(id):
+    """Set which users have access to a site, from the checkbox panel on
+    the site edit page. Works the user_sites M2M from the user side."""
+    site = Site.query.get_or_404(id)
+    selected = set(request.form.getlist("user_ids", type=int))
+
+    changed = 0
+    for u in User.query.all():
+        has_access = site in u.sites
+        wants_access = u.id in selected
+        if wants_access and not has_access:
+            u.sites.append(site)
+            changed += 1
+        elif has_access and not wants_access:
+            u.sites.remove(site)
+            changed += 1
+
+    log_admin_action(
+        "site.users_updated", "site", id,
+        summary=f"Site '{site.name}' access updated ({changed} change(s))",
+    )
+    db.session.commit()
+    flash(_t("flash.site.users_updated", name=site.name, count=changed), "success")
+    return redirect(url_for("admin.edit_site", id=site.id))
 
 
 # ═══════════════════════════════════════════════════════════════════════
