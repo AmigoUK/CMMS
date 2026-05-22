@@ -75,9 +75,24 @@
                 </td>
                 <td>
                     <a href="{{ url_for('admin.edit_team', id=team.id) }}" class="btn btn-sm btn-outline-secondary"
-                       title="Edit">
+                       title="{{ _('ui.button.edit') }}">
                         <i class="bi bi-pencil"></i>
                     </a>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-{{ 'warning' if team.is_active else 'success' }}"
+                            data-bs-toggle="modal" data-bs-target="#confirmModal"
+                            data-action="{{ url_for('admin.toggle_team', id=team.id) }}"
+                            data-message="{{ _('ui.button.deactivate') if team.is_active else _('ui.button.activate') }} '{{ team.name }}'?"
+                            title="{{ _('ui.button.deactivate') if team.is_active else _('ui.button.activate') }}">
+                        <i class="bi bi-{{ 'pause' if team.is_active else 'play' }}"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger"
+                            data-bs-toggle="modal" data-bs-target="#confirmModal"
+                            data-action="{{ url_for('admin.delete_team', id=team.id) }}"
+                            data-message="{{ _('ui.bulk.action.delete') }} '{{ team.name }}'? ({{ team.members | length }})"
+                            title="{{ _('ui.bulk.action.delete') }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 </td>
             </tr>
             {% endfor %}

@@ -11,6 +11,10 @@ from blueprints.admin import admin_bp
 from decorators import admin_required
 from extensions import db
 from models import AppSettings, Site, Team, User, ROLES
+from utils.admin_ops import bulk_user_action, perform_team_delete, perform_user_delete
+from utils.audit import log_admin_action
+from utils.bulk import parse_selection
+from utils.dependencies import site_delete_report, user_delete_report
 from utils.i18n import translate as _t
 
 
@@ -27,10 +31,16 @@ def list_users():
         page=page, per_page=25, error_out=False,
     )
 
+    teams = Team.query.filter_by(is_active=True).order_by(Team.name).all()
+    sites = Site.query.filter_by(is_active=True).order_by(Site.name).all()
+
     return render_template(
         "admin/users.html",
         users=pagination.items,
         pagination=pagination,
+        teams=teams,
+        sites=sites,
+        roles=ROLES,
     )
 
 
@@ -294,6 +304,94 @@ def stop_impersonating():
     return redirect(url_for("admin.list_users"))
 
 
+# ── delete user ───────────────────────────────────────────────────────
+
+@admin_bp.route("/users/<int:id>/delete", methods=["GET"])
+@admin_required
+def confirm_delete_user(id):
+    """Show the delete dependency report for a user."""
+    user = User.query.get_or_404(id)
+    return render_template(
+        "admin/user_delete_confirm.html",
+        user=user,
+        report=user_delete_report(user),
+        is_self=(user.id == current_user.id),
+    )
+
+
+@admin_bp.route("/users/<int:id>/delete", methods=["POST"])
+@admin_required
+def delete_user(id):
+    """Hard-delete a user — blocked if linked history exists (decision D1)."""
+    user = User.query.get_or_404(id)
+
+    if user.id == current_user.id:
+        flash(_t("flash.user.cannot_deactivate_self"), "warning")
+        return redirect(url_for("admin.list_users"))
+
+    if not user_delete_report(user)["can_delete"]:
+        flash(_t("flash.user.delete_blocked", username=user.username), "danger")
+        return redirect(url_for("admin.confirm_delete_user", id=user.id))
+
+    username = user.username
+    perform_user_delete(user)
+    log_admin_action(
+        "user.delete", "user", id,
+        summary=f"Deleted user '{username}'",
+    )
+    db.session.commit()
+    flash(_t("flash.user.deleted", username=username), "success")
+    return redirect(url_for("admin.list_users"))
+
+
+# ── bulk user operations ──────────────────────────────────────────────
+
+_BULK_USER_ACTIONS = {
+    "activate", "deactivate", "role_change", "team_assign",
+    "site_access", "delete",
+}
+
+
+@admin_bp.route("/users/bulk", methods=["POST"])
+@admin_required
+def bulk_users():
+    """Apply one action to many users at once."""
+    action = request.form.get("bulk_action", "").strip()
+    if action not in _BULK_USER_ACTIONS:
+        flash(_t("flash.bulk.unknown_action"), "danger")
+        return redirect(url_for("admin.list_users"))
+
+    user_ids = parse_selection(request.form, base_query=User.query)
+    if not user_ids:
+        flash(_t("flash.bulk.none_selected"), "warning")
+        return redirect(url_for("admin.list_users"))
+
+    result = bulk_user_action(
+        action, user_ids,
+        actor_id=current_user.id,
+        new_role=request.form.get("new_role", "").strip() or None,
+        new_team_id=request.form.get("new_team_id", type=int),
+        site_ids=request.form.getlist("site_ids", type=int),
+        site_mode=request.form.get("site_mode", "add"),
+    )
+    log_admin_action(
+        f"user.bulk_{action}", "batch",
+        summary=f"{result.updated} updated, {result.skipped_count} skipped",
+        detail={
+            "action": action,
+            "updated": result.updated,
+            "skipped": result.skipped,
+        },
+    )
+    db.session.commit()
+    flash(
+        _t("flash.bulk.summary",
+           updated=result.updated, skipped=result.skipped_count),
+        "success",
+    )
+    return redirect(url_for("admin.list_users"))
+
+
 # ═══════════════════════════════════════════════════════════════════════
 #  TEAMS
 # ═══════════════════════════════════════════════════════════════════════
@@ -357,6 +455,35 @@ def update_team(id):
 
     db.session.commit()
     flash(_t("flash.team.updated", name=name), "success")
+    return redirect(url_for("admin.list_teams"))
+
+
+@admin_bp.route("/teams/<int:id>/toggle", methods=["POST"])
+@admin_required
+def toggle_team(id):
+    """Activate/deactivate a team."""
+    team = Team.query.get_or_404(id)
+    team.is_active = not team.is_active
+    db.session.commit()
+    key = "flash.team.activated" if team.is_active else "flash.team.deactivated"
+    flash(_t(key, name=team.name), "success")
+    return redirect(url_for("admin.list_teams"))
+
+
+@admin_bp.route("/teams/<int:id>/delete", methods=["POST"])
+@admin_required
+def delete_team(id):
+    """Delete a team. Every teams.id reference is nullable, so this is
+    always safe — affected users/contacts/certifications are unassigned."""
+    team = Team.query.get_or_404(id)
+    name = team.name
+    count = perform_team_delete(team)
+    log_admin_action(
+        "team.delete", "team", id,
+        summary=f"Deleted team '{name}', {count} record(s) unassigned",
+    )
+    db.session.commit()
+    flash(_t("flash.team.deleted", name=name, count=count), "success")
     return redirect(url_for("admin.list_teams"))
 
 
@@ -482,6 +609,31 @@ def update_site_custom_fields(id):
     db.session.commit()
     flash(_t("flash.site.custom_fields_saved", name=site.name), "success")
     return redirect(url_for("admin.edit_site", id=site.id))
+
+
+@admin_bp.route("/sites/<int:id>/toggle", methods=["POST"])
+@admin_required
+def toggle_site(id):
+    """Activate/deactivate a site."""
+    site = Site.query.get_or_404(id)
+    site.is_active = not site.is_active
+    db.session.commit()
+    key = "flash.site.activated" if site.is_active else "flash.site.deactivated"
+    flash(_t(key, name=site.name), "success")
+    return redirect(url_for("admin.list_sites"))
+
+
+@admin_bp.route("/sites/<int:id>/delete", methods=["GET"])
+@admin_required
+def confirm_delete_site(id):
+    """Read-only dependency report for a site. Per decision D2 sites are
+    deactivate-only — there is no destructive POST endpoint."""
+    site = Site.query.get_or_404(id)
+    return render_template(
+        "admin/site_delete_report.html",
+        site=site,
+        report=site_delete_report(site),
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════

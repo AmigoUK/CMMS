@@ -40,6 +40,12 @@ TRANSLATIONS = {
         "en": "Apply this action to the selected rows? This cannot be undone.",
         "pl": "Zastosować tę akcję do zaznaczonych wierszy? Nie można tego cofnąć.",
     },
+    ("ui.bulk.mode_add", "ui"): {"en": "Add", "pl": "Dodaj"},
+    ("ui.bulk.mode_remove", "ui"): {"en": "Remove", "pl": "Usuń"},
+    ("ui.bulk.mode_replace", "ui"): {"en": "Replace with", "pl": "Zastąp"},
+    ("ui.bulk.no_team", "ui"): {
+        "en": "— No team —", "pl": "— Brak zespołu —",
+    },
 
     # ── Bulk action labels ──────────────────────────────────────────────
     ("ui.bulk.action.activate", "ui"): {"en": "Activate", "pl": "Aktywuj"},
