@@ -284,3 +284,75 @@ def test_bulk_delete_removes_clean_users(app, factory):
     assert result.updated == 2
     for uid in ids:
         assert db.session.get(User, uid) is None
+
+
+# ── check_deletable / perform_entity_delete ────────────────────────────
+
+def test_check_deletable_clean_supplier(app):
+    from extensions import db
+    from models import Supplier
+    from utils.admin_ops import check_deletable
+
+    sup = Supplier(name="Acme")
+    db.session.add(sup)
+    db.session.commit()
+
+    can_delete, blockers = check_deletable(sup)
+    assert can_delete is True
+    assert blockers == []
+
+
+def test_check_deletable_supplier_blocked_by_part(app, factory):
+    from extensions import db
+    from models import Supplier
+    from utils.admin_ops import check_deletable
+
+    site = factory.site()
+    sup = Supplier(name="Acme")
+    db.session.add(sup)
+    db.session.flush()
+    part = factory.part(site=site)
+    part.supplier_id = sup.id
+    db.session.commit()
+
+    can_delete, blockers = check_deletable(sup)
+    assert can_delete is False
+    assert any(b["relation"] == "parts" for b in blockers)
+
+
+def test_perform_entity_delete_removes_clean_supplier(app):
+    from extensions import db
+    from models import Supplier
+    from utils.admin_ops import perform_entity_delete
+
+    sup = Supplier(name="Acme")
+    db.session.add(sup)
+    db.session.commit()
+    sid = sup.id
+
+    perform_entity_delete(sup)
+    db.session.commit()
+
+    assert db.session.get(Supplier, sid) is None
+
+
+def test_perform_entity_delete_removes_owned_child_rows(app, factory):
+    """A certification's own log rows are owned children — deleted with it."""
+    from extensions import db
+    from models import Certification, CertificationLog
+    from utils.admin_ops import perform_entity_delete
+
+    site = factory.site()
+    cert = Certification(site_id=site.id, name="Fire inspection")
+    db.session.add(cert)
+    db.session.flush()
+    log = CertificationLog(certification_id=cert.id, action="created")
+    db.session.add(log)
+    db.session.commit()
+    cert_id, log_id = cert.id, log.id
+
+    perform_entity_delete(cert, owned_tables=("certification_logs",))
+    db.session.commit()
+
+    assert db.session.get(Certification, cert_id) is None
+    assert db.session.get(CertificationLog, log_id) is None

@@ -90,7 +90,66 @@ def list_parts():
         search_query=q,
         show_filter=show,
         reorder_count=reorder_count,
+        suppliers=Supplier.query.filter_by(is_active=True)
+        .order_by(Supplier.name).all(),
     )
+
+
+# ── bulk operations ────────────────────────────────────────────────────
+
+@parts_bp.route("/bulk", methods=["POST"])
+@supervisor_required
+def bulk():
+    """Apply one action to many parts in the current site."""
+    from utils.audit import log_admin_action
+    from utils.bulk import BulkResult, parse_selection
+    from utils.i18n import translate as _t
+
+    action = request.form.get("bulk_action", "").strip()
+    if action not in {"activate", "deactivate", "set_category", "set_supplier"}:
+        flash(_t("flash.bulk.unknown_action"), "danger")
+        return redirect(url_for("parts.list_parts"))
+
+    base = Part.query.filter_by(site_id=g.current_site.id)
+    ids = parse_selection(request.form, base_query=base)
+    if not ids:
+        flash(_t("flash.bulk.none_selected"), "warning")
+        return redirect(url_for("parts.list_parts"))
+
+    new_category = request.form.get("new_category", "").strip()
+    new_supplier_id = None
+    if action == "set_supplier":
+        raw = request.form.get("new_supplier_id", type=int)
+        if raw:
+            if db.session.get(Supplier, raw) is None:
+                flash(_t("flash.bulk.unknown_action"), "danger")
+                return redirect(url_for("parts.list_parts"))
+            new_supplier_id = raw
+
+    result = BulkResult()
+    for part in base.filter(Part.id.in_(ids)).all():
+        if action == "activate":
+            part.is_active = True
+        elif action == "deactivate":
+            part.is_active = False
+        elif action == "set_category":
+            part.category = new_category
+        elif action == "set_supplier":
+            part.supplier_id = new_supplier_id
+        result.mark_updated()
+
+    log_admin_action(
+        f"part.bulk_{action}", "batch",
+        summary=f"{result.updated} part(s) updated",
+        detail={"action": action, "updated": result.updated},
+    )
+    db.session.commit()
+    flash(
+        _t("flash.bulk.summary",
+           updated=result.updated, skipped=result.skipped_count),
+        "success",
+    )
+    return redirect(url_for("parts.list_parts"))
 
 
 # ── detail ─────────────────────────────────────────────────────────────

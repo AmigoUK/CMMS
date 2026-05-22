@@ -64,6 +64,51 @@ def columns_referencing(target_table):
     return columns
 
 
+# Many-to-many association tables — their rows are removed automatically
+# by SQLAlchemy when the parent is deleted, so they never block a delete.
+_ASSOCIATION_TABLES = {"user_sites", "part_assets", "preventive_task_parts"}
+
+
+def check_deletable(instance, owned_tables=()):
+    """Return (can_delete, blockers) for an operational entity.
+
+    The entity is blocked from deletion when any non-association,
+    non-owned table holds a row whose foreign key points at it.
+    `owned_tables` name child rows that are deleted along with the
+    instance, so they inform rather than block. Each blocker is
+    {relation, count}.
+    """
+    from sqlalchemy import func, select
+
+    owned = set(owned_tables)
+    blockers = []
+    for column in columns_referencing(instance.__table__.name):
+        ref_table = column.table
+        if ref_table.name in _ASSOCIATION_TABLES or ref_table.name in owned:
+            continue
+        count = db.session.execute(
+            select(func.count()).select_from(ref_table)
+            .where(column == instance.id)
+        ).scalar()
+        if count:
+            blockers.append({"relation": ref_table.name, "count": count})
+    return (len(blockers) == 0, blockers)
+
+
+def perform_entity_delete(instance, owned_tables=()):
+    """Delete an operational entity. The caller must first confirm
+    check_deletable(instance)[0]. Rows in `owned_tables` are removed
+    first; many-to-many association rows are cleared by SQLAlchemy when
+    the instance itself is deleted."""
+    owned = set(owned_tables)
+    for column in columns_referencing(instance.__table__.name):
+        if column.table.name in owned:
+            db.session.execute(
+                column.table.delete().where(column == instance.id)
+            )
+    db.session.delete(instance)
+
+
 def perform_team_delete(team):
     """Hard-delete *team*, unassigning every record that referenced it.
 

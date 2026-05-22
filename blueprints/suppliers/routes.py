@@ -47,6 +47,58 @@ def list_suppliers():
     )
 
 
+# ── bulk operations ───────────────────────────────────────────────────
+
+@suppliers_bp.route("/bulk", methods=["POST"])
+@supervisor_required
+def bulk():
+    """Apply one action to many suppliers: activate, deactivate, delete."""
+    from utils.admin_ops import check_deletable, perform_entity_delete
+    from utils.audit import log_admin_action
+    from utils.bulk import BulkResult, parse_selection
+    from utils.i18n import translate as _t
+
+    action = request.form.get("bulk_action", "").strip()
+    if action not in {"activate", "deactivate", "delete"}:
+        flash(_t("flash.bulk.unknown_action"), "danger")
+        return redirect(url_for("suppliers.list_suppliers"))
+
+    base = Supplier.query
+    ids = parse_selection(request.form, base_query=base)
+    if not ids:
+        flash(_t("flash.bulk.none_selected"), "warning")
+        return redirect(url_for("suppliers.list_suppliers"))
+
+    result = BulkResult()
+    for supplier in base.filter(Supplier.id.in_(ids)).all():
+        if action == "activate":
+            supplier.is_active = True
+            result.mark_updated()
+        elif action == "deactivate":
+            supplier.is_active = False
+            result.mark_updated()
+        elif action == "delete":
+            can_delete, _blockers = check_deletable(supplier)
+            if not can_delete:
+                result.skip(supplier.id, supplier.name, "blocked")
+                continue
+            perform_entity_delete(supplier)
+            result.mark_updated()
+
+    log_admin_action(
+        f"supplier.bulk_{action}", "batch",
+        summary=f"{result.updated} updated, {result.skipped_count} skipped",
+        detail={"action": action, "updated": result.updated},
+    )
+    db.session.commit()
+    flash(
+        _t("flash.bulk.summary",
+           updated=result.updated, skipped=result.skipped_count),
+        "success",
+    )
+    return redirect(url_for("suppliers.list_suppliers"))
+
+
 # ── detail ────────────────────────────────────────────────────────────
 
 @suppliers_bp.route("/<int:id>")
