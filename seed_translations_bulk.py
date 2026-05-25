@@ -328,6 +328,10 @@ TRANSLATIONS = {
         "en": "{count} user(s) imported.",
         "pl": "Zaimportowano użytkowników: {count}.",
     },
+    ("flash.import.skipped_duplicates", "flash"): {
+        "en": "skipped as duplicates",
+        "pl": "pominięto jako duplikaty",
+    },
 }
 
 

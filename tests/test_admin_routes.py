@@ -167,6 +167,32 @@ def test_bulk_users_filtered_scope_respects_role_filter(app, factory, client):
     assert db.session.get(User, supervisor.id).is_active_user is True
 
 
+def test_bulk_delete_skips_last_active_admin(app, factory, client):
+    """Bulk delete must not remove the sole active admin.
+
+    The admin tries to delete their own account; they are also the only
+    active admin. This exercises both the self-guard and the last_admin
+    guard — either is sufficient to protect the account. The user must
+    still exist in the database after the request.
+    """
+    from extensions import db
+    from models import User
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    db.session.commit()
+    aid = admin.id
+    _login(client, admin)
+
+    r = client.post("/admin/users/bulk", data={
+        "bulk_action": "delete",
+        "ids": [aid],  # trying to delete ourselves (also the last active admin)
+    }, follow_redirects=False)
+
+    assert r.status_code == 302
+    assert db.session.get(User, aid) is not None  # skipped: self / last_admin
+
+
 # ── team toggle / delete ───────────────────────────────────────────────
 
 def test_toggle_team(app, factory, client):
@@ -421,6 +447,28 @@ def test_import_users_commit_creates_users(app, factory, client):
     assert AdminAuditLog.query.filter_by(action="user.csv_import").count() == 1
 
 
+def test_import_users_commit_reports_skipped_duplicates(app, factory, client):
+    """Flash message must include the skipped count when rows are duplicates."""
+    from extensions import db
+    from models import User
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    # Pre-create a user that will collide with the CSV row (username match)
+    existing = factory.user(username="dup_user", role="user", sites=[s])
+    db.session.commit()
+    _login(client, admin)
+
+    # CSV contains only the duplicate row (username collision) — should be skipped
+    csv_text = _CSV_HEADER + "\ndup_user,other@example.com,Dup User,user,,,,,"
+    r = client.post(
+        "/admin/users/import/confirm",
+        data={"csv_text": csv_text}, follow_redirects=True,
+    )
+    assert r.status_code == 200
+    assert b"skipped" in r.data.lower()
+
+
 def test_import_users_preview_bad_header_redirects(app, factory, client):
     from extensions import db
 
@@ -455,6 +503,7 @@ def test_reset_password_returns_result_page(app, factory, client):
 
 
 def test_reset_password_not_in_flash(app, factory, client):
+    import re
     from extensions import db
 
     s = factory.site()
@@ -464,12 +513,18 @@ def test_reset_password_not_in_flash(app, factory, client):
     _login(client, admin)
     with client.session_transaction() as sess:
         sess.pop("_flashes", None)  # clear any existing flashes
-    client.post(f"/admin/users/{victim.id}/reset-password", follow_redirects=False)
+    r = client.post(f"/admin/users/{victim.id}/reset-password", follow_redirects=False)
+
+    # Extract the actual temp_password from the response HTML
+    match = re.search(r'<code[^>]*>([A-Za-z0-9_-]+)</code>', r.data.decode())
+    assert match, "temp_password not found in response body"
+    temp_password = match.group(1)
+
+    # Verify the actual credential value is not present in any flash message
     with client.session_transaction() as sess:
         flashes = sess.get("_flashes", [])
-    # No flash message should contain any password-looking content
     for category, message in flashes:
-        assert "password" not in message.lower() or category == "success"  # only neutral success flashes allowed
+        assert temp_password not in message
 
 
 # ── impersonation ──────────────────────────────────────────────────────
@@ -489,9 +544,11 @@ def test_impersonate_happy_path(app, factory, client):
     r = client.post(f"/admin/users/{tech.id}/impersonate", follow_redirects=False)
 
     assert r.status_code == 302
-    assert "/dashboard" in r.headers["Location"] or r.headers["Location"].endswith("/")
+    assert "/dashboard" in r.headers["Location"]
     with client.session_transaction() as sess:
         assert sess.get("impersonating_from") == admin_id
+    with client.session_transaction() as sess:
+        assert sess.get("_user_id") == str(tech.id)
     assert AdminAuditLog.query.filter_by(action="user.impersonate_start").count() == 1
 
 
@@ -534,6 +591,33 @@ def test_impersonate_inactive_blocked(app, factory, client):
     assert "danger" in categories
 
 
+def test_stop_impersonating_happy_path(app, factory, client):
+    """Full round-trip: admin impersonates technician then stops — session restored, audit logged."""
+    from extensions import db
+    from models import AdminAuditLog
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    tech = factory.user(role="technician", sites=[s])
+    db.session.commit()
+    admin_id = admin.id
+
+    # Log in as the technician (simulating mid-impersonation state)
+    _login(client, tech)
+    with client.session_transaction() as sess:
+        sess["impersonating_from"] = admin_id
+
+    r = client.post("/admin/stop-impersonating", follow_redirects=False)
+
+    assert r.status_code == 302
+    assert "/admin/users" in r.headers["Location"]
+    with client.session_transaction() as sess:
+        assert "impersonating_from" not in sess
+    with client.session_transaction() as sess:
+        assert sess.get("_user_id") == str(admin_id)
+    assert AdminAuditLog.query.filter_by(action="user.impersonate_stop").count() == 1
+
+
 def test_stop_impersonating_no_session_key(app, factory, client):
     """Calling stop_impersonating without an active impersonation session does not crash."""
     from extensions import db
@@ -548,7 +632,7 @@ def test_stop_impersonating_no_session_key(app, factory, client):
     assert r.status_code == 302
 
 
-def test_stop_impersonating_deactivated_original_admin(app, factory, client):
+def test_stop_impersonating_non_admin_session_key(app, factory, client):
     """If the original admin is missing or no longer admin, stop gracefully with danger flash."""
     from extensions import db
 
@@ -571,3 +655,34 @@ def test_stop_impersonating_deactivated_original_admin(app, factory, client):
         flashes = sess.get("_flashes", [])
     categories = [cat for cat, _ in flashes]
     assert "danger" in categories
+
+
+def test_stop_impersonating_deactivated_admin(app, factory, client):
+    """If the stored admin has been deactivated, stop gracefully with danger flash (not success)."""
+    from extensions import db
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    tech = factory.user(role="technician", sites=[s])
+    db.session.commit()
+    admin_id = admin.id
+
+    # Deactivate the admin after impersonation has started
+    admin.is_active_user = False
+    db.session.commit()
+
+    # Simulate mid-impersonation state: logged in as tech, session points back to deactivated admin
+    _login(client, tech)
+    with client.session_transaction() as sess:
+        sess["impersonating_from"] = admin_id
+
+    r = client.post("/admin/stop-impersonating", follow_redirects=False)
+
+    assert r.status_code == 302
+    # Must redirect to dashboard (not admin panel) and flash danger, not success
+    assert "/admin/users" not in r.headers["Location"]
+    with client.session_transaction() as sess:
+        flashes = sess.get("_flashes", [])
+    categories = [cat for cat, _ in flashes]
+    assert "danger" in categories
+    assert "success" not in categories

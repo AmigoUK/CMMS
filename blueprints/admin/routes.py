@@ -350,7 +350,7 @@ def stop_impersonating():
         return redirect(url_for("dashboard.index"))
 
     admin_user = User.query.get(admin_id)
-    if not admin_user or not admin_user.is_admin:
+    if not admin_user or not admin_user.is_admin or not admin_user.is_active_user:
         flash(_t("flash.user.original_admin_missing"), "danger")
         return redirect(url_for("dashboard.index"))
 
@@ -533,13 +533,17 @@ def import_users_commit():
         return redirect(url_for("admin.import_users_form"))
 
     created = commit_user_import(rows)
+    skipped_count = sum(1 for r in rows if r["status"] == "skip")
     log_admin_action(
         "user.csv_import", "batch",
         summary=f"{len(created)} user(s) imported from CSV",
         detail={"created": [c["username"] for c in created]},
     )
     db.session.commit()
-    flash(_t("flash.import.done", count=len(created)), "success")
+    flash_msg = _t("flash.import.done", count=len(created))
+    if skipped_count:
+        flash_msg += f" ({skipped_count} {_t('flash.import.skipped_duplicates')})"
+    flash(flash_msg, "success")
     return render_template("admin/users_import_result.html", created=created)
 
 
