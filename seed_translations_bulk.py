@@ -296,6 +296,19 @@ TRANSLATIONS = {
     ("ui.import.nothing_created", "ui"): {
         "en": "No users were created.", "pl": "Nie utworzono żadnych użytkowników.",
     },
+    ("ui.password_reset.result_heading", "ui"): {
+        "en": "Password reset", "pl": "Reset hasła",
+    },
+    ("ui.password_reset.save_warning", "ui"): {
+        "en": "Note this password now — this page cannot be refreshed.",
+        "pl": "Zapisz to hasło teraz — strona nie może zostać odświeżona.",
+    },
+    ("ui.password_reset.temp_password_label", "ui"): {
+        "en": "Temporary password", "pl": "Hasło tymczasowe",
+    },
+    ("ui.password_reset.back_to_users", "ui"): {
+        "en": "Back to users", "pl": "Wróć do użytkowników",
+    },
     ("flash.import.file_required", "flash"): {
         "en": "Please choose a CSV file.", "pl": "Wybierz plik CSV.",
     },

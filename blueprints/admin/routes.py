@@ -3,7 +3,7 @@
 import secrets
 
 from flask import (
-    abort, flash, g, redirect, render_template, request, session, url_for,
+    abort, flash, g, make_response, redirect, render_template, request, session, url_for,
 )
 from flask_login import current_user, login_required, login_user
 
@@ -300,11 +300,15 @@ def reset_password(id):
     user.set_password(temp_password)
     db.session.commit()
 
-    flash(
-        _t("flash.user.password_reset", username=user.username, password=temp_password),
-        "warning",
+    resp = make_response(
+        render_template(
+            "admin/password_reset_result.html",
+            user=user,
+            temp_password=temp_password,
+        )
     )
-    return redirect(url_for("admin.edit_user", id=user.id))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 @admin_bp.route("/users/<int:id>/impersonate", methods=["POST"])
