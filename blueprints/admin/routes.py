@@ -22,12 +22,49 @@ from utils.i18n import translate as _t
 #  USERS
 # ═══════════════════════════════════════════════════════════════════════
 
+def _user_base_query(args):
+    """Return a filtered User query based on search/filter parameters.
+
+    Accepts a dict-like object (request.args or request.form) and applies:
+      - ``q``      — case-insensitive substring match on username, display_name,
+                     or email
+      - ``role``   — exact role filter (must be a known ROLES value)
+      - ``active`` — ``"1"`` for active-only, ``"0"`` for inactive-only;
+                     absent means all
+
+    The returned query is ordered by username and suitable for use as the
+    ``base_query`` argument to :func:`utils.bulk.parse_selection`.
+    """
+    q = User.query
+
+    search = args.get("q", "").strip()
+    if search:
+        pattern = f"%{search}%"
+        q = q.filter(
+            User.username.ilike(pattern)
+            | User.display_name.ilike(pattern)
+            | User.email.ilike(pattern)
+        )
+
+    role = args.get("role", "").strip()
+    if role and role in ROLES:
+        q = q.filter(User.role == role)
+
+    active = args.get("active", "").strip()
+    if active == "1":
+        q = q.filter(User.is_active_user == True)  # noqa: E712
+    elif active == "0":
+        q = q.filter(User.is_active_user == False)  # noqa: E712
+
+    return q.order_by(User.username)
+
+
 @admin_bp.route("/users")
 @admin_required
 def list_users():
     page = request.args.get("page", 1, type=int)
 
-    pagination = User.query.order_by(User.username).paginate(
+    pagination = _user_base_query(request.args).paginate(
         page=page, per_page=25, error_out=False,
     )
 
@@ -41,6 +78,9 @@ def list_users():
         teams=teams,
         sites=sites,
         roles=ROLES,
+        search=request.args.get("q", ""),
+        filter_role=request.args.get("role", ""),
+        filter_active=request.args.get("active", ""),
     )
 
 
@@ -361,7 +401,7 @@ def bulk_users():
         flash(_t("flash.bulk.unknown_action"), "danger")
         return redirect(url_for("admin.list_users"))
 
-    user_ids = parse_selection(request.form, base_query=User.query)
+    user_ids = parse_selection(request.form, base_query=_user_base_query(request.form))
     if not user_ids:
         flash(_t("flash.bulk.none_selected"), "warning")
         return redirect(url_for("admin.list_users"))

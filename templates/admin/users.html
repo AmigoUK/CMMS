@@ -48,6 +48,38 @@
     </li>
 </ul>
 
+{# Filter bar #}
+<form method="GET" action="{{ url_for('admin.list_users') }}" class="row g-2 mb-3 align-items-end">
+    <div class="col-auto flex-grow-1">
+        <input type="search" name="q" class="form-control form-control-sm"
+               placeholder="{{ _('ui.label.search') }}"
+               value="{{ search }}">
+    </div>
+    <div class="col-auto">
+        <select name="role" class="form-select form-select-sm">
+            <option value="">{{ _('ui.label.all_roles') }}</option>
+            {% for r in roles %}
+            <option value="{{ r }}" {% if filter_role == r %}selected{% endif %}>{{ _('label.role.' + r) }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-auto">
+        <select name="active" class="form-select form-select-sm">
+            <option value="">{{ _('ui.label.all_statuses') }}</option>
+            <option value="1" {% if filter_active == '1' %}selected{% endif %}>{{ _('ui.label.active') }}</option>
+            <option value="0" {% if filter_active == '0' %}selected{% endif %}>{{ _('ui.label.inactive') }}</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-funnel me-1"></i>{{ _('ui.button.filter') }}
+        </button>
+        {% if search or filter_role or filter_active %}
+        <a href="{{ url_for('admin.list_users') }}" class="btn btn-sm btn-link">{{ _('ui.button.clear') }}</a>
+        {% endif %}
+    </div>
+</form>
+
 {# Users table #}
 {% if users %}
 {% set bulk_user_actions = [
@@ -61,6 +93,10 @@
 <form method="POST" action="{{ url_for('admin.bulk_users') }}" data-bulk-form
       data-bulk-confirm-text="{{ _('ui.bulk.confirm_generic') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {# Carry active filter state so bulk_users() scopes its query correctly #}
+    {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
+    {% if filter_role %}<input type="hidden" name="role" value="{{ filter_role }}">{% endif %}
+    {% if filter_active %}<input type="hidden" name="active" value="{{ filter_active }}">{% endif %}
     <div class="table-responsive">
         <table class="table table-hover align-middle">
             <thead class="table-light">
