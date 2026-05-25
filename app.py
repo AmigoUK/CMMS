@@ -269,6 +269,8 @@ def create_app(config_class=None):
             Translation, HelpContent, AdminAuditLog,
         )
 
+        # New tables (admin-bulk-ops feature): admin_audit_logs, user_permission_overrides
+        # are created here automatically on existing databases via create_all().
         db.create_all()
 
         # Apply additive column migrations (idempotent, runs every boot).

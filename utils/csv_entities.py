@@ -44,6 +44,12 @@ def _to_date(text):
 
 
 def _to_bool(text):
+    """Return True unless *text* (case-insensitive) is in _FALSEY.
+
+    Call sites should default the missing-cell value to ``"yes"`` so that an
+    empty ``is_active`` column is unambiguously active rather than relying on
+    the side-effect that ``""`` is not in ``_FALSEY``.
+    """
     return text.lower() not in _FALSEY
 
 
@@ -114,7 +120,7 @@ def commit_suppliers(rows):
             address=f.get("address", ""),
             shop_url=f.get("shop_url", ""),
             notes=f.get("notes", ""),
-            is_active=_to_bool(f.get("is_active", "")),
+            is_active=_to_bool(f.get("is_active", "yes")),
         ))
         created += 1
     return created
@@ -172,7 +178,7 @@ def commit_locations(rows, site_id):
             name=f["name"],
             location_type=ltype if ltype in LOCATION_TYPES else "area",
             description=f.get("description", ""),
-            is_active=_to_bool(f.get("is_active", "")),
+            is_active=_to_bool(f.get("is_active", "yes")),
         )
         db.session.add(loc)
         created_objs.append((loc, f.get("parent", "")))

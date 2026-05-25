@@ -657,14 +657,18 @@ def update_team_members(id):
     team = Team.query.get_or_404(id)
     selected = set(request.form.getlist("user_ids", type=int))
 
-    changed = 0
-    for u in User.query.all():
-        if u.id in selected and u.team_id != team.id:
-            u.team_id = team.id
-            changed += 1
-        elif u.id not in selected and u.team_id == team.id:
-            u.team_id = None
-            changed += 1
+    current_ids = {u.id for u in team.members}
+    to_add = selected - current_ids
+    to_remove = current_ids - selected
+    if to_add:
+        User.query.filter(User.id.in_(to_add)).update(
+            {"team_id": team.id}, synchronize_session="fetch"
+        )
+    if to_remove:
+        User.query.filter(User.id.in_(to_remove)).update(
+            {"team_id": None}, synchronize_session="fetch"
+        )
+    changed = len(to_add) + len(to_remove)
 
     log_admin_action(
         "team.members_updated", "team", id,
@@ -879,16 +883,15 @@ def update_site_users(id):
     site = Site.query.get_or_404(id)
     selected = set(request.form.getlist("user_ids", type=int))
 
-    changed = 0
-    for u in User.query.all():
-        has_access = site in u.sites
-        wants_access = u.id in selected
-        if wants_access and not has_access:
-            u.sites.append(site)
-            changed += 1
-        elif has_access and not wants_access:
-            u.sites.remove(site)
-            changed += 1
+    current_ids = {u.id for u in site.users}
+    to_add = selected - current_ids
+    to_remove = current_ids - selected
+    if to_add:
+        new_users = User.query.filter(User.id.in_(to_add)).all()
+        site.users.extend(new_users)
+    if to_remove:
+        site.users = [u for u in site.users if u.id not in to_remove]
+    changed = len(to_add) + len(to_remove)
 
     log_admin_action(
         "site.users_updated", "site", id,
