@@ -144,6 +144,29 @@ def test_bulk_users_forbidden_for_non_admin(app, factory, client):
     assert r.status_code == 403
 
 
+def test_bulk_users_filtered_scope_respects_role_filter(app, factory, client):
+    """select_scope=filtered with role=technician must not touch supervisors."""
+    from extensions import db
+    from models import User
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    tech = factory.user(role="technician", sites=[s])
+    supervisor = factory.user(role="supervisor", sites=[s])
+    db.session.commit()
+    _login(client, admin)
+
+    r = client.post("/admin/users/bulk", data={
+        "bulk_action": "deactivate",
+        "select_scope": "filtered",
+        "role": "technician",
+    }, follow_redirects=False)
+
+    assert r.status_code == 302
+    assert db.session.get(User, tech.id).is_active_user is False
+    assert db.session.get(User, supervisor.id).is_active_user is True
+
+
 # ── team toggle / delete ───────────────────────────────────────────────
 
 def test_toggle_team(app, factory, client):

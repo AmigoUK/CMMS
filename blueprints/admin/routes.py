@@ -23,7 +23,11 @@ from utils.i18n import translate as _t
 # ═══════════════════════════════════════════════════════════════════════
 
 def _user_base_query(args):
-    """Return a filtered User query based on search/filter parameters.
+    """Return a User query with optional filters applied from args.
+
+    Filters: q (search), role (exact), active ("1"/"0").
+    With no filters supplied, returns all users — this is the intended
+    behaviour for an unfiltered list.
 
     Accepts a dict-like object (request.args or request.form) and applies:
       - ``q``      — case-insensitive substring match on username, display_name,
