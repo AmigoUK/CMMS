@@ -299,6 +299,10 @@ def reset_password(id):
     temp_password = secrets.token_urlsafe(10)
     user.set_password(temp_password)
     db.session.commit()
+    log_admin_action(
+        "user.password_reset", "user", user.id,
+        summary=f"Temporary password issued for '{user.username}'",
+    )
 
     resp = make_response(
         render_template(
@@ -308,6 +312,7 @@ def reset_password(id):
         )
     )
     resp.headers["Cache-Control"] = "no-store"
+    resp.headers["Pragma"] = "no-cache"
     return resp
 
 
@@ -329,6 +334,8 @@ def impersonate(id):
     session["impersonating_from"] = current_user.id
 
     login_user(user)
+    log_admin_action("user.impersonate_start", "user", user.id,
+                     summary=f"Started impersonating '{user.username}'")
     flash(_t("flash.user.now_impersonating", name=user.display_name, role=user.role), "info")
     return redirect(url_for("dashboard.index"))
 
@@ -348,6 +355,8 @@ def stop_impersonating():
         return redirect(url_for("dashboard.index"))
 
     login_user(admin_user)
+    log_admin_action("user.impersonate_stop", "user", admin_user.id,
+                     summary="Returned from impersonation")
     flash(_t("flash.user.returned_to_admin"), "success")
     return redirect(url_for("admin.list_users"))
 

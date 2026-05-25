@@ -436,3 +436,138 @@ def test_import_users_preview_bad_header_redirects(app, factory, client):
         follow_redirects=False,
     )
     assert r.status_code == 302
+
+
+# ── reset password ─────────────────────────────────────────────────────
+
+def test_reset_password_returns_result_page(app, factory, client):
+    from extensions import db
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    victim = factory.user(role="technician", sites=[s])
+    db.session.commit()
+    _login(client, admin)
+    r = client.post(f"/admin/users/{victim.id}/reset-password", follow_redirects=False)
+    assert r.status_code == 200
+    assert "no-store" in r.headers.get("Cache-Control", "")
+    assert victim.username.encode() in r.data
+
+
+def test_reset_password_not_in_flash(app, factory, client):
+    from extensions import db
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    victim = factory.user(role="technician", sites=[s])
+    db.session.commit()
+    _login(client, admin)
+    with client.session_transaction() as sess:
+        sess.pop("_flashes", None)  # clear any existing flashes
+    client.post(f"/admin/users/{victim.id}/reset-password", follow_redirects=False)
+    with client.session_transaction() as sess:
+        flashes = sess.get("_flashes", [])
+    # No flash message should contain any password-looking content
+    for category, message in flashes:
+        assert "password" not in message.lower() or category == "success"  # only neutral success flashes allowed
+
+
+# ── impersonation ──────────────────────────────────────────────────────
+
+def test_impersonate_happy_path(app, factory, client):
+    """Admin impersonates a technician: session stores admin ID, redirect to dashboard."""
+    from extensions import db
+    from models import AdminAuditLog
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    tech = factory.user(role="technician", sites=[s])
+    db.session.commit()
+    admin_id = admin.id
+    _login(client, admin)
+
+    r = client.post(f"/admin/users/{tech.id}/impersonate", follow_redirects=False)
+
+    assert r.status_code == 302
+    assert "/dashboard" in r.headers["Location"] or r.headers["Location"].endswith("/")
+    with client.session_transaction() as sess:
+        assert sess.get("impersonating_from") == admin_id
+    assert AdminAuditLog.query.filter_by(action="user.impersonate_start").count() == 1
+
+
+def test_impersonate_self_blocked(app, factory, client):
+    """Admin cannot impersonate themselves — redirects to user list with warning."""
+    from extensions import db
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    db.session.commit()
+    _login(client, admin)
+
+    r = client.post(f"/admin/users/{admin.id}/impersonate", follow_redirects=False)
+
+    assert r.status_code == 302
+    assert "/admin/users" in r.headers["Location"]
+    with client.session_transaction() as sess:
+        flashes = sess.get("_flashes", [])
+    categories = [cat for cat, _ in flashes]
+    assert "warning" in categories
+
+
+def test_impersonate_inactive_blocked(app, factory, client):
+    """Admin cannot impersonate a deactivated user — redirects with danger flash."""
+    from extensions import db
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    inactive = factory.user(role="technician", sites=[s])
+    inactive.is_active_user = False
+    db.session.commit()
+    _login(client, admin)
+
+    r = client.post(f"/admin/users/{inactive.id}/impersonate", follow_redirects=False)
+
+    assert r.status_code == 302
+    with client.session_transaction() as sess:
+        flashes = sess.get("_flashes", [])
+    categories = [cat for cat, _ in flashes]
+    assert "danger" in categories
+
+
+def test_stop_impersonating_no_session_key(app, factory, client):
+    """Calling stop_impersonating without an active impersonation session does not crash."""
+    from extensions import db
+
+    s = factory.site()
+    regular = factory.user(role="technician", sites=[s])
+    db.session.commit()
+    _login(client, regular)
+
+    r = client.post("/admin/stop-impersonating", follow_redirects=False)
+
+    assert r.status_code == 302
+
+
+def test_stop_impersonating_deactivated_original_admin(app, factory, client):
+    """If the original admin is missing or no longer admin, stop gracefully with danger flash."""
+    from extensions import db
+
+    s = factory.site()
+    admin = factory.user(role="admin", sites=[s])
+    tech = factory.user(role="technician", sites=[s])
+    # Simulate a deactivated/demoted original admin by using a technician's ID
+    bad_admin_id = tech.id
+    db.session.commit()
+    _login(client, admin)
+
+    # Manually inject impersonating_from pointing at a non-admin user
+    with client.session_transaction() as sess:
+        sess["impersonating_from"] = bad_admin_id
+
+    r = client.post("/admin/stop-impersonating", follow_redirects=False)
+
+    assert r.status_code == 302
+    with client.session_transaction() as sess:
+        flashes = sess.get("_flashes", [])
+    categories = [cat for cat, _ in flashes]
+    assert "danger" in categories
