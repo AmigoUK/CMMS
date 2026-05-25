@@ -1,4 +1,6 @@
-"""HTTP tests for operational-entity bulk operations (suppliers, parts)."""
+"""HTTP tests for operational-entity bulk operations and CSV import/export."""
+
+import io
 
 
 def _login(client, user, active_site_id=None):
@@ -367,3 +369,89 @@ def test_bulk_locations_delete_skips_blocked_by_child(app, factory, client):
         data={"ids": [pid], "bulk_action": "delete"}, follow_redirects=False,
     )
     assert db.session.get(Location, pid) is not None  # blocked by its child
+
+
+# ── CSV import / export ────────────────────────────────────────────────
+
+def test_supplier_csv_export_route(app, factory, client):
+    from extensions import db
+    from models import Supplier
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    db.session.add(Supplier(name="Acme"))
+    db.session.commit()
+    _login(client, sup, s.id)
+
+    r = client.get("/suppliers/export")
+    assert r.status_code == 200
+    assert "text/csv" in r.content_type
+    assert b"Acme" in r.data
+
+
+def test_supplier_csv_import_roundtrip(app, factory, client):
+    from extensions import db
+    from models import Supplier
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    db.session.commit()
+    _login(client, sup, s.id)
+
+    csv_text = "name,email\nNewCo,new@x.com"
+    preview = client.post(
+        "/suppliers/import",
+        data={"csv_file": (io.BytesIO(csv_text.encode()), "s.csv")},
+        content_type="multipart/form-data",
+    )
+    assert preview.status_code == 200
+
+    client.post("/suppliers/import/confirm",
+                data={"csv_text": csv_text}, follow_redirects=False)
+    assert Supplier.query.filter_by(name="NewCo").first() is not None
+
+
+def test_parts_csv_import_commit(app, factory, client):
+    from extensions import db
+    from models import Part
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    db.session.commit()
+    _login(client, sup, s.id)
+
+    client.post("/parts/import/confirm",
+                data={"csv_text": "name,quantity_on_hand\nWidget,7"},
+                follow_redirects=False)
+    p = Part.query.filter_by(name="Widget", site_id=s.id).first()
+    assert p is not None and p.quantity_on_hand == 7
+
+
+def test_locations_csv_export_route(app, factory, client):
+    from extensions import db
+    from models import Location
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    db.session.add(Location(site_id=s.id, name="Yard", location_type="area"))
+    db.session.commit()
+    _login(client, sup, s.id)
+
+    r = client.get("/locations/export")
+    assert r.status_code == 200
+    assert b"Yard" in r.data
+
+
+def test_assets_csv_import_commit(app, factory, client):
+    from extensions import db
+    from models import Asset
+
+    s = factory.site()
+    sup = factory.user(role="supervisor", sites=[s])
+    db.session.commit()
+    _login(client, sup, s.id)
+
+    client.post("/assets/import/confirm",
+                data={"csv_text": "name,status\nBoiler,operational"},
+                follow_redirects=False)
+    assert Asset.query.filter_by(name="Boiler", site_id=s.id).first() is not None

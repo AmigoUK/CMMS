@@ -230,3 +230,100 @@ def quick_create():
     db.session.add(supplier)
     db.session.commit()
     return jsonify({"id": supplier.id, "name": supplier.name}), 201
+
+
+# ── CSV import / export ───────────────────────────────────────────────
+
+def _csv_response(text, filename):
+    from flask import make_response
+    resp = make_response(text)
+    resp.headers["Content-Type"] = "text/csv"
+    resp.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return resp
+
+
+def _import_ctx():
+    from utils.csv_entities import supplier_headers
+    from utils.i18n import translate as _t
+    return {
+        "title": _t("ui.button.import_users") + " — " + _t("ui.page.suppliers"),
+        "headers": supplier_headers,
+        "import_url": url_for("suppliers.import_preview"),
+        "confirm_url": url_for("suppliers.import_commit"),
+        "template_url": url_for("suppliers.import_template"),
+        "export_url": url_for("suppliers.export"),
+        "import_form_url": url_for("suppliers.import_form"),
+        "cancel_url": url_for("suppliers.list_suppliers"),
+    }
+
+
+@suppliers_bp.route("/export")
+@supervisor_required
+def export():
+    from utils.csv_entities import supplier_columns
+    from utils.csv_io import export_csv
+    return _csv_response(
+        export_csv(Supplier.query.order_by(Supplier.name).all(),
+                   supplier_columns()),
+        "suppliers.csv",
+    )
+
+
+@suppliers_bp.route("/import/template")
+@supervisor_required
+def import_template():
+    from utils.csv_entities import supplier_headers
+    from utils.csv_io import csv_template
+    return _csv_response(csv_template(supplier_headers),
+                         "suppliers_template.csv")
+
+
+@suppliers_bp.route("/import", methods=["GET"])
+@supervisor_required
+def import_form():
+    return render_template("csv_import.html", **_import_ctx())
+
+
+@suppliers_bp.route("/import", methods=["POST"])
+@supervisor_required
+def import_preview():
+    from utils.csv_entities import make_supplier_validator, supplier_required
+    from utils.csv_io import count_statuses, parse_csv, read_upload
+    from utils.i18n import translate as _t
+
+    text, err = read_upload(request.files.get("csv_file"))
+    if err:
+        flash(_t("flash.import." + err), "danger")
+        return redirect(url_for("suppliers.import_form"))
+    rows, header_error = parse_csv(
+        text, supplier_required, make_supplier_validator())
+    if header_error:
+        flash(_t("flash.import.bad_header", detail=header_error), "danger")
+        return redirect(url_for("suppliers.import_form"))
+    return render_template(
+        "csv_import.html", rows=rows, counts=count_statuses(rows),
+        csv_text=text, **_import_ctx())
+
+
+@suppliers_bp.route("/import/confirm", methods=["POST"])
+@supervisor_required
+def import_commit():
+    from utils.audit import log_admin_action
+    from utils.csv_entities import (
+        commit_suppliers, make_supplier_validator, supplier_required,
+    )
+    from utils.csv_io import parse_csv
+    from utils.i18n import translate as _t
+
+    rows, header_error = parse_csv(
+        request.form.get("csv_text", ""), supplier_required,
+        make_supplier_validator())
+    if header_error:
+        flash(_t("flash.import.bad_format"), "danger")
+        return redirect(url_for("suppliers.import_form"))
+    created = commit_suppliers(rows)
+    log_admin_action("supplier.csv_import", "batch",
+                     summary=f"{created} supplier(s) imported")
+    db.session.commit()
+    flash(_t("flash.import.done", count=created), "success")
+    return redirect(url_for("suppliers.list_suppliers"))

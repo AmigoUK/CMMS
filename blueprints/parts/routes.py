@@ -528,3 +528,93 @@ def qr_code(id):
     response.headers["Content-Type"] = "image/png"
     response.headers["Cache-Control"] = "public, max-age=86400"
     return response
+
+
+# ── CSV import / export ───────────────────────────────────────────────
+
+def _csv_response(text, filename):
+    resp = make_response(text)
+    resp.headers["Content-Type"] = "text/csv"
+    resp.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return resp
+
+
+def _import_ctx():
+    from utils.csv_entities import part_headers
+    from utils.i18n import translate as _t
+    return {
+        "title": _t("ui.button.import_users") + " — " + _t("ui.page.parts_inventory"),
+        "headers": part_headers,
+        "import_url": url_for("parts.import_preview"),
+        "confirm_url": url_for("parts.import_commit"),
+        "template_url": url_for("parts.import_template"),
+        "export_url": url_for("parts.export"),
+        "import_form_url": url_for("parts.import_form"),
+        "cancel_url": url_for("parts.list_parts"),
+    }
+
+
+@parts_bp.route("/export")
+@supervisor_required
+def export():
+    from utils.csv_entities import part_columns
+    from utils.csv_io import export_csv
+    rows = Part.query.filter_by(site_id=g.current_site.id).order_by(Part.name).all()
+    return _csv_response(export_csv(rows, part_columns()), "parts.csv")
+
+
+@parts_bp.route("/import/template")
+@supervisor_required
+def import_template():
+    from utils.csv_entities import part_headers
+    from utils.csv_io import csv_template
+    return _csv_response(csv_template(part_headers), "parts_template.csv")
+
+
+@parts_bp.route("/import", methods=["GET"])
+@supervisor_required
+def import_form():
+    return render_template("csv_import.html", **_import_ctx())
+
+
+@parts_bp.route("/import", methods=["POST"])
+@supervisor_required
+def import_preview():
+    from utils.csv_entities import make_part_validator, part_required
+    from utils.csv_io import count_statuses, parse_csv, read_upload
+    from utils.i18n import translate as _t
+
+    text, err = read_upload(request.files.get("csv_file"))
+    if err:
+        flash(_t("flash.import." + err), "danger")
+        return redirect(url_for("parts.import_form"))
+    rows, header_error = parse_csv(
+        text, part_required, make_part_validator(g.current_site.id))
+    if header_error:
+        flash(_t("flash.import.bad_header", detail=header_error), "danger")
+        return redirect(url_for("parts.import_form"))
+    return render_template(
+        "csv_import.html", rows=rows, counts=count_statuses(rows),
+        csv_text=text, **_import_ctx())
+
+
+@parts_bp.route("/import/confirm", methods=["POST"])
+@supervisor_required
+def import_commit():
+    from utils.audit import log_admin_action
+    from utils.csv_entities import commit_parts, make_part_validator, part_required
+    from utils.csv_io import parse_csv
+    from utils.i18n import translate as _t
+
+    rows, header_error = parse_csv(
+        request.form.get("csv_text", ""), part_required,
+        make_part_validator(g.current_site.id))
+    if header_error:
+        flash(_t("flash.import.bad_format"), "danger")
+        return redirect(url_for("parts.import_form"))
+    created = commit_parts(rows, g.current_site.id)
+    log_admin_action("part.csv_import", "batch",
+                     summary=f"{created} part(s) imported")
+    db.session.commit()
+    flash(_t("flash.import.done", count=created), "success")
+    return redirect(url_for("parts.list_parts"))
