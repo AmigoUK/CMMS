@@ -354,9 +354,10 @@ def stop_impersonating():
         flash(_t("flash.user.original_admin_missing"), "danger")
         return redirect(url_for("dashboard.index"))
 
+    impersonated_id = current_user.id   # still the technician at this point
     login_user(admin_user)
-    log_admin_action("user.impersonate_stop", "user", admin_user.id,
-                     summary="Returned from impersonation")
+    log_admin_action("user.impersonate_stop", "user", impersonated_id,
+                     summary=f"Returned from impersonating user {impersonated_id}")
     flash(_t("flash.user.returned_to_admin"), "success")
     return redirect(url_for("admin.list_users"))
 
@@ -458,7 +459,7 @@ def _csv_response(text, filename):
     from flask import make_response
     resp = make_response(text)
     resp.headers["Content-Type"] = "text/csv"
-    resp.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    resp.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
     return resp
 
 
@@ -1259,7 +1260,7 @@ def export_translations():
 
     response = make_response(output.getvalue())
     response.headers["Content-Type"] = "text/csv"
-    response.headers["Content-Disposition"] = "attachment; filename=cmms_translations.csv"
+    response.headers["Content-Disposition"] = 'attachment; filename="cmms_translations.csv"'
     return response
 
 

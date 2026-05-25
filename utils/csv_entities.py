@@ -325,7 +325,7 @@ def make_asset_validator(site_id):
         l.name.lower(): l.id
         for l in Location.query.filter_by(site_id=site_id).all()
     }
-    existing_tags = {a.asset_tag.lower() for a in Asset.query.all()
+    existing_tags = {a.asset_tag.lower() for a in Asset.query.filter_by(site_id=site_id).all()
                      if a.asset_tag}
     seen_tags = set()
 

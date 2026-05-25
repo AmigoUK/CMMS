@@ -268,7 +268,7 @@ def _csv_response(text, filename):
     from flask import make_response
     resp = make_response(text)
     resp.headers["Content-Type"] = "text/csv"
-    resp.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    resp.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
     return resp
 
 
@@ -276,7 +276,7 @@ def _import_ctx():
     from utils.csv_entities import location_headers
     from utils.i18n import translate as _t
     return {
-        "title": _t("ui.button.import_users") + " — " + _t("ui.page.locations"),
+        "title": _t("ui.button.import") + " — " + _t("ui.page.locations"),
         "headers": location_headers,
         "import_url": url_for("locations.import_preview"),
         "confirm_url": url_for("locations.import_commit"),

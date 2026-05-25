@@ -209,6 +209,9 @@ def bulk_user_action(action, user_ids, *, actor_id, new_role=None,
             result.mark_updated()
 
         elif action == "delete":
+            if _is_last_active_admin(user):
+                result.skip(user.id, user.username, "last_admin")
+                continue
             if not user_delete_report(user)["can_delete"]:
                 result.skip(user.id, user.username, "blocked")
                 continue

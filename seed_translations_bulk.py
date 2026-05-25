@@ -229,6 +229,7 @@ TRANSLATIONS = {
     },
 
     # ── User CSV import / export (Phase 3) ──────────────────────────────
+    ("ui.button.import", "ui"): {"en": "Import", "pl": "Importuj"},
     ("ui.button.import_users", "ui"): {"en": "Import", "pl": "Importuj"},
     ("ui.button.export_users", "ui"): {"en": "Export", "pl": "Eksportuj"},
     ("ui.button.preview_import", "ui"): {
@@ -300,8 +301,8 @@ TRANSLATIONS = {
         "en": "Password reset", "pl": "Reset hasła",
     },
     ("ui.password_reset.save_warning", "ui"): {
-        "en": "Note this password now — this page cannot be refreshed.",
-        "pl": "Zapisz to hasło teraz — strona nie może zostać odświeżona.",
+        "en": "Note this password now — it will not be shown again.",
+        "pl": "Zapisz to hasło — nie zostanie ponownie wyświetlone.",
     },
     ("ui.password_reset.temp_password_label", "ui"): {
         "en": "Temporary password", "pl": "Hasło tymczasowe",

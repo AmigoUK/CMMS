@@ -535,7 +535,7 @@ def qr_code(id):
 def _csv_response(text, filename):
     resp = make_response(text)
     resp.headers["Content-Type"] = "text/csv"
-    resp.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    resp.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
     return resp
 
 
@@ -543,7 +543,7 @@ def _import_ctx():
     from utils.csv_entities import part_headers
     from utils.i18n import translate as _t
     return {
-        "title": _t("ui.button.import_users") + " — " + _t("ui.page.parts_inventory"),
+        "title": _t("ui.button.import") + " — " + _t("ui.page.parts_inventory"),
         "headers": part_headers,
         "import_url": url_for("parts.import_preview"),
         "confirm_url": url_for("parts.import_commit"),
