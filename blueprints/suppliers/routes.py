@@ -1,6 +1,6 @@
 """Suppliers blueprint — routes for supplier management."""
 
-from flask import abort, flash, jsonify, redirect, render_template, request, url_for
+from flask import abort, flash, g, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from blueprints.suppliers import suppliers_bp
@@ -105,8 +105,10 @@ def bulk():
 @supervisor_required
 def detail(id):
     supplier = Supplier.query.get_or_404(id)
-    parts = Part.query.filter_by(
-        supplier_id=supplier.id, is_active=True,
+    parts = Part.query.filter(
+        Part.supplier_id == supplier.id,
+        Part.is_active == True,
+        Part.site_id == g.current_site.id,
     ).order_by(Part.name).all()
     low_stock_parts = [p for p in parts if p.is_low_stock]
     return render_template(
