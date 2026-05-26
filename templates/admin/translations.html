@@ -44,12 +44,13 @@
 {# Filters #}
 <form method="GET" class="row g-2 mb-3">
     <div class="col-sm-4">
-        <input type="text" name="q" class="form-control form-control-sm" placeholder="Search key or value..."
+        <input type="text" name="q" class="form-control form-control-sm"
+               placeholder="{{ _('ui.label.search') }}"
                value="{{ search_query }}">
     </div>
     <div class="col-sm-3">
         <select name="category" class="form-select form-select-sm">
-            <option value="">All categories</option>
+            <option value="">{{ _('ui.label.all_categories') }}</option>
             {% for cat in categories %}
             <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
             {% endfor %}
@@ -57,12 +58,12 @@
     </div>
     <div class="col-sm-3">
         <select name="show" class="form-select form-select-sm">
-            <option value="" {% if not show_filter %}selected{% endif %}>All</option>
-            <option value="missing" {% if show_filter == 'missing' %}selected{% endif %}>Missing only</option>
+            <option value="" {% if not show_filter %}selected{% endif %}>{{ _('ui.label.all') }}</option>
+            <option value="missing" {% if show_filter == 'missing' %}selected{% endif %}>{{ _('ui.label.missing_only') }}</option>
         </select>
     </div>
     <div class="col-sm-2">
-        <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Filter</button>
+        <button type="submit" class="btn btn-sm btn-outline-secondary w-100">{{ _('ui.button.filter') }}</button>
     </div>
 </form>
 
@@ -82,11 +83,11 @@
     <table class="table table-sm table-hover align-middle">
         <thead class="table-light">
             <tr>
-                <th>Key</th>
-                <th>Category</th>
-                <th>English</th>
+                <th>{{ _('ui.label.key') }}</th>
+                <th>{{ _('ui.label.category') }}</th>
+                <th>{{ _('ui.label.english') }}</th>
                 <th>{{ target_lang_name }}</th>
-                <th style="width: 80px;">Actions</th>
+                <th style="width: 80px;">{{ _('ui.label.actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -99,7 +100,7 @@
                     {% if t.target_value %}
                     {{ t.target_value[:80] }}{% if t.target_value|length > 80 %}...{% endif %}
                     {% else %}
-                    <span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Missing</span>
+                    <span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>{{ _('ui.status.missing') }}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -116,6 +117,6 @@
 {% include "partials/_pagination.html" %}
 
 {% else %}
-<div class="text-center text-muted py-4">No translations match your filters.</div>
+<div class="text-center text-muted py-4">{{ _('ui.text.translations_no_match') }}</div>
 {% endif %}
 {% endblock %}

@@ -230,8 +230,34 @@ TRANSLATIONS = {
 
     # ── User CSV import / export (Phase 3) ──────────────────────────────
     ("ui.button.import", "ui"): {"en": "Import", "pl": "Importuj"},
-    ("ui.button.import_users", "ui"): {"en": "Import", "pl": "Importuj"},
-    ("ui.button.export_users", "ui"): {"en": "Export", "pl": "Eksportuj"},
+    ("ui.button.import_users", "ui"): {"en": "Import users", "pl": "Importuj użytkowników"},
+    ("ui.button.export_users", "ui"): {"en": "Export users", "pl": "Eksportuj użytkowników"},
+
+    # ── Per-entity CSV import / export (Phase 4 hotfix) ─────────────────
+    ("ui.button.import_assets", "ui"): {
+        "en": "Import assets", "pl": "Importuj urządzenia",
+    },
+    ("ui.button.export_assets", "ui"): {
+        "en": "Export assets", "pl": "Eksportuj urządzenia",
+    },
+    ("ui.button.import_parts", "ui"): {
+        "en": "Import parts", "pl": "Importuj części",
+    },
+    ("ui.button.export_parts", "ui"): {
+        "en": "Export parts", "pl": "Eksportuj części",
+    },
+    ("ui.button.import_suppliers", "ui"): {
+        "en": "Import suppliers", "pl": "Importuj dostawców",
+    },
+    ("ui.button.export_suppliers", "ui"): {
+        "en": "Export suppliers", "pl": "Eksportuj dostawców",
+    },
+    ("ui.button.import_locations", "ui"): {
+        "en": "Import locations", "pl": "Importuj lokalizacje",
+    },
+    ("ui.button.export_locations", "ui"): {
+        "en": "Export locations", "pl": "Eksportuj lokalizacje",
+    },
     ("ui.button.preview_import", "ui"): {
         "en": "Preview", "pl": "Podgląd",
     },
@@ -331,6 +357,38 @@ TRANSLATIONS = {
     ("flash.import.skipped_duplicates", "flash"): {
         "en": "skipped as duplicates",
         "pl": "pominięto jako duplikaty",
+    },
+
+    # ── Admin users filter bar + impersonation (commit 5695058 hotfix) ──
+    ("ui.button.clear", "ui"): {"en": "Clear", "pl": "Wyczyść"},
+    ("ui.button.login_as", "ui"): {
+        "en": "Login as", "pl": "Zaloguj się jako",
+    },
+    ("ui.confirm.login_as", "ui"): {
+        "en": "Log in as this user?",
+        "pl": "Zalogować się jako tego użytkownika?",
+    },
+    ("ui.label.all_roles", "ui"): {
+        "en": "All roles", "pl": "Wszystkie role",
+    },
+    ("ui.label.search", "ui"): {"en": "Search", "pl": "Szukaj"},
+    ("ui.text.admin_tab_permissions", "ui"): {
+        "en": "Permissions", "pl": "Uprawnienia",
+    },
+
+    # ── Admin translations editor screen ────────────────────────────────
+    ("ui.label.all_categories", "ui"): {
+        "en": "All categories", "pl": "Wszystkie kategorie",
+    },
+    ("ui.label.missing_only", "ui"): {
+        "en": "Missing only", "pl": "Tylko brakujące",
+    },
+    ("ui.label.key", "ui"): {"en": "Key", "pl": "Klucz"},
+    ("ui.label.english", "ui"): {"en": "English", "pl": "Angielski"},
+    ("ui.status.missing", "ui"): {"en": "Missing", "pl": "Brakuje"},
+    ("ui.text.translations_no_match", "ui"): {
+        "en": "No translations match your filters.",
+        "pl": "Żadne tłumaczenia nie pasują do filtrów.",
     },
 }
 
