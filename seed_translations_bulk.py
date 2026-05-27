@@ -258,6 +258,18 @@ TRANSLATIONS = {
     ("ui.button.export_locations", "ui"): {
         "en": "Export locations", "pl": "Eksportuj lokalizacje",
     },
+    ("ui.button.import_pm", "ui"): {
+        "en": "Import PM tasks", "pl": "Importuj zadania PM",
+    },
+    ("ui.button.export_pm", "ui"): {
+        "en": "Export PM tasks", "pl": "Eksportuj zadania PM",
+    },
+    ("ui.button.import_certs", "ui"): {
+        "en": "Import certifications", "pl": "Importuj certyfikacje",
+    },
+    ("ui.button.export_certs", "ui"): {
+        "en": "Export certifications", "pl": "Eksportuj certyfikacje",
+    },
     ("ui.button.preview_import", "ui"): {
         "en": "Preview", "pl": "Podgląd",
     },
