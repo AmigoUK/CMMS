@@ -30,6 +30,7 @@ from models.app_settings import AppSettings
 from models.request_activity import RequestActivity
 from models.translation import Translation
 from models.help_content import HelpContent
+from models.admin_audit_log import AdminAuditLog
 
 __all__ = [
     "Certification", "CertificationLog", "CERT_TYPES", "CERT_STATUSES",
@@ -51,4 +52,5 @@ __all__ = [
     "RequestActivity",
     "Translation",
     "HelpContent",
+    "AdminAuditLog",
 ]

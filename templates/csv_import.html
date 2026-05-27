@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ cancel_url }}" class="text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.button.back') }}
+    </a>
+</div>
+
+<h1 class="h3 mb-4"><i class="bi bi-upload me-2"></i>{{ title }}</h1>
+
+{% if rows is not defined %}
+{# ── upload form ── #}
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted">{{ _('ui.text.import_help') }}</p>
+                <p class="small mb-3">
+                    <strong>{{ _('ui.text.import_columns') }}:</strong>
+                    <code>{{ headers | join(', ') }}</code>
+                </p>
+                <form method="POST" action="{{ import_url }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">{{ _('ui.label.csv_file') }}</label>
+                        <input type="file" class="form-control" id="csv_file"
+                               name="csv_file" accept=".csv" required>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-eye me-1"></i>{{ _('ui.button.preview_import') }}
+                        </button>
+                        <a href="{{ template_url }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-download me-1"></i>{{ _('ui.button.download_template') }}
+                        </a>
+                        <a href="{{ export_url }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-table me-1"></i>{{ _('ui.button.export_users') }}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+{# ── dry-run preview ── #}
+<div class="alert alert-info d-flex flex-wrap gap-3">
+    <span><span class="badge bg-success">{{ counts.create }}</span> {{ _('ui.import.status_create') }}</span>
+    <span><span class="badge bg-secondary">{{ counts.skip }}</span> {{ _('ui.import.status_skip') }}</span>
+    <span><span class="badge bg-danger">{{ counts.error }}</span> {{ _('ui.import.status_error') }}</span>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>{{ _('ui.label.name') }}</th>
+                <th>{{ _('ui.label.status') }}</th>
+                <th>{{ _('ui.label.notes') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in rows %}
+            <tr class="{% if r.status == 'error' %}table-danger{% elif r.status == 'skip' %}table-warning{% endif %}">
+                <td class="text-muted">{{ r.row_num }}</td>
+                <td>{{ r.fields.name if r.fields else '' }}</td>
+                <td>
+                    {% if r.status == 'create' %}
+                    <span class="badge bg-success">{{ _('ui.import.status_create') }}</span>
+                    {% elif r.status == 'skip' %}
+                    <span class="badge bg-secondary">{{ _('ui.import.status_skip') }}</span>
+                    {% else %}
+                    <span class="badge bg-danger">{{ _('ui.import.status_error') }}</span>
+                    {% endif %}
+                </td>
+                <td class="small text-danger">{{ r.errors | join('; ') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if counts.create %}
+<form method="POST" action="{{ confirm_url }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <textarea name="csv_text" hidden>{{ csv_text }}</textarea>
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.confirm_import') }} ({{ counts.create }})
+    </button>
+    <a href="{{ cancel_url }}" class="btn btn-outline-secondary">{{ _('ui.button.cancel') }}</a>
+</form>
+{% else %}
+<div class="alert alert-warning">{{ _('ui.import.nothing_to_import') }}</div>
+<a href="{{ import_form_url }}" class="btn btn-outline-secondary">{{ _('ui.button.back') }}</a>
+{% endif %}
+{% endif %}
+{% endblock %}

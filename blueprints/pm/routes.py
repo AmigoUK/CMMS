@@ -124,7 +124,71 @@ def task_list():
         search_query=q,
         show_filter=show,
         overdue_count=overdue_count,
+        technicians=User.query.filter_by(is_active_user=True)
+        .order_by(User.display_name).all(),
     )
+
+
+# ── bulk operations ───────────────────────────────────────────────────
+
+@pm_bp.route("/tasks/bulk", methods=["POST"])
+@supervisor_required
+def bulk_tasks():
+    """Apply one action to many PM tasks in the current site."""
+    from utils.admin_ops import check_deletable, perform_entity_delete
+    from utils.audit import log_admin_action
+    from utils.bulk import BulkResult, parse_selection
+    from utils.i18n import translate as _t
+
+    action = request.form.get("bulk_action", "").strip()
+    if action not in {"activate", "deactivate", "reassign", "delete"}:
+        flash(_t("flash.bulk.unknown_action"), "danger")
+        return redirect(url_for("pm.task_list"))
+
+    base = PreventiveTask.query.filter_by(site_id=g.current_site.id)
+    ids = parse_selection(request.form, base_query=base)
+    if not ids:
+        flash(_t("flash.bulk.none_selected"), "warning")
+        return redirect(url_for("pm.task_list"))
+
+    new_assignee_id = None
+    if action == "reassign":
+        raw = request.form.get("new_assignee_id", type=int)
+        if raw:
+            if db.session.get(User, raw) is None:
+                flash(_t("flash.bulk.unknown_action"), "danger")
+                return redirect(url_for("pm.task_list"))
+            new_assignee_id = raw
+
+    result = BulkResult()
+    for task in base.filter(PreventiveTask.id.in_(ids)).all():
+        if action == "delete":
+            can_delete, _blockers = check_deletable(task)
+            if not can_delete:
+                result.skip(task.id, task.name, "blocked")
+                continue
+            perform_entity_delete(task)
+        elif action == "activate":
+            task.is_active = True
+        elif action == "deactivate":
+            task.is_active = False
+        elif action == "reassign":
+            task.assigned_to_id = new_assignee_id
+        result.mark_updated()
+
+    log_admin_action(
+        f"pm.bulk_{action}", "batch",
+        summary=f"{result.updated} task(s) updated, "
+                f"{result.skipped_count} skipped",
+        detail={"action": action, "updated": result.updated},
+    )
+    db.session.commit()
+    flash(
+        _t("flash.bulk.summary",
+           updated=result.updated, skipped=result.skipped_count),
+        "success",
+    )
+    return redirect(url_for("pm.task_list"))
 
 
 # ── task detail ───────────────────────────────────────────────────────

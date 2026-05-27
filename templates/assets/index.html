@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/_bulk_actions.html" import bulk_checkbox_header, bulk_checkbox_cell, bulk_action_bar %}
 
 {% block title %}{{ _('ui.page.property') }} — CMMS{% endblock %}
 
@@ -9,6 +10,12 @@
         {% if current_user.is_supervisor %}
         <a href="{{ url_for('assets.qr_labels_select') }}" class="btn btn-outline-secondary">
             <i class="bi bi-qr-code me-1"></i>{{ _('ui.button.print_qr_labels') }}
+        </a>
+        <a href="{{ url_for('assets.import_form') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-upload me-1"></i>{{ _('ui.button.import_assets') }}
+        </a>
+        <a href="{{ url_for('assets.export') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-download me-1"></i>{{ _('ui.button.export_assets') }}
         </a>
         <a href="{{ url_for('assets.new') }}" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_property') }}
@@ -67,12 +74,26 @@
 
 {# Property table / cards #}
 {% if assets %}
+{% set bulk_asset_actions = [
+    {"value": "activate", "label": _('ui.bulk.action.activate')},
+    {"value": "deactivate", "label": _('ui.bulk.action.deactivate'), "confirm": true},
+    {"value": "set_status", "label": _('ui.bulk.action.set_status')},
+    {"value": "set_criticality", "label": _('ui.bulk.action.set_criticality')},
+    {"value": "set_location", "label": _('ui.bulk.action.set_location')},
+    {"value": "set_category", "label": _('ui.bulk.action.set_category')},
+] %}
 
 {# Desktop table #}
+{% if current_user.is_supervisor %}
+<form method="POST" action="{{ url_for('assets.bulk') }}" data-bulk-form
+      data-bulk-confirm-text="{{ _('ui.bulk.confirm_generic') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% endif %}
 <div class="table-responsive d-none d-md-block">
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
+                {% if current_user.is_supervisor %}{{ bulk_checkbox_header() }}{% endif %}
                 <th style="width: 50px;"></th>
                 <th>{{ _('ui.label.name') }}</th>
                 <th>{{ _('ui.label.tag') }}</th>
@@ -86,6 +107,7 @@
         <tbody>
             {% for asset in assets %}
             <tr>
+                {% if current_user.is_supervisor %}{{ bulk_checkbox_cell(asset.id) }}{% endif %}
                 <td>
                     {% if asset.image %}
                     <img src="{{ url_for('uploaded_file', filename='property/' + asset.image) }}"
@@ -139,6 +161,37 @@
         </tbody>
     </table>
 </div>
+{% if current_user.is_supervisor %}
+{% call bulk_action_bar(bulk_asset_actions, pagination.total) %}
+    <div data-bulk-for="set_status" hidden>
+        <select name="new_status" class="form-select form-select-sm w-auto">
+            {% for s in statuses %}
+            <option value="{{ s }}">{{ s | replace('_', ' ') | title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div data-bulk-for="set_criticality" hidden>
+        <select name="new_criticality" class="form-select form-select-sm w-auto">
+            {% for c in criticalities %}
+            <option value="{{ c }}">{{ c | title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div data-bulk-for="set_location" hidden>
+        <select name="new_location_id" class="form-select form-select-sm w-auto">
+            <option value="">{{ _('ui.bulk.no_location') }}</option>
+            {% for l in locations %}
+            <option value="{{ l.id }}">{{ l.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div data-bulk-for="set_category" hidden>
+        <input type="text" name="new_category" class="form-control form-control-sm w-auto"
+               placeholder="{{ _('ui.label.category') }}">
+    </div>
+{% endcall %}
+</form>
+{% endif %}
 
 {# Mobile cards #}
 <div class="d-md-none">

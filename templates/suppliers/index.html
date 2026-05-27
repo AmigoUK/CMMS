@@ -1,12 +1,21 @@
 {% extends "base.html" %}
+{% from "partials/_bulk_actions.html" import bulk_checkbox_header, bulk_checkbox_cell, bulk_action_bar %}
 {% block title %}{{ _('ui.page.suppliers') }} — CMMS{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0"><i class="bi bi-truck me-2"></i>{{ _('ui.page.suppliers') }}</h1>
-    <a href="{{ url_for('suppliers.new') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_supplier') }}
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('suppliers.import_form') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-upload me-1"></i>{{ _('ui.button.import_suppliers') }}
+        </a>
+        <a href="{{ url_for('suppliers.export') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-download me-1"></i>{{ _('ui.button.export_suppliers') }}
+        </a>
+        <a href="{{ url_for('suppliers.new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_supplier') }}
+        </a>
+    </div>
 </div>
 
 {# Search #}
@@ -39,10 +48,19 @@
 </div>
 
 {% if suppliers %}
+{% set bulk_supplier_actions = [
+    {"value": "activate", "label": _('ui.bulk.action.activate')},
+    {"value": "deactivate", "label": _('ui.bulk.action.deactivate'), "confirm": true},
+    {"value": "delete", "label": _('ui.bulk.action.delete'), "confirm": true},
+] %}
+<form method="POST" action="{{ url_for('suppliers.bulk') }}" data-bulk-form
+      data-bulk-confirm-text="{{ _('ui.bulk.confirm_generic') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="table-responsive">
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
+                {{ bulk_checkbox_header() }}
                 <th>{{ _('ui.label.name') }}</th>
                 <th>{{ _('ui.label.contact_person') }}</th>
                 <th>{{ _('ui.label.email') }}</th>
@@ -54,6 +72,7 @@
         <tbody>
             {% for s in suppliers %}
             <tr>
+                {{ bulk_checkbox_cell(s.id) }}
                 <td>
                     <a href="{{ url_for('suppliers.detail', id=s.id) }}" class="fw-semibold">
                         {{ s.name }}
@@ -79,20 +98,22 @@
                        class="btn btn-sm btn-outline-secondary" title="{{ _('ui.button.edit') }}">
                         <i class="bi bi-pencil"></i>
                     </a>
-                    <form method="POST" action="{{ url_for('suppliers.toggle', id=s.id) }}"
-                          class="d-inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if s.is_active else 'success' }}"
-                                title="{{ _('ui.label.deactivate') if s.is_active else _('ui.label.activate') }}">
-                            <i class="bi bi-{{ 'pause' if s.is_active else 'play' }}"></i>
-                        </button>
-                    </form>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-{{ 'warning' if s.is_active else 'success' }}"
+                            data-bs-toggle="modal" data-bs-target="#confirmModal"
+                            data-action="{{ url_for('suppliers.toggle', id=s.id) }}"
+                            data-message="{{ _('ui.label.deactivate') if s.is_active else _('ui.label.activate') }} '{{ s.name }}'?"
+                            title="{{ _('ui.label.deactivate') if s.is_active else _('ui.label.activate') }}">
+                        <i class="bi bi-{{ 'pause' if s.is_active else 'play' }}"></i>
+                    </button>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+{{ bulk_action_bar(bulk_supplier_actions, pagination.total) }}
+</form>
 {% include "partials/_pagination.html" %}
 {% else %}
 <div class="text-center text-muted py-5">

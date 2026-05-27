@@ -1,13 +1,22 @@
 {% extends "base.html" %}
+{% from "partials/_bulk_actions.html" import bulk_checkbox_header, bulk_checkbox_cell, bulk_action_bar %}
 
 {% block title %}{{ _('ui.page.user_management') }} — CMMS{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0"><i class="bi bi-shield-lock me-2"></i>{{ _('ui.page.user_management') }}</h1>
-    <a href="{{ url_for('admin.new_user') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_user') }}
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.import_users_form') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-upload me-1"></i>{{ _('ui.button.import_users') }}
+        </a>
+        <a href="{{ url_for('admin.export_users') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-download me-1"></i>{{ _('ui.button.export_users') }}
+        </a>
+        <a href="{{ url_for('admin.new_user') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_user') }}
+        </a>
+    </div>
 </div>
 
 {# Sub-navigation tabs #}
@@ -39,83 +48,168 @@
     </li>
 </ul>
 
+{# Filter bar #}
+<form method="GET" action="{{ url_for('admin.list_users') }}" class="row g-2 mb-3 align-items-end">
+    <div class="col-auto flex-grow-1">
+        <input type="search" name="q" class="form-control form-control-sm"
+               placeholder="{{ _('ui.label.search') }}"
+               value="{{ search }}">
+    </div>
+    <div class="col-auto">
+        <select name="role" class="form-select form-select-sm">
+            <option value="">{{ _('ui.label.all_roles') }}</option>
+            {% for r in roles %}
+            <option value="{{ r }}" {% if filter_role == r %}selected{% endif %}>{{ _('label.role.' + r) }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-auto">
+        <select name="active" class="form-select form-select-sm">
+            <option value="">{{ _('ui.label.all_statuses') }}</option>
+            <option value="1" {% if filter_active == '1' %}selected{% endif %}>{{ _('ui.label.active') }}</option>
+            <option value="0" {% if filter_active == '0' %}selected{% endif %}>{{ _('ui.label.inactive') }}</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-funnel me-1"></i>{{ _('ui.button.filter') }}
+        </button>
+        {% if search or filter_role or filter_active %}
+        <a href="{{ url_for('admin.list_users') }}" class="btn btn-sm btn-link">{{ _('ui.button.clear') }}</a>
+        {% endif %}
+    </div>
+</form>
+
 {# Users table #}
 {% if users %}
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>{{ _('ui.label.username') }}</th>
-                <th>{{ _('ui.label.display_name') }}</th>
-                <th>{{ _('ui.label.email') }}</th>
-                <th>{{ _('ui.label.role') }}</th>
-                <th>{{ _('ui.label.team') }}</th>
-                <th>{{ _('ui.label.sites') }}</th>
-                <th>{{ _('ui.label.active') }}</th>
-                <th>{{ _('ui.label.actions') }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr class="{% if not user.is_active_user %}text-muted{% endif %}">
-                <td class="fw-semibold">{{ user.username }}</td>
-                <td>{{ user.display_name }}</td>
-                <td>{{ user.email }}</td>
-                <td>
-                    {% if user.role == 'admin' %}
-                    <span class="badge bg-danger">{{ _('label.role.admin') }}</span>
-                    {% elif user.role == 'supervisor' %}
-                    <span class="badge bg-primary">{{ _('label.role.supervisor') }}</span>
-                    {% elif user.role == 'technician' %}
-                    <span class="badge bg-success">{{ _('label.role.technician') }}</span>
-                    {% elif user.role == 'contractor' %}
-                    <span class="badge bg-warning text-dark">{{ _('label.role.contractor') }}</span>
-                    {% else %}
-                    <span class="badge bg-secondary">{{ _('label.role.user') }}</span>
-                    {% endif %}
-                </td>
-                <td>{{ user.team.name if user.team else '—' }}</td>
-                <td>
-                    <span class="badge bg-body-secondary text-body border">{{ user.sites | length }}</span>
-                </td>
-                <td>
-                    {% if user.is_active_user %}
-                    <span class="badge bg-success">{{ _('ui.label.active') }}</span>
-                    {% else %}
-                    <span class="badge bg-secondary">{{ _('ui.label.inactive') }}</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="{{ url_for('admin.edit_user', id=user.id) }}" class="btn btn-sm btn-outline-secondary"
-                       title="Edit">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    {% if user.id != current_user.id and user.is_active_user %}
-                    <form method="POST" action="{{ url_for('admin.impersonate', id=user.id) }}" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-outline-info"
-                                title="{{ _('ui.button.login_as') }}"
-                                onclick="return confirm('{{ _('ui.confirm.login_as') }}')">
+{% set bulk_user_actions = [
+    {"value": "activate", "label": _('ui.bulk.action.activate')},
+    {"value": "deactivate", "label": _('ui.bulk.action.deactivate'), "confirm": true},
+    {"value": "role_change", "label": _('ui.bulk.action.role_change')},
+    {"value": "team_assign", "label": _('ui.bulk.action.team_assign')},
+    {"value": "site_access", "label": _('ui.bulk.action.site_access')},
+    {"value": "delete", "label": _('ui.bulk.action.delete'), "confirm": true},
+] %}
+<form method="POST" action="{{ url_for('admin.bulk_users') }}" data-bulk-form
+      data-bulk-confirm-text="{{ _('ui.bulk.confirm_generic') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {# Carry active filter state so bulk_users() scopes its query correctly #}
+    {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
+    {% if filter_role %}<input type="hidden" name="role" value="{{ filter_role }}">{% endif %}
+    {% if filter_active %}<input type="hidden" name="active" value="{{ filter_active }}">{% endif %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    {{ bulk_checkbox_header() }}
+                    <th>{{ _('ui.label.username') }}</th>
+                    <th>{{ _('ui.label.display_name') }}</th>
+                    <th>{{ _('ui.label.email') }}</th>
+                    <th>{{ _('ui.label.role') }}</th>
+                    <th>{{ _('ui.label.team') }}</th>
+                    <th>{{ _('ui.label.sites') }}</th>
+                    <th>{{ _('ui.label.active') }}</th>
+                    <th>{{ _('ui.label.actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr class="{% if not user.is_active_user %}text-muted{% endif %}">
+                    {{ bulk_checkbox_cell(user.id) }}
+                    <td class="fw-semibold">{{ user.username }}</td>
+                    <td>{{ user.display_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        {% if user.role == 'admin' %}
+                        <span class="badge bg-danger">{{ _('label.role.admin') }}</span>
+                        {% elif user.role == 'supervisor' %}
+                        <span class="badge bg-primary">{{ _('label.role.supervisor') }}</span>
+                        {% elif user.role == 'technician' %}
+                        <span class="badge bg-success">{{ _('label.role.technician') }}</span>
+                        {% elif user.role == 'contractor' %}
+                        <span class="badge bg-warning text-dark">{{ _('label.role.contractor') }}</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ _('label.role.user') }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.team.name if user.team else '—' }}</td>
+                    <td>
+                        <span class="badge bg-body-secondary text-body border">{{ user.sites | length }}</span>
+                    </td>
+                    <td>
+                        {% if user.is_active_user %}
+                        <span class="badge bg-success">{{ _('ui.label.active') }}</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ _('ui.label.inactive') }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin.edit_user', id=user.id) }}" class="btn btn-sm btn-outline-secondary"
+                           title="{{ _('ui.button.edit') }}">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if user.id != current_user.id and user.is_active_user %}
+                        <button type="button" class="btn btn-sm btn-outline-info"
+                                data-bs-toggle="modal" data-bs-target="#confirmModal"
+                                data-action="{{ url_for('admin.impersonate', id=user.id) }}"
+                                data-message="{{ _('ui.confirm.login_as') }}"
+                                title="{{ _('ui.button.login_as') }}">
                             <i class="bi bi-box-arrow-in-right"></i>
                         </button>
-                    </form>
-                    {% endif %}
-                    {% if user.id != current_user.id %}
-                    <button type="button"
-                            class="btn btn-sm btn-outline-{{ 'warning' if user.is_active_user else 'success' }}"
-                            data-bs-toggle="modal" data-bs-target="#confirmModal"
-                            data-action="{{ url_for('admin.toggle_user', id=user.id) }}"
-                            data-message="{{ _('ui.button.deactivate') if user.is_active_user else _('ui.button.activate') }} user '{{ user.username }}'?"
-                            title="{{ _('ui.button.deactivate') if user.is_active_user else _('ui.button.activate') }}">
-                        <i class="bi bi-{{ 'pause' if user.is_active_user else 'play' }}"></i>
-                    </button>
-                    {% endif %}
-                </td>
-            </tr>
+                        {% endif %}
+                        {% if user.id != current_user.id %}
+                        <button type="button"
+                                class="btn btn-sm btn-outline-{{ 'warning' if user.is_active_user else 'success' }}"
+                                data-bs-toggle="modal" data-bs-target="#confirmModal"
+                                data-action="{{ url_for('admin.toggle_user', id=user.id) }}"
+                                data-message="{{ _('ui.button.deactivate') if user.is_active_user else _('ui.button.activate') }} '{{ user.username }}'?"
+                                title="{{ _('ui.button.deactivate') if user.is_active_user else _('ui.button.activate') }}">
+                            <i class="bi bi-{{ 'pause' if user.is_active_user else 'play' }}"></i>
+                        </button>
+                        <a href="{{ url_for('admin.confirm_delete_user', id=user.id) }}"
+                           class="btn btn-sm btn-outline-danger"
+                           title="{{ _('ui.bulk.action.delete') }}">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% call bulk_action_bar(bulk_user_actions, pagination.total) %}
+        <div data-bulk-for="role_change" hidden>
+            <select name="new_role" class="form-select form-select-sm w-auto">
+                {% for r in roles %}
+                <option value="{{ r }}">{{ _('label.role.' + r) }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div data-bulk-for="team_assign" hidden>
+            <select name="new_team_id" class="form-select form-select-sm w-auto">
+                <option value="">{{ _('ui.bulk.no_team') }}</option>
+                {% for t in teams %}
+                <option value="{{ t.id }}">{{ t.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div data-bulk-for="site_access" hidden class="d-flex flex-wrap align-items-center gap-2">
+            <select name="site_mode" class="form-select form-select-sm w-auto">
+                <option value="add">{{ _('ui.bulk.mode_add') }}</option>
+                <option value="remove">{{ _('ui.bulk.mode_remove') }}</option>
+                <option value="replace">{{ _('ui.bulk.mode_replace') }}</option>
+            </select>
+            {% for st in sites %}
+            <label class="form-check form-check-inline mb-0">
+                <input type="checkbox" class="form-check-input" name="site_ids" value="{{ st.id }}">
+                {{ st.code }}
+            </label>
             {% endfor %}
-        </tbody>
-    </table>
-</div>
+        </div>
+    {% endcall %}
+</form>
 
 {% include "partials/_pagination.html" %}
 

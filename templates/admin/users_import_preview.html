@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('ui.import.preview_heading') }} — CMMS{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('admin.import_users_form') }}" class="text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i>{{ _('ui.button.back') }}
+    </a>
+</div>
+
+<h1 class="h3 mb-3"><i class="bi bi-eye me-2"></i>{{ _('ui.import.preview_heading') }}</h1>
+
+<div class="alert alert-info d-flex flex-wrap gap-3">
+    <span><span class="badge bg-success">{{ counts.create }}</span> {{ _('ui.import.status_create') }}</span>
+    <span><span class="badge bg-secondary">{{ counts.skip }}</span> {{ _('ui.import.status_skip') }}</span>
+    <span><span class="badge bg-danger">{{ counts.error }}</span> {{ _('ui.import.status_error') }}</span>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>{{ _('ui.label.username') }}</th>
+                <th>{{ _('ui.label.email') }}</th>
+                <th>{{ _('ui.label.role') }}</th>
+                <th>{{ _('ui.label.status') }}</th>
+                <th>{{ _('ui.label.notes') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in rows %}
+            <tr class="{% if r.status == 'error' %}table-danger{% elif r.status == 'skip' %}table-warning{% endif %}">
+                <td class="text-muted">{{ r.row_num }}</td>
+                <td>{{ r.fields.username }}</td>
+                <td>{{ r.fields.email }}</td>
+                <td>{{ r.role }}</td>
+                <td>
+                    {% if r.status == 'create' %}
+                    <span class="badge bg-success">{{ _('ui.import.status_create') }}</span>
+                    {% elif r.status == 'skip' %}
+                    <span class="badge bg-secondary">{{ _('ui.import.status_skip') }}</span>
+                    {% else %}
+                    <span class="badge bg-danger">{{ _('ui.import.status_error') }}</span>
+                    {% endif %}
+                </td>
+                <td class="small text-danger">{{ r.errors | join('; ') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if counts.create %}
+<form method="POST" action="{{ url_for('admin.import_users_commit') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <textarea name="csv_text" hidden>{{ csv_text }}</textarea>
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.confirm_import') }} ({{ counts.create }})
+    </button>
+    <a href="{{ url_for('admin.import_users_form') }}" class="btn btn-outline-secondary">
+        {{ _('ui.button.cancel') }}
+    </a>
+</form>
+{% else %}
+<div class="alert alert-warning">{{ _('ui.import.nothing_to_import') }}</div>
+<a href="{{ url_for('admin.import_users_form') }}" class="btn btn-outline-secondary">
+    {{ _('ui.button.back') }}
+</a>
+{% endif %}
+{% endblock %}

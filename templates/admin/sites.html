@@ -81,6 +81,19 @@
                        title="{{ _('ui.button.edit') }}">
                         <i class="bi bi-pencil"></i>
                     </a>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-{{ 'warning' if site.is_active else 'success' }}"
+                            data-bs-toggle="modal" data-bs-target="#confirmModal"
+                            data-action="{{ url_for('admin.toggle_site', id=site.id) }}"
+                            data-message="{{ _('ui.button.deactivate') if site.is_active else _('ui.button.activate') }} '{{ site.name }}'?"
+                            title="{{ _('ui.button.deactivate') if site.is_active else _('ui.button.activate') }}">
+                        <i class="bi bi-{{ 'pause' if site.is_active else 'play' }}"></i>
+                    </button>
+                    <a href="{{ url_for('admin.confirm_delete_site', id=site.id) }}"
+                       class="btn btn-sm btn-outline-danger"
+                       title="{{ _('ui.delete.confirm_permanently') }}">
+                        <i class="bi bi-trash"></i>
+                    </a>
                 </td>
             </tr>
             {% endfor %}

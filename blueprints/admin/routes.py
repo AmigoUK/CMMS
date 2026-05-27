@@ -3,7 +3,7 @@
 import secrets
 
 from flask import (
-    abort, flash, g, redirect, render_template, request, session, url_for,
+    abort, flash, g, make_response, redirect, render_template, request, session, url_for,
 )
 from flask_login import current_user, login_required, login_user
 
@@ -11,6 +11,10 @@ from blueprints.admin import admin_bp
 from decorators import admin_required
 from extensions import db
 from models import AppSettings, Site, Team, User, ROLES
+from utils.admin_ops import bulk_user_action, perform_team_delete, perform_user_delete
+from utils.audit import log_admin_action
+from utils.bulk import parse_selection
+from utils.dependencies import site_delete_report, user_delete_report
 from utils.i18n import translate as _t
 
 
@@ -18,19 +22,69 @@ from utils.i18n import translate as _t
 #  USERS
 # ═══════════════════════════════════════════════════════════════════════
 
+def _user_base_query(args):
+    """Return a User query with optional filters applied from args.
+
+    Filters: q (search), role (exact), active ("1"/"0").
+    With no filters supplied, returns all users — this is the intended
+    behaviour for an unfiltered list.
+
+    Accepts a dict-like object (request.args or request.form) and applies:
+      - ``q``      — case-insensitive substring match on username, display_name,
+                     or email
+      - ``role``   — exact role filter (must be a known ROLES value)
+      - ``active`` — ``"1"`` for active-only, ``"0"`` for inactive-only;
+                     absent means all
+
+    The returned query is ordered by username and suitable for use as the
+    ``base_query`` argument to :func:`utils.bulk.parse_selection`.
+    """
+    q = User.query
+
+    search = args.get("q", "").strip()
+    if search:
+        pattern = f"%{search}%"
+        q = q.filter(
+            User.username.ilike(pattern)
+            | User.display_name.ilike(pattern)
+            | User.email.ilike(pattern)
+        )
+
+    role = args.get("role", "").strip()
+    if role and role in ROLES:
+        q = q.filter(User.role == role)
+
+    active = args.get("active", "").strip()
+    if active == "1":
+        q = q.filter(User.is_active_user == True)  # noqa: E712
+    elif active == "0":
+        q = q.filter(User.is_active_user == False)  # noqa: E712
+
+    return q.order_by(User.username)
+
+
 @admin_bp.route("/users")
 @admin_required
 def list_users():
     page = request.args.get("page", 1, type=int)
 
-    pagination = User.query.order_by(User.username).paginate(
+    pagination = _user_base_query(request.args).paginate(
         page=page, per_page=25, error_out=False,
     )
+
+    teams = Team.query.filter_by(is_active=True).order_by(Team.name).all()
+    sites = Site.query.filter_by(is_active=True).order_by(Site.name).all()
 
     return render_template(
         "admin/users.html",
         users=pagination.items,
         pagination=pagination,
+        teams=teams,
+        sites=sites,
+        roles=ROLES,
+        search=request.args.get("q", ""),
+        filter_role=request.args.get("role", ""),
+        filter_active=request.args.get("active", ""),
     )
 
 
@@ -245,12 +299,21 @@ def reset_password(id):
     temp_password = secrets.token_urlsafe(10)
     user.set_password(temp_password)
     db.session.commit()
-
-    flash(
-        _t("flash.user.password_reset", username=user.username, password=temp_password),
-        "warning",
+    log_admin_action(
+        "user.password_reset", "user", user.id,
+        summary=f"Temporary password issued for '{user.username}'",
     )
-    return redirect(url_for("admin.edit_user", id=user.id))
+
+    resp = make_response(
+        render_template(
+            "admin/password_reset_result.html",
+            user=user,
+            temp_password=temp_password,
+        )
+    )
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
 
 
 @admin_bp.route("/users/<int:id>/impersonate", methods=["POST"])
@@ -271,6 +334,8 @@ def impersonate(id):
     session["impersonating_from"] = current_user.id
 
     login_user(user)
+    log_admin_action("user.impersonate_start", "user", user.id,
+                     summary=f"Started impersonating '{user.username}'")
     flash(_t("flash.user.now_impersonating", name=user.display_name, role=user.role), "info")
     return redirect(url_for("dashboard.index"))
 
@@ -285,13 +350,201 @@ def stop_impersonating():
         return redirect(url_for("dashboard.index"))
 
     admin_user = User.query.get(admin_id)
-    if not admin_user or not admin_user.is_admin:
+    if not admin_user or not admin_user.is_admin or not admin_user.is_active_user:
         flash(_t("flash.user.original_admin_missing"), "danger")
         return redirect(url_for("dashboard.index"))
 
+    impersonated_id = current_user.id   # still the technician at this point
     login_user(admin_user)
+    log_admin_action("user.impersonate_stop", "user", impersonated_id,
+                     summary=f"Returned from impersonating user {impersonated_id}")
     flash(_t("flash.user.returned_to_admin"), "success")
     return redirect(url_for("admin.list_users"))
+
+
+# ── delete user ───────────────────────────────────────────────────────
+
+@admin_bp.route("/users/<int:id>/delete", methods=["GET"])
+@admin_required
+def confirm_delete_user(id):
+    """Show the delete dependency report for a user."""
+    user = User.query.get_or_404(id)
+    return render_template(
+        "admin/user_delete_confirm.html",
+        user=user,
+        report=user_delete_report(user),
+        is_self=(user.id == current_user.id),
+    )
+
+
+@admin_bp.route("/users/<int:id>/delete", methods=["POST"])
+@admin_required
+def delete_user(id):
+    """Hard-delete a user — blocked if linked history exists (decision D1)."""
+    user = User.query.get_or_404(id)
+
+    if user.id == current_user.id:
+        flash(_t("flash.user.cannot_deactivate_self"), "warning")
+        return redirect(url_for("admin.list_users"))
+
+    if not user_delete_report(user)["can_delete"]:
+        flash(_t("flash.user.delete_blocked", username=user.username), "danger")
+        return redirect(url_for("admin.confirm_delete_user", id=user.id))
+
+    username = user.username
+    perform_user_delete(user)
+    log_admin_action(
+        "user.delete", "user", id,
+        summary=f"Deleted user '{username}'",
+    )
+    db.session.commit()
+    flash(_t("flash.user.deleted", username=username), "success")
+    return redirect(url_for("admin.list_users"))
+
+
+# ── bulk user operations ──────────────────────────────────────────────
+
+_BULK_USER_ACTIONS = {
+    "activate", "deactivate", "role_change", "team_assign",
+    "site_access", "delete",
+}
+
+
+@admin_bp.route("/users/bulk", methods=["POST"])
+@admin_required
+def bulk_users():
+    """Apply one action to many users at once."""
+    action = request.form.get("bulk_action", "").strip()
+    if action not in _BULK_USER_ACTIONS:
+        flash(_t("flash.bulk.unknown_action"), "danger")
+        return redirect(url_for("admin.list_users"))
+
+    user_ids = parse_selection(request.form, base_query=_user_base_query(request.form))
+    if not user_ids:
+        flash(_t("flash.bulk.none_selected"), "warning")
+        return redirect(url_for("admin.list_users"))
+
+    result = bulk_user_action(
+        action, user_ids,
+        actor_id=current_user.id,
+        new_role=request.form.get("new_role", "").strip() or None,
+        new_team_id=request.form.get("new_team_id", type=int),
+        site_ids=request.form.getlist("site_ids", type=int),
+        site_mode=request.form.get("site_mode", "add"),
+    )
+    log_admin_action(
+        f"user.bulk_{action}", "batch",
+        summary=f"{result.updated} updated, {result.skipped_count} skipped",
+        detail={
+            "action": action,
+            "updated": result.updated,
+            "skipped": result.skipped,
+        },
+    )
+    db.session.commit()
+    flash(
+        _t("flash.bulk.summary",
+           updated=result.updated, skipped=result.skipped_count),
+        "success",
+    )
+    return redirect(url_for("admin.list_users"))
+
+
+# ── user CSV import / export ──────────────────────────────────────────
+
+_MAX_IMPORT_BYTES = 1_000_000  # processed in memory — cap to avoid abuse
+
+
+def _csv_response(text, filename):
+    from flask import make_response
+    resp = make_response(text)
+    resp.headers["Content-Type"] = "text/csv"
+    resp.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return resp
+
+
+@admin_bp.route("/users/export")
+@admin_required
+def export_users():
+    from utils.csv_users import export_users_csv
+    return _csv_response(export_users_csv(), "cmms_users.csv")
+
+
+@admin_bp.route("/users/import/template")
+@admin_required
+def download_user_template():
+    from utils.csv_users import csv_template
+    return _csv_response(csv_template(), "cmms_users_template.csv")
+
+
+@admin_bp.route("/users/import", methods=["GET"])
+@admin_required
+def import_users_form():
+    from utils.csv_users import CSV_COLUMNS
+    return render_template("admin/users_import.html", columns=CSV_COLUMNS)
+
+
+@admin_bp.route("/users/import", methods=["POST"])
+@admin_required
+def import_users_preview():
+    """Dry run — parse and validate the upload, render the preview. No writes."""
+    from utils.csv_users import parse_user_csv
+
+    file = request.files.get("csv_file")
+    if not file or not file.filename:
+        flash(_t("flash.import.file_required"), "danger")
+        return redirect(url_for("admin.import_users_form"))
+
+    raw = file.read()
+    if len(raw) > _MAX_IMPORT_BYTES:
+        flash(_t("flash.import.file_too_large"), "danger")
+        return redirect(url_for("admin.import_users_form"))
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        flash(_t("flash.import.bad_format"), "danger")
+        return redirect(url_for("admin.import_users_form"))
+
+    rows, header_error = parse_user_csv(text)
+    if header_error:
+        flash(_t("flash.import.bad_header", detail=header_error), "danger")
+        return redirect(url_for("admin.import_users_form"))
+
+    counts = {
+        status: sum(1 for r in rows if r["status"] == status)
+        for status in ("create", "skip", "error")
+    }
+    return render_template(
+        "admin/users_import_preview.html",
+        rows=rows, counts=counts, csv_text=text,
+    )
+
+
+@admin_bp.route("/users/import/confirm", methods=["POST"])
+@admin_required
+def import_users_commit():
+    """Re-validate the previewed CSV and create the new users."""
+    from utils.csv_users import commit_user_import, parse_user_csv
+
+    text = request.form.get("csv_text", "")
+    rows, header_error = parse_user_csv(text)
+    if header_error:
+        flash(_t("flash.import.bad_format"), "danger")
+        return redirect(url_for("admin.import_users_form"))
+
+    created = commit_user_import(rows)
+    skipped_count = sum(1 for r in rows if r["status"] == "skip")
+    log_admin_action(
+        "user.csv_import", "batch",
+        summary=f"{len(created)} user(s) imported from CSV",
+        detail={"created": [c["username"] for c in created]},
+    )
+    db.session.commit()
+    flash_msg = _t("flash.import.done", count=len(created))
+    if skipped_count:
+        flash_msg += f" ({skipped_count} {_t('flash.import.skipped_duplicates')})"
+    flash(flash_msg, "success")
+    return render_template("admin/users_import_result.html", created=created)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -338,7 +591,13 @@ def create_team():
 @admin_required
 def edit_team(id):
     team = Team.query.get_or_404(id)
-    return render_template("admin/team_form.html", team=team)
+    return render_template(
+        "admin/team_form.html",
+        team=team,
+        users=User.query.order_by(User.username).all(),
+        sites=Site.query.filter_by(is_active=True).order_by(Site.name).all(),
+        roles=ROLES,
+    )
 
 
 @admin_bp.route("/teams/<int:id>/edit", methods=["POST"])
@@ -358,6 +617,112 @@ def update_team(id):
     db.session.commit()
     flash(_t("flash.team.updated", name=name), "success")
     return redirect(url_for("admin.list_teams"))
+
+
+@admin_bp.route("/teams/<int:id>/toggle", methods=["POST"])
+@admin_required
+def toggle_team(id):
+    """Activate/deactivate a team."""
+    team = Team.query.get_or_404(id)
+    team.is_active = not team.is_active
+    db.session.commit()
+    key = "flash.team.activated" if team.is_active else "flash.team.deactivated"
+    flash(_t(key, name=team.name), "success")
+    return redirect(url_for("admin.list_teams"))
+
+
+@admin_bp.route("/teams/<int:id>/delete", methods=["POST"])
+@admin_required
+def delete_team(id):
+    """Delete a team. Every teams.id reference is nullable, so this is
+    always safe — affected users/contacts/certifications are unassigned."""
+    team = Team.query.get_or_404(id)
+    name = team.name
+    count = perform_team_delete(team)
+    log_admin_action(
+        "team.delete", "team", id,
+        summary=f"Deleted team '{name}', {count} record(s) unassigned",
+    )
+    db.session.commit()
+    flash(_t("flash.team.deleted", name=name, count=count), "success")
+    return redirect(url_for("admin.list_teams"))
+
+
+@admin_bp.route("/teams/<int:id>/members", methods=["POST"])
+@admin_required
+def update_team_members(id):
+    """Set a team's membership from the checkbox panel on its edit page.
+    A user belongs to one team — checking them here moves them in,
+    omitting a current member moves them out."""
+    team = Team.query.get_or_404(id)
+    selected = set(request.form.getlist("user_ids", type=int))
+
+    current_ids = {u.id for u in team.members}
+    to_add = selected - current_ids
+    to_remove = current_ids - selected
+    if to_add:
+        User.query.filter(User.id.in_(to_add)).update(
+            {"team_id": team.id}, synchronize_session="fetch"
+        )
+    if to_remove:
+        User.query.filter(User.id.in_(to_remove)).update(
+            {"team_id": None}, synchronize_session="fetch"
+        )
+    changed = len(to_add) + len(to_remove)
+
+    log_admin_action(
+        "team.members_updated", "team", id,
+        summary=f"Team '{team.name}' membership updated ({changed} change(s))",
+    )
+    db.session.commit()
+    flash(_t("flash.team.members_updated", name=team.name, count=changed), "success")
+    return redirect(url_for("admin.edit_team", id=team.id))
+
+
+# Whole-team bulk actions exclude delete (too destructive for one click)
+# and team_assign (out of scope here).
+_BULK_TEAM_ACTIONS = {"activate", "deactivate", "role_change", "site_access"}
+
+
+@admin_bp.route("/teams/<int:id>/bulk", methods=["POST"])
+@admin_required
+def bulk_team_members(id):
+    """Apply one bulk action to every current member of a team."""
+    team = Team.query.get_or_404(id)
+    action = request.form.get("bulk_action", "").strip()
+    if action not in _BULK_TEAM_ACTIONS:
+        flash(_t("flash.bulk.unknown_action"), "danger")
+        return redirect(url_for("admin.edit_team", id=team.id))
+
+    member_ids = [u.id for u in team.members]
+    if not member_ids:
+        flash(_t("flash.bulk.none_selected"), "warning")
+        return redirect(url_for("admin.edit_team", id=team.id))
+
+    result = bulk_user_action(
+        action, member_ids,
+        actor_id=current_user.id,
+        new_role=request.form.get("new_role", "").strip() or None,
+        site_ids=request.form.getlist("site_ids", type=int),
+        site_mode=request.form.get("site_mode", "add"),
+    )
+    log_admin_action(
+        f"team.bulk_{action}", "team", id,
+        summary=f"Team '{team.name}': {result.updated} updated, "
+                f"{result.skipped_count} skipped",
+        detail={
+            "action": action,
+            "updated": result.updated,
+            "skipped": result.skipped,
+        },
+    )
+    db.session.commit()
+    flash(
+        _t("flash.bulk.summary",
+           updated=result.updated, skipped=result.skipped_count),
+        "success",
+    )
+    return redirect(url_for("admin.edit_team", id=team.id))
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -422,6 +787,7 @@ def edit_site(id):
     return render_template(
         "admin/site_form.html", site=site,
         site_colors=SITE_COLORS, site_icons=SITE_ICONS,
+        users=User.query.order_by(User.username).all(),
     )
 
 
@@ -481,6 +847,58 @@ def update_site_custom_fields(id):
 
     db.session.commit()
     flash(_t("flash.site.custom_fields_saved", name=site.name), "success")
+    return redirect(url_for("admin.edit_site", id=site.id))
+
+
+@admin_bp.route("/sites/<int:id>/toggle", methods=["POST"])
+@admin_required
+def toggle_site(id):
+    """Activate/deactivate a site."""
+    site = Site.query.get_or_404(id)
+    site.is_active = not site.is_active
+    db.session.commit()
+    key = "flash.site.activated" if site.is_active else "flash.site.deactivated"
+    flash(_t(key, name=site.name), "success")
+    return redirect(url_for("admin.list_sites"))
+
+
+@admin_bp.route("/sites/<int:id>/delete", methods=["GET"])
+@admin_required
+def confirm_delete_site(id):
+    """Read-only dependency report for a site. Per decision D2 sites are
+    deactivate-only — there is no destructive POST endpoint."""
+    site = Site.query.get_or_404(id)
+    return render_template(
+        "admin/site_delete_report.html",
+        site=site,
+        report=site_delete_report(site),
+    )
+
+
+@admin_bp.route("/sites/<int:id>/users", methods=["POST"])
+@admin_required
+def update_site_users(id):
+    """Set which users have access to a site, from the checkbox panel on
+    the site edit page. Works the user_sites M2M from the user side."""
+    site = Site.query.get_or_404(id)
+    selected = set(request.form.getlist("user_ids", type=int))
+
+    current_ids = {u.id for u in site.users}
+    to_add = selected - current_ids
+    to_remove = current_ids - selected
+    if to_add:
+        new_users = User.query.filter(User.id.in_(to_add)).all()
+        site.users.extend(new_users)
+    if to_remove:
+        site.users = [u for u in site.users if u.id not in to_remove]
+    changed = len(to_add) + len(to_remove)
+
+    log_admin_action(
+        "site.users_updated", "site", id,
+        summary=f"Site '{site.name}' access updated ({changed} change(s))",
+    )
+    db.session.commit()
+    flash(_t("flash.site.users_updated", name=site.name, count=changed), "success")
     return redirect(url_for("admin.edit_site", id=site.id))
 
 
@@ -849,7 +1267,7 @@ def export_translations():
 
     response = make_response(output.getvalue())
     response.headers["Content-Type"] = "text/csv"
-    response.headers["Content-Disposition"] = "attachment; filename=cmms_translations.csv"
+    response.headers["Content-Disposition"] = 'attachment; filename="cmms_translations.csv"'
     return response
 
 

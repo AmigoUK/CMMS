@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/_bulk_actions.html" import bulk_checkbox_header, bulk_checkbox_cell, bulk_action_bar %}
 {% block title %}{{ _('ui.page.parts_inventory') }} — CMMS{% endblock %}
 
 {% block content %}
@@ -11,6 +12,12 @@
             <span class="badge bg-danger ms-1">{{ reorder_count }}</span>
         </a>
         {% endif %}
+        <a href="{{ url_for('parts.import_form') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-upload me-1"></i>{{ _('ui.button.import_parts') }}
+        </a>
+        <a href="{{ url_for('parts.export') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-download me-1"></i>{{ _('ui.button.export_parts') }}
+        </a>
         <a href="{{ url_for('parts.new') }}" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i>{{ _('ui.button.new_part') }}
         </a>
@@ -50,10 +57,20 @@
 </div>
 
 {% if parts %}
+{% set bulk_part_actions = [
+    {"value": "activate", "label": _('ui.bulk.action.activate')},
+    {"value": "deactivate", "label": _('ui.bulk.action.deactivate'), "confirm": true},
+    {"value": "set_category", "label": _('ui.bulk.action.set_category')},
+    {"value": "set_supplier", "label": _('ui.bulk.action.set_supplier')},
+] %}
+<form method="POST" action="{{ url_for('parts.bulk') }}" data-bulk-form
+      data-bulk-confirm-text="{{ _('ui.bulk.confirm_generic') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="table-responsive">
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
+                {{ bulk_checkbox_header() }}
                 <th style="width: 44px;"></th>
                 <th>{{ _('ui.label.name') }}</th>
                 <th>{{ _('ui.label.part_number') }}</th>
@@ -67,6 +84,7 @@
         <tbody>
             {% for part in parts %}
             <tr class="{% if part.is_low_stock %}row-low-stock{% endif %}">
+                {{ bulk_checkbox_cell(part.id) }}
                 <td>
                     {% if part.image %}
                     <img src="{{ url_for('uploaded_file', filename='parts/' + part.image) }}"
@@ -132,6 +150,21 @@
         </tbody>
     </table>
 </div>
+{% call bulk_action_bar(bulk_part_actions, pagination.total) %}
+    <div data-bulk-for="set_category" hidden>
+        <input type="text" name="new_category" class="form-control form-control-sm w-auto"
+               placeholder="{{ _('ui.label.category') }}">
+    </div>
+    <div data-bulk-for="set_supplier" hidden>
+        <select name="new_supplier_id" class="form-select form-select-sm w-auto">
+            <option value="">—</option>
+            {% for sup in suppliers %}
+            <option value="{{ sup.id }}">{{ sup.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+{% endcall %}
+</form>
 
 {% include "partials/_pagination.html" %}
 

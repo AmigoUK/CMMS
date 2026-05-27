@@ -108,15 +108,103 @@ def list_assets():
         page=page, per_page=25, error_out=False,
     )
 
+    locations = Location.query.filter_by(
+        site_id=g.current_site.id, is_active=True,
+    ).order_by(Location.name).all()
+
     return render_template(
         "assets/index.html",
         assets=pagination.items,
         pagination=pagination,
         statuses=ASSET_STATUSES,
+        criticalities=ASSET_CRITICALITIES,
+        locations=locations,
         current_status=status_filter,
         search_query=q,
         filter_location=filter_location,
     )
+
+
+# ── bulk operations ────────────────────────────────────────────────────
+
+_BULK_ASSET_ACTIONS = {
+    "activate", "deactivate", "set_status", "set_criticality",
+    "set_location", "set_category",
+}
+
+
+@assets_bp.route("/bulk", methods=["POST"])
+@supervisor_required
+def bulk():
+    """Apply one action to many assets in the current site."""
+    from utils.audit import log_admin_action
+    from utils.bulk import BulkResult, parse_selection
+    from utils.i18n import translate as _t
+
+    action = request.form.get("bulk_action", "").strip()
+    if action not in _BULK_ASSET_ACTIONS:
+        flash(_t("flash.bulk.unknown_action"), "danger")
+        return redirect(url_for("assets.list_assets"))
+
+    # base query is site-scoped — selection and the final fetch both use
+    # it, so a tampered POST cannot reach another site's assets.
+    base = Asset.query.filter_by(site_id=g.current_site.id)
+    ids = parse_selection(request.form, base_query=base)
+    if not ids:
+        flash(_t("flash.bulk.none_selected"), "warning")
+        return redirect(url_for("assets.list_assets"))
+
+    new_status = request.form.get("new_status", "")
+    new_criticality = request.form.get("new_criticality", "")
+    new_category = request.form.get("new_category", "").strip()
+
+    new_location_id = None
+    if action == "set_location":
+        raw = request.form.get("new_location_id", type=int)
+        if raw:
+            loc = Location.query.filter_by(
+                id=raw, site_id=g.current_site.id,
+            ).first()
+            if not loc:
+                flash(_t("flash.bulk.unknown_action"), "danger")
+                return redirect(url_for("assets.list_assets"))
+            new_location_id = loc.id
+
+    result = BulkResult()
+    for asset in base.filter(Asset.id.in_(ids)).all():
+        if action == "activate":
+            asset.is_active = True
+        elif action == "deactivate":
+            asset.is_active = False
+        elif action == "set_status":
+            if new_status not in ASSET_STATUSES:
+                result.skip(asset.id, asset.name, "invalid_value")
+                continue
+            asset.status = new_status
+        elif action == "set_criticality":
+            if new_criticality not in ASSET_CRITICALITIES:
+                result.skip(asset.id, asset.name, "invalid_value")
+                continue
+            asset.criticality = new_criticality
+        elif action == "set_location":
+            asset.location_id = new_location_id
+        elif action == "set_category":
+            asset.category = new_category
+        result.mark_updated()
+
+    log_admin_action(
+        f"asset.bulk_{action}", "batch",
+        summary=f"{result.updated} asset(s) updated, "
+                f"{result.skipped_count} skipped",
+        detail={"action": action, "updated": result.updated},
+    )
+    db.session.commit()
+    flash(
+        _t("flash.bulk.summary",
+           updated=result.updated, skipped=result.skipped_count),
+        "success",
+    )
+    return redirect(url_for("assets.list_assets"))
 
 
 # ── new asset ─────────────────────────────────────────────────────────
@@ -495,3 +583,97 @@ def email_expiry_report():
         flash(f"Failed to send email: {error}", "danger")
 
     return redirect(url_for("assets.expiry_report"))
+
+
+# ── CSV import / export ───────────────────────────────────────────────
+
+def _csv_response(text, filename):
+    from flask import make_response
+    resp = make_response(text)
+    resp.headers["Content-Type"] = "text/csv"
+    resp.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return resp
+
+
+def _import_ctx():
+    from utils.csv_entities import asset_headers
+    from utils.i18n import translate as _t
+    return {
+        "title": _t("ui.button.import") + " — " + _t("ui.page.property"),
+        "headers": asset_headers,
+        "import_url": url_for("assets.import_preview"),
+        "confirm_url": url_for("assets.import_commit"),
+        "template_url": url_for("assets.import_template"),
+        "export_url": url_for("assets.export"),
+        "import_form_url": url_for("assets.import_form"),
+        "cancel_url": url_for("assets.list_assets"),
+    }
+
+
+@assets_bp.route("/export")
+@supervisor_required
+def export():
+    from utils.csv_entities import asset_columns
+    from utils.csv_io import export_csv
+    rows = Asset.query.filter_by(
+        site_id=g.current_site.id).order_by(Asset.name).all()
+    return _csv_response(export_csv(rows, asset_columns()), "assets.csv")
+
+
+@assets_bp.route("/import/template")
+@supervisor_required
+def import_template():
+    from utils.csv_entities import asset_headers
+    from utils.csv_io import csv_template
+    return _csv_response(csv_template(asset_headers), "assets_template.csv")
+
+
+@assets_bp.route("/import", methods=["GET"])
+@supervisor_required
+def import_form():
+    return render_template("csv_import.html", **_import_ctx())
+
+
+@assets_bp.route("/import", methods=["POST"])
+@supervisor_required
+def import_preview():
+    from utils.csv_entities import asset_required, make_asset_validator
+    from utils.csv_io import count_statuses, parse_csv, read_upload
+    from utils.i18n import translate as _t
+
+    text, err = read_upload(request.files.get("csv_file"))
+    if err:
+        flash(_t("flash.import." + err), "danger")
+        return redirect(url_for("assets.import_form"))
+    rows, header_error = parse_csv(
+        text, asset_required, make_asset_validator(g.current_site.id))
+    if header_error:
+        flash(_t("flash.import.bad_header", detail=header_error), "danger")
+        return redirect(url_for("assets.import_form"))
+    return render_template(
+        "csv_import.html", rows=rows, counts=count_statuses(rows),
+        csv_text=text, **_import_ctx())
+
+
+@assets_bp.route("/import/confirm", methods=["POST"])
+@supervisor_required
+def import_commit():
+    from utils.audit import log_admin_action
+    from utils.csv_entities import (
+        asset_required, commit_assets, make_asset_validator,
+    )
+    from utils.csv_io import parse_csv
+    from utils.i18n import translate as _t
+
+    rows, header_error = parse_csv(
+        request.form.get("csv_text", ""), asset_required,
+        make_asset_validator(g.current_site.id))
+    if header_error:
+        flash(_t("flash.import.bad_format"), "danger")
+        return redirect(url_for("assets.import_form"))
+    created = commit_assets(rows, g.current_site.id)
+    log_admin_action("asset.csv_import", "batch",
+                     summary=f"{created} asset(s) imported")
+    db.session.commit()
+    flash(_t("flash.import.done", count=created), "success")
+    return redirect(url_for("assets.list_assets"))

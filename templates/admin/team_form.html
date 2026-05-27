@@ -49,6 +49,107 @@
                         <a href="{{ url_for('admin.list_teams') }}" class="btn btn-outline-secondary">{{ _('ui.button.cancel') }}</a>
                     </div>
                 </form>
+
+                {% if team %}
+                {# Members panel #}
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-people me-2"></i>{{ _('ui.heading.team_members') }}</h6>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('admin.update_team_members', id=team.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="border rounded p-2 mb-3" style="max-height: 260px; overflow-y: auto;">
+                                {% for u in users %}
+                                <label class="form-check d-flex align-items-center mb-1">
+                                    <input type="checkbox" class="form-check-input me-2" name="user_ids"
+                                           value="{{ u.id }}" {% if u.team_id == team.id %}checked{% endif %}>
+                                    <span>{{ u.display_name }}
+                                        <span class="text-muted small">({{ u.username }})</span></span>
+                                    {% if u.team_id and u.team_id != team.id %}
+                                    <span class="badge bg-body-secondary text-body border ms-auto">{{ u.team.name }}</span>
+                                    {% endif %}
+                                </label>
+                                {% else %}
+                                <p class="text-muted small mb-0">{{ _('ui.text.no_users_found') }}</p>
+                                {% endfor %}
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>{{ _('ui.button.save_changes') }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {# Apply to all members #}
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>{{ _('ui.heading.team_bulk') }}</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if team.members %}
+                        <p class="text-muted small">{{ _('ui.text.team_bulk_help') }}</p>
+                        <form method="POST" action="{{ url_for('admin.bulk_team_members', id=team.id) }}"
+                              onsubmit="return confirm('{{ _('ui.bulk.confirm_generic') }}');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <select name="bulk_action" id="teamBulkAction" required
+                                        class="form-select form-select-sm w-auto">
+                                    <option value="">{{ _('ui.bulk.choose_action') }}</option>
+                                    <option value="activate">{{ _('ui.bulk.action.activate') }}</option>
+                                    <option value="deactivate">{{ _('ui.bulk.action.deactivate') }}</option>
+                                    <option value="role_change">{{ _('ui.bulk.action.role_change') }}</option>
+                                    <option value="site_access">{{ _('ui.bulk.action.site_access') }}</option>
+                                </select>
+                                <div data-team-bulk-for="role_change" hidden>
+                                    <select name="new_role" class="form-select form-select-sm w-auto">
+                                        {% for r in roles %}
+                                        <option value="{{ r }}">{{ _('label.role.' + r) }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div data-team-bulk-for="site_access" hidden
+                                     class="d-flex flex-wrap gap-2 align-items-center">
+                                    <select name="site_mode" class="form-select form-select-sm w-auto">
+                                        <option value="add">{{ _('ui.bulk.mode_add') }}</option>
+                                        <option value="remove">{{ _('ui.bulk.mode_remove') }}</option>
+                                        <option value="replace">{{ _('ui.bulk.mode_replace') }}</option>
+                                    </select>
+                                    {% for st in sites %}
+                                    <label class="form-check form-check-inline mb-0">
+                                        <input type="checkbox" class="form-check-input" name="site_ids"
+                                               value="{{ st.id }}"> {{ st.code }}
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-primary">{{ _('ui.bulk.apply') }}</button>
+                            </div>
+                        </form>
+                        {% else %}
+                        <p class="text-muted small mb-0">{{ _('ui.text.team_no_members') }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <script>
+                (function () {
+                    var sel = document.getElementById("teamBulkAction");
+                    if (!sel) { return; }
+                    var panels = document.querySelectorAll("[data-team-bulk-for]");
+                    function sync() {
+                        panels.forEach(function (p) {
+                            var match = p.getAttribute("data-team-bulk-for") === sel.value;
+                            p.hidden = !match;
+                            p.querySelectorAll("input, select").forEach(function (el) {
+                                el.disabled = !match;
+                            });
+                        });
+                    }
+                    sel.addEventListener("change", sync);
+                    sync();
+                })();
+                </script>
+                {% endif %}
             </div>
         </div>
     </div>
