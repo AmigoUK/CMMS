@@ -320,6 +320,73 @@ def test_check_deletable_supplier_blocked_by_part(app, factory):
     assert any(b["relation"] == "parts" for b in blockers)
 
 
+def test_check_deletable_supplier_blocker_breaks_down_by_site(app, factory):
+    """A blocker whose table has a site_id column reports a per-site
+    breakdown so the admin can see exactly which site(s) hold the
+    referencing rows (the supplier delete-block follow-up)."""
+    from extensions import db
+    from models import Supplier
+    from utils.admin_ops import check_deletable
+
+    site_a = factory.site(code="SA", name="Site Alpha")
+    site_b = factory.site(code="SB", name="Site Beta")
+    sup = Supplier(name="Acme")
+    db.session.add(sup)
+    db.session.flush()
+    for _ in range(3):
+        p = factory.part(site=site_a)
+        p.supplier_id = sup.id
+    p = factory.part(site=site_b)
+    p.supplier_id = sup.id
+    db.session.commit()
+
+    _, blockers = check_deletable(sup)
+    parts_blocker = next(b for b in blockers if b["relation"] == "parts")
+    assert parts_blocker["count"] == 4
+    by_site = {s["site_id"]: s for s in parts_blocker["sites"]}
+    assert by_site[site_a.id]["count"] == 3
+    assert by_site[site_a.id]["site_name"] == "Site Alpha"
+    assert by_site[site_b.id]["count"] == 1
+    assert by_site[site_b.id]["site_name"] == "Site Beta"
+
+
+def test_check_deletable_blocker_without_site_id_has_no_breakdown(app, factory):
+    """Blocker tables that don't carry site_id keep the legacy shape:
+    just {relation, count}, no 'sites' key."""
+    from extensions import db
+    from models import Certification, CertificationLog
+    from utils.admin_ops import check_deletable
+
+    site = factory.site()
+    cert = Certification(site_id=site.id, name="Fire inspection")
+    db.session.add(cert)
+    db.session.flush()
+    db.session.add(CertificationLog(certification_id=cert.id, action="created"))
+    db.session.commit()
+
+    _, blockers = check_deletable(cert)
+    logs_blocker = next(
+        (b for b in blockers if b["relation"] == "certification_logs"), None
+    )
+    if logs_blocker is not None:
+        assert "sites" not in logs_blocker
+
+
+def test_format_blockers_renders_count_and_site_breakdown():
+    from utils.admin_ops import format_blockers
+
+    assert format_blockers([]) == ""
+    assert format_blockers([{"relation": "logs", "count": 2}]) == "logs: 2"
+    line = format_blockers([{
+        "relation": "parts", "count": 4,
+        "sites": [
+            {"site_id": 1, "site_name": "Alpha", "count": 3},
+            {"site_id": 2, "site_name": "Beta", "count": 1},
+        ],
+    }, {"relation": "work_orders", "count": 2}])
+    assert line == "parts: 4 (Alpha: 3, Beta: 1); work_orders: 2"
+
+
 def test_perform_entity_delete_removes_clean_supplier(app):
     from extensions import db
     from models import Supplier
