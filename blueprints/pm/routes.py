@@ -3,7 +3,7 @@
 import json
 from datetime import date, timedelta
 
-from flask import abort, flash, g, jsonify, redirect, render_template, request, url_for
+from flask import abort, flash, g, jsonify, make_response, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from blueprints.pm import pm_bp
@@ -548,3 +548,96 @@ def log_reading(id):
     db.session.commit()
     flash(f"Reading logged: {value} {meter.unit}.", "success")
     return redirect(url_for("pm.meters"))
+
+
+# ── CSV import / export ───────────────────────────────────────────────
+
+def _csv_response(text, filename):
+    resp = make_response(text)
+    resp.headers["Content-Type"] = "text/csv"
+    resp.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return resp
+
+
+def _import_ctx():
+    from utils.csv_entities import pm_headers
+    from utils.i18n import translate as _t
+    return {
+        "title": _t("ui.button.import") + " — " + _t("ui.page.pm_tasks"),
+        "headers": pm_headers,
+        "import_url": url_for("pm.import_preview"),
+        "confirm_url": url_for("pm.import_commit"),
+        "template_url": url_for("pm.import_template"),
+        "export_url": url_for("pm.export"),
+        "import_form_url": url_for("pm.import_form"),
+        "cancel_url": url_for("pm.task_list"),
+    }
+
+
+@pm_bp.route("/export")
+@supervisor_required
+def export():
+    from utils.csv_entities import pm_columns
+    from utils.csv_io import export_csv
+    rows = PreventiveTask.query.filter_by(
+        site_id=g.current_site.id).order_by(PreventiveTask.name).all()
+    return _csv_response(export_csv(rows, pm_columns()), "pm_tasks.csv")
+
+
+@pm_bp.route("/import/template")
+@supervisor_required
+def import_template():
+    from utils.csv_entities import pm_headers
+    from utils.csv_io import csv_template
+    return _csv_response(csv_template(pm_headers), "pm_tasks_template.csv")
+
+
+@pm_bp.route("/import", methods=["GET"])
+@supervisor_required
+def import_form():
+    return render_template("csv_import.html", **_import_ctx())
+
+
+@pm_bp.route("/import", methods=["POST"])
+@supervisor_required
+def import_preview():
+    from utils.csv_entities import make_pm_validator, pm_required
+    from utils.csv_io import count_statuses, parse_csv, read_upload
+    from utils.i18n import translate as _t
+
+    text, err = read_upload(request.files.get("csv_file"))
+    if err:
+        flash(_t("flash.import." + err), "danger")
+        return redirect(url_for("pm.import_form"))
+    rows, header_error = parse_csv(
+        text, pm_required, make_pm_validator(g.current_site.id))
+    if header_error:
+        flash(_t("flash.import.bad_header", detail=header_error), "danger")
+        return redirect(url_for("pm.import_form"))
+    return render_template(
+        "csv_import.html", rows=rows, counts=count_statuses(rows),
+        csv_text=text, **_import_ctx())
+
+
+@pm_bp.route("/import/confirm", methods=["POST"])
+@supervisor_required
+def import_commit():
+    from utils.audit import log_admin_action
+    from utils.csv_entities import (
+        commit_pm, make_pm_validator, pm_required,
+    )
+    from utils.csv_io import parse_csv
+    from utils.i18n import translate as _t
+
+    rows, header_error = parse_csv(
+        request.form.get("csv_text", ""), pm_required,
+        make_pm_validator(g.current_site.id))
+    if header_error:
+        flash(_t("flash.import.bad_format"), "danger")
+        return redirect(url_for("pm.import_form"))
+    created = commit_pm(rows, g.current_site.id, current_user.id)
+    log_admin_action("pm.csv_import", "batch",
+                     summary=f"{created} PM task(s) imported")
+    db.session.commit()
+    flash(_t("flash.import.done", count=created), "success")
+    return redirect(url_for("pm.task_list"))

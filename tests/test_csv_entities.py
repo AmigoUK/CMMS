@@ -140,3 +140,147 @@ def test_asset_csv_commit_with_location(app, factory):
     a = Asset.query.filter_by(name="Pump").first()
     assert a is not None
     assert a.location.name == "Workshop"
+
+
+# ── PM tasks ───────────────────────────────────────────────────────────
+
+def test_pm_csv_roundtrip(app, factory):
+    from extensions import db
+    from models import Asset, PreventiveTask
+    from utils.csv_entities import commit_pm, make_pm_validator, pm_required
+
+    s = factory.site()
+    u = factory.user(sites=[s])
+    db.session.add(Asset(site_id=s.id, name="Boiler-1"))
+    db.session.commit()
+
+    text = ("name,asset,frequency_value,frequency_unit,priority\n"
+            "Boiler check,Boiler-1,30,days,high")
+    rows, err = parse_csv(text, pm_required, make_pm_validator(s.id))
+    assert err is None
+    assert rows[0]["status"] == "create"
+    assert commit_pm(rows, s.id, u.id) == 1
+    db.session.commit()
+
+    task = PreventiveTask.query.filter_by(name="Boiler check").first()
+    assert task is not None
+    assert task.asset.name == "Boiler-1"
+    assert task.frequency_value == 30
+    assert task.priority == "high"
+
+
+def test_pm_csv_unknown_asset_is_error(app, factory):
+    from utils.csv_entities import make_pm_validator, pm_required
+
+    s = factory.site()
+    rows, err = parse_csv(
+        "name,asset\nFoo,Ghost", pm_required, make_pm_validator(s.id),
+    )
+    assert rows[0]["status"] == "error"
+    assert any("unknown asset" in e for e in rows[0]["errors"])
+
+
+def test_pm_csv_bad_frequency_unit_is_error(app, factory):
+    from utils.csv_entities import make_pm_validator, pm_required
+
+    s = factory.site()
+    rows, err = parse_csv(
+        "name,frequency_unit\nFoo,fortnights", pm_required,
+        make_pm_validator(s.id),
+    )
+    assert rows[0]["status"] == "error"
+    assert any("frequency_unit" in e for e in rows[0]["errors"])
+
+
+def test_pm_csv_skips_existing_name(app, factory):
+    from extensions import db
+    from models import PreventiveTask
+    from utils.csv_entities import make_pm_validator, pm_required
+
+    s = factory.site()
+    db.session.add(PreventiveTask(site_id=s.id, name="Recurring"))
+    db.session.commit()
+
+    rows, err = parse_csv(
+        "name\nRecurring", pm_required, make_pm_validator(s.id),
+    )
+    assert rows[0]["status"] == "skip"
+
+
+# ── Certifications ─────────────────────────────────────────────────────
+
+def test_cert_csv_roundtrip(app, factory):
+    from extensions import db
+    from models import Asset, Certification
+    from utils.csv_entities import (
+        cert_required, commit_certs, make_cert_validator,
+    )
+
+    s = factory.site()
+    db.session.add(Asset(site_id=s.id, name="Lift-A"))
+    db.session.commit()
+
+    text = ("name,asset,cert_type,expiry_date,frequency_value,frequency_unit\n"
+            "Lift inspection,Lift-A,inspection,2027-01-15,12,months")
+    rows, err = parse_csv(text, cert_required, make_cert_validator(s.id))
+    assert err is None
+    assert rows[0]["status"] == "create"
+    assert commit_certs(rows, s.id) == 1
+    db.session.commit()
+
+    cert = Certification.query.filter_by(name="Lift inspection").first()
+    assert cert is not None
+    assert cert.asset.name == "Lift-A"
+    assert str(cert.expiry_date) == "2027-01-15"
+
+
+def test_cert_csv_unknown_cert_type_is_error(app, factory):
+    from utils.csv_entities import cert_required, make_cert_validator
+
+    s = factory.site()
+    rows, err = parse_csv(
+        "name,cert_type\nFoo,wizardry", cert_required,
+        make_cert_validator(s.id),
+    )
+    assert rows[0]["status"] == "error"
+    assert any("cert_type" in e for e in rows[0]["errors"])
+
+
+def test_cert_csv_with_location_target(app, factory):
+    from extensions import db
+    from models import Certification, Location
+    from utils.csv_entities import (
+        cert_required, commit_certs, make_cert_validator,
+    )
+
+    s = factory.site()
+    db.session.add(Location(site_id=s.id, name="Roof", location_type="area"))
+    db.session.commit()
+
+    text = "name,location\nRoof anchor inspection,Roof"
+    rows, err = parse_csv(text, cert_required, make_cert_validator(s.id))
+    assert rows[0]["status"] == "create"
+    commit_certs(rows, s.id)
+    db.session.commit()
+
+    c = Certification.query.filter_by(name="Roof anchor inspection").first()
+    assert c.location.name == "Roof"
+    assert c.asset_id is None
+
+
+def test_cert_csv_skips_duplicate_certificate_number(app, factory):
+    from extensions import db
+    from models import Certification
+    from utils.csv_entities import cert_required, make_cert_validator
+
+    s = factory.site()
+    db.session.add(Certification(
+        site_id=s.id, name="Old cert", certificate_number="C-001",
+    ))
+    db.session.commit()
+
+    rows, err = parse_csv(
+        "name,certificate_number\nNew name,C-001",
+        cert_required, make_cert_validator(s.id),
+    )
+    assert rows[0]["status"] == "skip"
