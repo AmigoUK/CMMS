@@ -12,7 +12,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = ROOT / "templates"
-BASELINE = ROOT / "tests" / "i18n_keys_baseline.txt"
 
 SEED_KEY = re.compile(r"""\(\s*['"]([\w.]+)['"]\s*,\s*['"]\w+['"]\s*\)\s*:""")
 TEMPLATE_USAGE = re.compile(r"""_\(\s*['"]([\w.]+)['"]""")
@@ -40,26 +39,6 @@ def find_unseeded() -> list[str]:
     # but the real keys (`label.role.admin`, ...) are individually seeded.
     real_keys = {k for k in used if not k.endswith(".")}
     return sorted(real_keys - seeded_keys())
-
-
-def baseline_keys() -> set[str]:
-    if not BASELINE.exists():
-        return set()
-    return {
-        line.strip()
-        for line in BASELINE.read_text(encoding="utf-8").splitlines()
-        if line.strip() and not line.startswith("#")
-    }
-
-
-def find_new_unseeded() -> list[str]:
-    """Unseeded keys that are NOT in the historical baseline.
-
-    The baseline file (tests/i18n_keys_baseline.txt) lists the pre-existing
-    debt of unseeded keys; this returns only keys introduced after that
-    snapshot. CI fails on these.
-    """
-    return sorted(set(find_unseeded()) - baseline_keys())
 
 
 def main() -> int:
