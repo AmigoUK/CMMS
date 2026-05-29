@@ -135,7 +135,7 @@ def task_list():
 @supervisor_required
 def bulk_tasks():
     """Apply one action to many PM tasks in the current site."""
-    from utils.admin_ops import check_deletable, perform_entity_delete
+    from utils.admin_ops import check_deletable, format_blockers, perform_entity_delete
     from utils.audit import log_admin_action
     from utils.bulk import BulkResult, parse_selection
     from utils.i18n import translate as _t
@@ -163,9 +163,9 @@ def bulk_tasks():
     result = BulkResult()
     for task in base.filter(PreventiveTask.id.in_(ids)).all():
         if action == "delete":
-            can_delete, _blockers = check_deletable(task)
+            can_delete, blockers = check_deletable(task)
             if not can_delete:
-                result.skip(task.id, task.name, "blocked")
+                result.skip(task.id, task.name, format_blockers(blockers))
                 continue
             perform_entity_delete(task)
         elif action == "activate":
@@ -188,6 +188,11 @@ def bulk_tasks():
            updated=result.updated, skipped=result.skipped_count),
         "success",
     )
+    if result.skipped:
+        detail = "; ".join(
+            f"{row['name']}: {row['reason']}" for row in result.skipped
+        )
+        flash(_t("flash.bulk.skipped_detail", detail=detail), "warning")
     return redirect(url_for("pm.task_list"))
 
 

@@ -53,7 +53,7 @@ def list_suppliers():
 @supervisor_required
 def bulk():
     """Apply one action to many suppliers: activate, deactivate, delete."""
-    from utils.admin_ops import check_deletable, perform_entity_delete
+    from utils.admin_ops import check_deletable, format_blockers, perform_entity_delete
     from utils.audit import log_admin_action
     from utils.bulk import BulkResult, parse_selection
     from utils.i18n import translate as _t
@@ -78,9 +78,9 @@ def bulk():
             supplier.is_active = False
             result.mark_updated()
         elif action == "delete":
-            can_delete, _blockers = check_deletable(supplier)
+            can_delete, blockers = check_deletable(supplier)
             if not can_delete:
-                result.skip(supplier.id, supplier.name, "blocked")
+                result.skip(supplier.id, supplier.name, format_blockers(blockers))
                 continue
             perform_entity_delete(supplier)
             result.mark_updated()
@@ -96,6 +96,11 @@ def bulk():
            updated=result.updated, skipped=result.skipped_count),
         "success",
     )
+    if result.skipped:
+        detail = "; ".join(
+            f"{row['name']}: {row['reason']}" for row in result.skipped
+        )
+        flash(_t("flash.bulk.skipped_detail", detail=detail), "warning")
     return redirect(url_for("suppliers.list_suppliers"))
 
 

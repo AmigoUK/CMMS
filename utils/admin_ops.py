@@ -75,10 +75,16 @@ def check_deletable(instance, owned_tables=()):
     The entity is blocked from deletion when any non-association,
     non-owned table holds a row whose foreign key points at it.
     `owned_tables` name child rows that are deleted along with the
-    instance, so they inform rather than block. Each blocker is
-    {relation, count}.
+    instance, so they inform rather than block.
+
+    Each blocker is `{relation, count}`. When the blocker table carries
+    a `site_id` column, the blocker also gets `sites: [{site_id,
+    site_name, count}]` so admins can see which sites hold the
+    referencing rows — relevant after the per-site parts split, where
+    a supplier with parts only on Site A still blocks delete from Site B.
     """
     from sqlalchemy import func, select
+    from models import Site
 
     owned = set(owned_tables)
     blockers = []
@@ -90,9 +96,45 @@ def check_deletable(instance, owned_tables=()):
             select(func.count()).select_from(ref_table)
             .where(column == instance.id)
         ).scalar()
-        if count:
-            blockers.append({"relation": ref_table.name, "count": count})
+        if not count:
+            continue
+        blocker = {"relation": ref_table.name, "count": count}
+        site_col = ref_table.columns.get("site_id")
+        if site_col is not None:
+            rows = db.session.execute(
+                select(site_col, Site.name, func.count())
+                .select_from(ref_table.outerjoin(Site.__table__, site_col == Site.id))
+                .where(column == instance.id)
+                .group_by(site_col, Site.name)
+                .order_by(func.count().desc(), Site.name)
+            ).all()
+            blocker["sites"] = [
+                {"site_id": sid, "site_name": sname, "count": c}
+                for sid, sname, c in rows
+            ]
+        blockers.append(blocker)
     return (len(blockers) == 0, blockers)
+
+
+def format_blockers(blockers):
+    """Render a check_deletable blocker list as a single readable line.
+
+    Format: "relation: total (Site A: n, Site B: m); other: total".
+    The per-site breakdown is appended only when the blocker carries
+    `sites` (i.e. its table has a site_id column), so admins can see
+    which sites hold the referencing rows.
+    """
+    chunks = []
+    for b in blockers:
+        line = f"{b['relation']}: {b['count']}"
+        sites = b.get("sites")
+        if sites:
+            breakdown = ", ".join(
+                f"{s['site_name'] or '—'}: {s['count']}" for s in sites
+            )
+            line += f" ({breakdown})"
+        chunks.append(line)
+    return "; ".join(chunks)
 
 
 def perform_entity_delete(instance, owned_tables=()):

@@ -79,7 +79,7 @@ def list_locations():
 @supervisor_required
 def bulk():
     """Apply one action to many locations in the current site."""
-    from utils.admin_ops import check_deletable, perform_entity_delete
+    from utils.admin_ops import check_deletable, format_blockers, perform_entity_delete
     from utils.audit import log_admin_action
     from utils.bulk import BulkResult, parse_selection
     from utils.i18n import translate as _t
@@ -109,9 +109,9 @@ def bulk():
     result = BulkResult()
     for loc in base.filter(Location.id.in_(ids)).all():
         if action == "delete":
-            can_delete, _blockers = check_deletable(loc)
+            can_delete, blockers = check_deletable(loc)
             if not can_delete:
-                result.skip(loc.id, loc.name, "blocked")
+                result.skip(loc.id, loc.name, format_blockers(blockers))
                 continue
             perform_entity_delete(loc)
         elif action == "activate":
@@ -137,6 +137,11 @@ def bulk():
            updated=result.updated, skipped=result.skipped_count),
         "success",
     )
+    if result.skipped:
+        detail = "; ".join(
+            f"{row['name']}: {row['reason']}" for row in result.skipped
+        )
+        flash(_t("flash.bulk.skipped_detail", detail=detail), "warning")
     return redirect(url_for("locations.list_locations"))
 
 

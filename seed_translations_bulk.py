@@ -100,6 +100,10 @@ TRANSLATIONS = {
         "en": "{updated} updated, {skipped} skipped.",
         "pl": "Zaktualizowano: {updated}, pominięto: {skipped}.",
     },
+    ("flash.bulk.skipped_detail", "flash"): {
+        "en": "Skipped: {detail}",
+        "pl": "Pominięto: {detail}",
+    },
     ("flash.bulk.none_selected", "flash"): {
         "en": "No rows were selected.",
         "pl": "Nie zaznaczono żadnych wierszy.",

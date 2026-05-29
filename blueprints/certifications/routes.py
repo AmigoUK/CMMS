@@ -103,7 +103,7 @@ def index():
 @supervisor_required
 def bulk():
     """Apply one action to many certifications in the current site."""
-    from utils.admin_ops import check_deletable, perform_entity_delete
+    from utils.admin_ops import check_deletable, format_blockers, perform_entity_delete
     from utils.audit import log_admin_action
     from utils.bulk import BulkResult, parse_selection
     from utils.i18n import translate as _t
@@ -123,11 +123,11 @@ def bulk():
     result = BulkResult()
     for cert in base.filter(Certification.id.in_(ids)).all():
         if action == "delete":
-            can_delete, _blockers = check_deletable(
+            can_delete, blockers = check_deletable(
                 cert, owned_tables=("certification_logs",),
             )
             if not can_delete:
-                result.skip(cert.id, cert.name, "blocked")
+                result.skip(cert.id, cert.name, format_blockers(blockers))
                 continue
             perform_entity_delete(cert, owned_tables=("certification_logs",))
         elif action == "set_status":
@@ -149,6 +149,11 @@ def bulk():
            updated=result.updated, skipped=result.skipped_count),
         "success",
     )
+    if result.skipped:
+        detail = "; ".join(
+            f"{row['name']}: {row['reason']}" for row in result.skipped
+        )
+        flash(_t("flash.bulk.skipped_detail", detail=detail), "warning")
     return redirect(url_for("certs.index"))
 
 
