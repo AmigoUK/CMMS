@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
-from extensions import csrf, db, login_manager
+from extensions import csrf, db, login_manager, migrate
 
 APP_VERSION = "0.1.5"
 
@@ -20,6 +20,7 @@ def create_app(config_class=None):
 
     # Initialise extensions
     db.init_app(app)
+    migrate.init_app(app, db, directory="migrations")
     login_manager.init_app(app)
     csrf.init_app(app)
 
@@ -260,28 +261,14 @@ def create_app(config_class=None):
         return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
     # ── Database init & seeding ────────────────────────────
-    with app.app_context():
-        from models import (  # noqa: F401
-            Site, Team, User, Location, Asset,
-            WorkOrder, WorkOrderTask, Request,
-            Part, PartUsage, TimeLog, Attachment,
-            PreventiveTask, AppSettings, RequestActivity,
-            Translation, HelpContent, AdminAuditLog,
-        )
-
-        # New tables (admin-bulk-ops feature): admin_audit_logs, user_permission_overrides
-        # are created here automatically on existing databases via create_all().
-        db.create_all()
-
-        # Apply additive column migrations (idempotent, runs every boot).
-        from utils.migrations import run_startup_migrations
-        applied = run_startup_migrations()
-        if applied:
-            print(f"  Applied migrations: {', '.join(applied)}")
-
-        os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-
-        _seed_defaults()
+    # Tests bootstrap their own schema via db.create_all() in conftest, and
+    # `flask db migrate` must see an empty DB to autogenerate; both opt out
+    # via the TESTING flag / SKIP_DB_BOOTSTRAP env var.
+    if not (app.config.get("TESTING") or os.environ.get("SKIP_DB_BOOTSTRAP") == "1"):
+        with app.app_context():
+            _bootstrap_db()
+            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+            _seed_defaults()
 
     # ── CLI commands ─────────────────────────────────────────
     @app.cli.command("pm-generate")
@@ -352,6 +339,42 @@ def create_app(config_class=None):
                 print(f"  - {e}")
 
     return app
+
+
+def _bootstrap_db():
+    """Bring the schema to head before the app accepts requests.
+
+    Three cases, distinguished by inspecting the connected database:
+      1. Established install — alembic_version exists → upgrade head
+         applies any pending migrations (no-op when already at head).
+      2. Existing pre-Alembic install — tables exist but no
+         alembic_version (the cmms prod DB on first boot after this
+         migration ships) → stamp head to record the baseline as
+         already applied, then upgrade head (no-op).
+      3. Fresh database — neither alembic_version nor users → upgrade
+         head builds the full schema from migrations.
+    """
+    from sqlalchemy import inspect
+
+    from flask_migrate import stamp, upgrade
+
+    # Pull every model into the registry so db.metadata is complete
+    # before any Alembic comparison runs.
+    from models import (  # noqa: F401
+        AdminAuditLog, AppSettings, Asset, Attachment, HelpContent,
+        Location, Part, PartUsage, PreventiveTask, Request,
+        RequestActivity, Site, Team, TimeLog, Translation, User,
+        WorkOrder, WorkOrderTask,
+    )
+
+    inspector = inspect(db.engine)
+    has_alembic = inspector.has_table("alembic_version")
+    has_users = inspector.has_table("users")
+
+    if not has_alembic and has_users:
+        stamp(revision="head")
+        print("  Stamped existing schema as Alembic baseline")
+    upgrade()
 
 
 def _seed_defaults():
